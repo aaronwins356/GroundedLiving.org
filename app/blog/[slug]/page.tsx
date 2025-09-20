@@ -2,7 +2,7 @@ import path from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import parse, { Element, domToReact, type DOMNode } from "html-react-parser";
+import parse, { Element, domToReact, type HTMLReactParserOptions } from "html-react-parser";
 import { getPostBySlug, getPostSlugs } from "../../../lib/posts";
 import { AffiliateLink } from "../../../components/ui/AffiliateLink";
 
@@ -39,20 +39,22 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 function renderContent(html: string) {
-  return parse(html, {
-    replace: (node: DOMNode) => {
-      if (node.type === "tag" && node.name === "a") {
-        const element = node as Element;
-        const { href, target: _target, rel: _rel, ...rest } = element.attribs ?? {};
+  const options: HTMLReactParserOptions = {
+    replace: (node) => {
+      if (node instanceof Element && node.name === "a") {
+        const { href, target: _target, rel: _rel, ...rest } = node.attribs ?? {};
         return (
           <AffiliateLink href={href} {...(rest as Record<string, string>)}>
-            {domToReact(element.children)}
+            {domToReact(node.children, options)}
           </AffiliateLink>
         );
       }
+
       return undefined;
     },
-  });
+  };
+
+  return parse(html, options);
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
