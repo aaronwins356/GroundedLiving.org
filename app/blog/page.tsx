@@ -15,7 +15,6 @@ const POSTS_PER_PAGE = 6;
 type BlogIndexPageProps = {
   searchParams: {
     search?: string;
-    category?: string;
     page?: string;
   };
 };
@@ -34,17 +33,10 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
   const posts = await getPosts();
   const formatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
   const search = searchParams.search?.toLowerCase() ?? "";
-  const selectedCategory = searchParams.category ?? "";
-
-  const categories = Array.from(
-    new Set(posts.map((post) => post.category).filter((category): category is string => Boolean(category))),
-  ).sort();
 
   const filteredPosts = posts.filter((post) => {
-    const matchesCategory = selectedCategory ? post.category === selectedCategory : true;
     const haystack = `${post.title} ${post.excerpt ?? ""}`.toLowerCase();
-    const matchesSearch = search ? haystack.includes(search) : true;
-    return matchesCategory && matchesSearch;
+    return search ? haystack.includes(search) : true;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE));
@@ -56,7 +48,6 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
 
   const baseQuery = {
     search: search || undefined,
-    category: selectedCategory || undefined,
   };
 
   return (
@@ -71,7 +62,6 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
             </p>
           </div>
           <form className="mx-auto flex w-full max-w-xl gap-3" method="get">
-            {selectedCategory ? <input type="hidden" name="category" value={selectedCategory} /> : null}
             <label htmlFor="search" className="sr-only">
               Search posts
             </label>
@@ -93,42 +83,6 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
       </section>
 
       <section className="space-y-10">
-        {categories.length ? (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Explore by Category</h2>
-              <div className="flex flex-wrap gap-3 text-sm font-semibold">
-                <Link
-                  href={`/blog${buildQueryString({ ...baseQuery, category: undefined, page: undefined })}`}
-                  className={`rounded-full border px-4 py-2 transition ${
-                    selectedCategory
-                      ? "border-slate-200 bg-white text-slate-500 hover:text-slate-900"
-                      : "border-transparent bg-primary text-white shadow hover:bg-primary-dark"
-                  }`}
-                >
-                  All
-                </Link>
-                {categories.map((category) => {
-                  const isActive = selectedCategory === category;
-                  return (
-                    <Link
-                      key={category}
-                      href={`/blog${buildQueryString({ ...baseQuery, category, page: undefined })}`}
-                      className={`rounded-full border px-4 py-2 transition ${
-                        isActive
-                          ? "border-transparent bg-primary text-white shadow hover:bg-primary-dark"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary"
-                      }`}
-                    >
-                      {category}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
         <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
           {paginatedPosts.length ? (
             paginatedPosts.map((post) => {
@@ -145,7 +99,7 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
                     <div className="relative h-56 w-full overflow-hidden bg-slate-100">
                       <Image
                         src={coverImageUrl}
-                        alt={post.coverImage?.alt ?? post.title}
+                        alt={post.title}
                         fill
                         sizes="(min-width: 1280px) 360px, (min-width: 640px) 50vw, 100vw"
                         className="object-cover transition duration-500 group-hover:scale-105"
@@ -156,7 +110,7 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
                   )}
                   <div className="flex flex-1 flex-col gap-4 p-6">
                     <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      <span>{post.category}</span>
+                      <span>Published</span>
                       <time dateTime={post.publishedAt}>{formatter.format(new Date(post.publishedAt))}</time>
                     </div>
                     <div className="space-y-2">
@@ -165,7 +119,9 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
                           {post.title}
                         </Link>
                       </h2>
-                      <p className="text-sm leading-relaxed text-slate-600">{post.excerpt}</p>
+                      {post.excerpt ? (
+                        <p className="text-sm leading-relaxed text-slate-600">{post.excerpt}</p>
+                      ) : null}
                     </div>
                     <div className="mt-auto">
                       <Link
@@ -182,7 +138,7 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
             })
           ) : (
             <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
-              No posts match your filters right now. Try adjusting your search or category.
+              No posts match your search right now. Try a different keyword.
             </p>
           )}
         </div>
@@ -198,29 +154,15 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
               }`}
               className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition ${
                 currentPage === 1
-                  ? "cursor-not-allowed border border-slate-200 text-slate-300"
-                  : "border border-slate-200 text-slate-600 hover:border-primary hover:text-primary"
+                  ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                  : "bg-white text-primary shadow hover:text-primary-dark"
               }`}
             >
               Previous
             </Link>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => {
-              const isActive = pageNumber === currentPage;
-              return (
-                <Link
-                  key={pageNumber}
-                  href={`/blog${buildQueryString({ ...baseQuery, page: String(pageNumber) })}`}
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition ${
-                    isActive
-                      ? "bg-primary text-white shadow"
-                      : "border border-slate-200 text-slate-600 hover:border-primary hover:text-primary"
-                  }`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  {pageNumber}
-                </Link>
-              );
-            })}
+            <span className="text-sm font-semibold text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
             <Link
               aria-disabled={currentPage === totalPages}
               href={`/blog${
@@ -230,44 +172,14 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
               }`}
               className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition ${
                 currentPage === totalPages
-                  ? "cursor-not-allowed border border-slate-200 text-slate-300"
-                  : "border border-slate-200 text-slate-600 hover:border-primary hover:text-primary"
+                  ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                  : "bg-white text-primary shadow hover:text-primary-dark"
               }`}
             >
               Next
             </Link>
           </nav>
         ) : null}
-      </section>
-
-      <section className="rounded-3xl bg-slate-900 px-8 py-12 text-white sm:px-12">
-        <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 text-center">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary-light">Stay Grounded</p>
-            <h2 className="text-3xl font-bold sm:text-4xl">Join the Ritual Letters</h2>
-            <p className="text-base text-slate-200 sm:text-lg">
-              Receive gentle reminders, seasonal checklists, and nourishing recipes straight to your inbox each month.
-            </p>
-          </div>
-          <form className="flex w-full flex-col gap-3 sm:flex-row">
-            <label htmlFor="email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              className="w-full flex-1 rounded-full border-0 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/60"
-            />
-            <button
-              type="button"
-              className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/40 transition hover:bg-primary-dark"
-            >
-              Subscribe
-            </button>
-          </form>
-          <p className="text-xs text-slate-300">No spam—just thoughtful guidance to support your most grounded self.</p>
-        </div>
       </section>
     </div>
   );

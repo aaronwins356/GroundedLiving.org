@@ -2,14 +2,41 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  PortableText,
+  type PortableTextComponents,
+  type PortableTextMarkComponentProps,
+} from "@portabletext/react";
 
-import { PortableText } from "../../../components/sanity/PortableText";
 import { getPostBySlug, getPosts } from "../../../lib/sanity.queries";
 import { urlForImage } from "../../../lib/sanity.image";
 
 interface BlogPostPageProps {
-  params: { slug: string };
+  params: {
+    slug: string;
+  };
 }
+
+type LinkAnnotation = {
+  href?: string;
+};
+
+const portableTextComponents: PortableTextComponents = {
+  marks: {
+    link: ({ children, value }: PortableTextMarkComponentProps<LinkAnnotation>) => {
+      const href = typeof value?.href === "string" ? value.href : undefined;
+      if (!href) {
+        return children;
+      }
+
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+          {children}
+        </a>
+      );
+    },
+  },
+};
 
 export async function generateStaticParams() {
   const posts = await getPosts();
@@ -31,13 +58,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   return {
     title: post.title,
-    description: post.excerpt ?? undefined,
     openGraph: {
       title: post.title,
-      description: post.excerpt ?? undefined,
       type: "article",
       publishedTime: post.publishedAt,
-      tags: post.tags,
       images: coverImageUrl ? [coverImageUrl] : undefined,
     },
   };
@@ -50,7 +74,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  const formatter = new Intl.DateTimeFormat("en", { dateStyle: "long" });
   const coverImageUrl = post.coverImage
     ? urlForImage(post.coverImage).width(1600).height(900).fit("crop").auto("format").url()
     : null;
@@ -61,7 +84,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <div className="-mx-4 overflow-hidden rounded-3xl bg-slate-200 sm:-mx-6 lg:-mx-8">
           <Image
             src={coverImageUrl}
-            alt={post.coverImage?.alt ?? post.title}
+            alt={post.title}
             width={1600}
             height={900}
             className="h-80 w-full object-cover sm:h-[26rem]"
@@ -77,26 +100,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <span aria-hidden>←</span> Back to Blog
         </Link>
         <header className="space-y-4 text-center sm:text-left">
-          {post.category ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">{post.category}</p>
-          ) : null}
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">{post.title}</h1>
           <p className="text-sm text-slate-500">
-            <time dateTime={post.publishedAt}>{formatter.format(new Date(post.publishedAt))}</time>
+            <time dateTime={post.publishedAt}>{new Date(post.publishedAt).toLocaleDateString()}</time>
           </p>
         </header>
         <div className="prose prose-lg prose-slate mx-auto w-full text-left">
-          <PortableText value={post.content} />
+          <PortableText value={post.content} components={portableTextComponents} />
         </div>
-        {post.tags?.length ? (
-          <ul className="not-prose flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-            {post.tags.map((tag) => (
-              <li key={tag} className="rounded-full bg-primary/10 px-3 py-1 text-primary">
-                #{tag}
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </div>
     </article>
   );
