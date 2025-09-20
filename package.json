@@ -17,7 +17,9 @@
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
     "stripe": "^14.23.0",
-    "html-react-parser": "^4.2.0"
+    "html-react-parser": "^4.2.0",
+    "turndown": "^7.2.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
