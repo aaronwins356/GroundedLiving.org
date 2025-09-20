@@ -3,9 +3,6 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.groundedliving.org"),
@@ -39,7 +36,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en">
       <body>
         <div className="flex min-h-screen flex-col">
           <Navbar />

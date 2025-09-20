@@ -20,6 +20,21 @@
     "paths": {
       "@content/*": [
         "./content/*"
+      ],
+      "next-sanity": [
+        "./types/stubs/next-sanity"
+      ],
+      "next-sanity/studio": [
+        "./types/stubs/next-sanity-studio"
+      ],
+      "sanity": [
+        "./types/stubs/sanity"
+      ],
+      "sanity/desk": [
+        "./types/stubs/sanity-desk"
+      ],
+      "@sanity/image-url": [
+        "./types/stubs/sanity-image-url"
       ]
     },
     "types": [

@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint --max-warnings=0 . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@sanity/client": "^6.16.3",
