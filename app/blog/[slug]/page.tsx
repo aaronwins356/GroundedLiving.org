@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import parse, { DOMNode, Element, domToReact } from "html-react-parser";
 import { getPostBySlug, getPostSlugs } from "../../../lib/posts";
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         type: "article",
         publishedTime: post.frontmatter.date,
         tags: post.frontmatter.tags,
+        images: post.frontmatter.image ? [post.frontmatter.image] : undefined,
       },
     };
   } catch {
@@ -61,22 +63,50 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const post = await getPostBySlug(slug);
 
     return (
-      <article className="prose prose-slate mx-auto max-w-3xl">
-        <p className="text-sm uppercase tracking-wide text-primary">{post.frontmatter.category}</p>
-        <h1>{post.frontmatter.title}</h1>
-        <p className="text-sm text-slate-500">
-          <time dateTime={post.frontmatter.date}>{formatter.format(new Date(post.frontmatter.date))}</time>
-        </p>
-        {renderContent(post.content)}
-        {post.frontmatter.tags?.length ? (
-          <ul className="not-prose mt-8 flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-            {post.frontmatter.tags.map((tag) => (
-              <li key={tag} className="rounded-full bg-primary/10 px-3 py-1 text-primary">
-                #{tag}
-              </li>
-            ))}
-          </ul>
+      <article className="space-y-12">
+        {post.frontmatter.image ? (
+          <div className="-mx-4 overflow-hidden rounded-3xl bg-slate-200 sm:-mx-6 lg:-mx-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.frontmatter.image}
+              alt={post.frontmatter.title}
+              className="h-80 w-full object-cover sm:h-[26rem]"
+            />
+          </div>
         ) : null}
+        <div className="mx-auto flex max-w-3xl flex-col gap-8">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary-dark"
+          >
+            <span aria-hidden>←</span> Back to Blog
+          </Link>
+          <header className="space-y-4 text-center sm:text-left">
+            {post.frontmatter.category ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+                {post.frontmatter.category}
+              </p>
+            ) : null}
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+              {post.frontmatter.title}
+            </h1>
+            <p className="text-sm text-slate-500">
+              <time dateTime={post.frontmatter.date}>{formatter.format(new Date(post.frontmatter.date))}</time>
+            </p>
+          </header>
+          <div className="prose prose-lg prose-slate mx-auto w-full text-left">
+            {renderContent(post.content)}
+          </div>
+          {post.frontmatter.tags?.length ? (
+            <ul className="not-prose flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+              {post.frontmatter.tags.map((tag) => (
+                <li key={tag} className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                  #{tag}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </article>
     );
   } catch (error) {

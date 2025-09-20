@@ -12,6 +12,7 @@ export type PostFrontmatter = {
   category?: string;
   tags?: string[];
   description?: string;
+  image?: string;
 };
 
 export type Post = {
@@ -43,6 +44,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
       category: data.category ?? "",
       tags: data.tags ?? [],
       description: data.description ?? "",
+      image: data.image ?? "",
     },
   };
 }
