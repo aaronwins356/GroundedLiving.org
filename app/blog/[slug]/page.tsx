@@ -2,7 +2,7 @@ import path from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import parse, { DOMNode, Element, domToReact } from "html-react-parser";
+import parse, { Element, domToReact, type DOMNode } from "html-react-parser";
 import { getPostBySlug, getPostSlugs } from "../../../lib/posts";
 import { AffiliateLink } from "../../../components/ui/AffiliateLink";
 
