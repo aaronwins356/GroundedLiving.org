@@ -1,5 +1,6 @@
-import type { Rule } from "sanity";
+import type { ArrayRule, DatetimeRule, SlugRule, StringRule } from "sanity";
 import { defineField, defineType } from "sanity";
+import type React from "react";
 
 export default defineType({
   name: "post",
@@ -10,7 +11,8 @@ export default defineType({
       name: "title",
       type: "string",
       title: "Title",
-      validation: (rule: Rule) => rule.required().min(4).error("Posts need a descriptive title."),
+      validation: (rule: StringRule) =>
+        rule.required().min(4).error("Posts need a descriptive title."),
     }),
     defineField({
       name: "slug",
@@ -21,13 +23,13 @@ export default defineType({
         source: "title",
         maxLength: 96,
       },
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: SlugRule) => rule.required(),
     }),
     defineField({
       name: "publishedAt",
       type: "datetime",
       title: "Publish Date",
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: DatetimeRule) => rule.required(),
     }),
     defineField({
       name: "excerpt",
@@ -85,7 +87,7 @@ export default defineType({
           ],
         },
       ],
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: ArrayRule<unknown[]>) => rule.required(),
     }),
   ],
   preview: {
@@ -96,10 +98,11 @@ export default defineType({
     },
     prepare(selection: { title?: string; subtitle?: string; media?: unknown }) {
       const { title, subtitle, media } = selection;
+      const formattedSubtitle = subtitle ? new Date(subtitle).toLocaleDateString() : undefined;
       return {
         title,
-        subtitle: subtitle ? new Date(subtitle).toLocaleDateString() : undefined,
-        media,
+        subtitle: formattedSubtitle,
+        media: media as React.ReactNode,
       };
     },
   },

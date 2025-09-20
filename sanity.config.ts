@@ -3,17 +3,17 @@ import { deskTool } from "sanity/desk";
 
 import { schemaTypes } from "./schemas";
 
-function requireEnv(name: string) {
+function readEnv(name: string, fallback: string) {
   const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing ${name} environment variable for Sanity configuration.`);
+  if (!value && process.env.NODE_ENV !== "production") {
+    console.warn(`Missing ${name} environment variable for Sanity Studio. Using fallback value.`);
   }
-  return value;
+  return value ?? fallback;
 }
 
-const projectId = requireEnv("SANITY_PROJECT_ID");
-const dataset = requireEnv("SANITY_DATASET");
-const apiVersion = requireEnv("SANITY_API_VERSION");
+const projectId = readEnv("SANITY_PROJECT_ID", "stub-project");
+const dataset = readEnv("SANITY_DATASET", "stub-dataset");
+const apiVersion = readEnv("SANITY_API_VERSION", "2025-01-01");
 
 export default defineConfig({
   basePath: "/studio",

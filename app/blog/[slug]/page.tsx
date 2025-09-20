@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, PageProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,7 +7,7 @@ import { PortableText } from "../../../components/sanity/PortableText";
 import { getPostBySlug, getPosts } from "../../../lib/sanity.queries";
 import { urlForImage } from "../../../lib/sanity.image";
 
-interface BlogPostPageProps {
+interface BlogPostPageProps extends PageProps {
   params: { slug: string };
 }
 

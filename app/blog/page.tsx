@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, PageProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,22 +12,21 @@ export const metadata: Metadata = {
 
 const POSTS_PER_PAGE = 6;
 
-type BlogIndexPageProps = {
+interface BlogIndexPageProps extends PageProps {
   searchParams: {
     search?: string;
     category?: string;
     page?: string;
   };
-};
+}
 
 function buildQueryString(params: Record<string, string | undefined>) {
-  const filteredEntries = Object.entries(params).reduce<[string, string][]>((acc, [key, value]) => {
-    if (value && value.length > 0) {
-      acc.push([key, value]);
-    }
-    return acc;
-  }, []);
-  return filteredEntries.length ? `?${new URLSearchParams(filteredEntries).toString()}` : "";
+  const filteredEntries = Object.entries(params).filter((entry): entry is [string, string] => {
+    const value = entry[1];
+    return typeof value === "string";
+  });
+  const nonEmptyEntries = filteredEntries.filter(([, value]) => value.length > 0);
+  return nonEmptyEntries.length ? `?${new URLSearchParams(nonEmptyEntries).toString()}` : "";
 }
 
 export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps) {
