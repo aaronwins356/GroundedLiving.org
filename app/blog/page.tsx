@@ -21,10 +21,7 @@ interface BlogIndexPageProps extends PageProps {
 }
 
 function buildQueryString(params: Record<string, string | undefined>) {
-  const filteredEntries = Object.entries(params).filter((entry): entry is [string, string] => {
-    const value = entry[1];
-    return typeof value === "string";
-  });
+  const filteredEntries = Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined);
   const nonEmptyEntries = filteredEntries.filter(([, value]) => value.length > 0);
   return nonEmptyEntries.length ? `?${new URLSearchParams(nonEmptyEntries).toString()}` : "";
 }

@@ -2,17 +2,17 @@ import "server-only";
 
 import { createClient } from "next-sanity";
 
-function readEnv(name: string, fallback: string) {
+function requireEnv(name: string) {
   const value = process.env[name];
-  if (!value && process.env.NODE_ENV !== "production") {
-    console.warn(`Missing ${name} environment variable for Sanity client. Using fallback value.`);
+  if (!value) {
+    throw new Error(`Missing ${name} environment variable for Sanity client.`);
   }
-  return value ?? fallback;
+  return value;
 }
 
-const projectId = readEnv("SANITY_PROJECT_ID", "stub-project");
-const dataset = readEnv("SANITY_DATASET", "stub-dataset");
-const apiVersion = readEnv("SANITY_API_VERSION", "2025-01-01");
+const projectId = requireEnv("SANITY_PROJECT_ID");
+const dataset = requireEnv("SANITY_DATASET");
+const apiVersion = requireEnv("SANITY_API_VERSION");
 
 export const sanityConfig = {
   projectId,

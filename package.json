@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "NEXT_FONT_DOWNLOAD_DISABLED=1 next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --max-warnings=0 ."
+    "lint": "next lint"
   },
   "dependencies": {
     "@sanity/client": "^6.16.3",
