@@ -1,6 +1,16 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { getAllPosts } from "../../lib/posts";
+import Image from "next/image";
+import Link from "next/link";
+
+import { getPosts } from "../../lib/sanity.queries";
+import { urlForImage } from "../../lib/sanity.image";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Explore mindful health, nutrition, and lifestyle articles from Grounded Living.",
+};
+
+const POSTS_PER_PAGE = 6;
 
 type BlogIndexPageProps = {
   searchParams: {
@@ -10,31 +20,29 @@ type BlogIndexPageProps = {
   };
 };
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description: "Explore mindful health, nutrition, and lifestyle articles from Grounded Living.",
-};
-
-const POSTS_PER_PAGE = 6;
-
 function buildQueryString(params: Record<string, string | undefined>) {
-  const filteredEntries = Object.entries(params).filter(([, value]) => value && value.length > 0);
+  const filteredEntries = Object.entries(params).reduce<[string, string][]>((acc, [key, value]) => {
+    if (value && value.length > 0) {
+      acc.push([key, value]);
+    }
+    return acc;
+  }, []);
   return filteredEntries.length ? `?${new URLSearchParams(filteredEntries).toString()}` : "";
 }
 
 export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps) {
-  const posts = await getAllPosts();
+  const posts = await getPosts();
   const formatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
   const search = searchParams.search?.toLowerCase() ?? "";
   const selectedCategory = searchParams.category ?? "";
 
   const categories = Array.from(
-    new Set(posts.map((post) => post.frontmatter.category).filter((category): category is string => Boolean(category))),
+    new Set(posts.map((post) => post.category).filter((category): category is string => Boolean(category))),
   ).sort();
 
   const filteredPosts = posts.filter((post) => {
-    const matchesCategory = selectedCategory ? post.frontmatter.category === selectedCategory : true;
-    const haystack = `${post.frontmatter.title} ${post.frontmatter.description ?? ""}`.toLowerCase();
+    const matchesCategory = selectedCategory ? post.category === selectedCategory : true;
+    const haystack = `${post.title} ${post.excerpt ?? ""}`.toLowerCase();
     const matchesSearch = search ? haystack.includes(search) : true;
     return matchesCategory && matchesSearch;
   });
@@ -123,48 +131,55 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
 
         <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
           {paginatedPosts.length ? (
-            paginatedPosts.map((post) => (
-              <article
-                key={post.slug}
-                className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                {post.frontmatter.image ? (
-                  <div className="relative h-56 w-full overflow-hidden bg-slate-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={post.frontmatter.image}
-                      alt=""
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                ) : (
-                  <div className="h-56 w-full bg-gradient-to-br from-slate-100 via-white to-slate-200" />
-                )}
-                <div className="flex flex-1 flex-col gap-4 p-6">
-                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <span>{post.frontmatter.category}</span>
-                    <time dateTime={post.frontmatter.date}>{formatter.format(new Date(post.frontmatter.date))}</time>
-                  </div>
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-semibold text-slate-900">
-                      <Link href={`/blog/${post.slug}`} className="transition hover:text-primary-dark">
-                        {post.frontmatter.title}
+            paginatedPosts.map((post) => {
+              const coverImageUrl = post.coverImage
+                ? urlForImage(post.coverImage).width(800).height(560).fit("crop").auto("format").url()
+                : null;
+
+              return (
+                <article
+                  key={post.slug}
+                  className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                >
+                  {coverImageUrl ? (
+                    <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+                      <Image
+                        src={coverImageUrl}
+                        alt={post.coverImage?.alt ?? post.title}
+                        fill
+                        sizes="(min-width: 1280px) 360px, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-56 w-full bg-gradient-to-br from-slate-100 via-white to-slate-200" />
+                  )}
+                  <div className="flex flex-1 flex-col gap-4 p-6">
+                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <span>{post.category}</span>
+                      <time dateTime={post.publishedAt}>{formatter.format(new Date(post.publishedAt))}</time>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-semibold text-slate-900">
+                        <Link href={`/blog/${post.slug}`} className="transition hover:text-primary-dark">
+                          {post.title}
+                        </Link>
+                      </h2>
+                      <p className="text-sm leading-relaxed text-slate-600">{post.excerpt}</p>
+                    </div>
+                    <div className="mt-auto">
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary-dark"
+                      >
+                        Read More
+                        <span aria-hidden>→</span>
                       </Link>
-                    </h2>
-                    <p className="text-sm leading-relaxed text-slate-600">{post.frontmatter.description}</p>
+                    </div>
                   </div>
-                  <div className="mt-auto">
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary-dark"
-                    >
-                      Read More
-                      <span aria-hidden>→</span>
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))
+                </article>
+              );
+            })
           ) : (
             <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
               No posts match your filters right now. Try adjusting your search or category.
@@ -210,7 +225,7 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
               aria-disabled={currentPage === totalPages}
               href={`/blog${
                 currentPage === totalPages
-                  ? buildQueryString({ ...baseQuery, page: String(currentPage) })
+                  ? buildQueryString({ ...baseQuery, page: undefined })
                   : buildQueryString({ ...baseQuery, page: String(currentPage + 1) })
               }`}
               className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition ${
