@@ -10,13 +10,12 @@ export default defineType({
       name: "title",
       type: "string",
       title: "Title",
-      validation: (rule: Rule) => rule.required().min(4).error("Posts need a descriptive title."),
+      validation: (rule: Rule) => rule.required(),
     }),
     defineField({
       name: "slug",
       type: "slug",
       title: "Slug",
-      description: "This determines the URL path (e.g. /blog/my-post).",
       options: {
         source: "title",
         maxLength: 96,
@@ -26,99 +25,23 @@ export default defineType({
     defineField({
       name: "publishedAt",
       type: "datetime",
-      title: "Publish Date",
+      title: "Published At",
       validation: (rule: Rule) => rule.required(),
-    }),
-    defineField({
-      name: "excerpt",
-      type: "text",
-      title: "Excerpt",
-      description: "Short description used on list pages and metadata.",
-      rows: 3,
-    }),
-    defineField({
-      name: "category",
-      type: "string",
-      title: "Category",
-      description: "Used for filtering on the blog index.",
-    }),
-    defineField({
-      name: "tags",
-      type: "array",
-      title: "Tags",
-      of: [{ type: "string" }],
-      options: {
-        layout: "tags",
-      },
     }),
     defineField({
       name: "coverImage",
-      title: "Cover Image",
       type: "image",
+      title: "Cover Image",
       options: {
         hotspot: true,
       },
-      fields: [
-        defineField({
-          name: "alt",
-          type: "string",
-          title: "Alternative text",
-          description: "Important for accessibility and SEO.",
-        }),
-      ],
     }),
     defineField({
       name: "content",
-      title: "Content",
       type: "array",
-      of: [
-        { type: "block" },
-        {
-          type: "image",
-          options: { hotspot: true },
-          fields: [
-            defineField({
-              name: "alt",
-              type: "string",
-              title: "Alternative text",
-            }),
-          ],
-        },
-      ],
+      title: "Content",
+      of: [{ type: "block" }],
       validation: (rule: Rule) => rule.required(),
     }),
-  ],
-  preview: {
-    select: {
-      title: "title",
-      subtitle: "publishedAt",
-      media: "coverImage",
-    },
-    prepare(selection: { title?: string; subtitle?: string; media?: unknown }) {
-      const { title, subtitle, media } = selection;
-      return {
-        title,
-        subtitle: subtitle ? new Date(subtitle).toLocaleDateString() : undefined,
-        media,
-      };
-    },
-  },
-  orderings: [
-    {
-      title: "Publish date, newest first",
-      name: "publishDateDesc",
-      by: [
-        { field: "publishedAt", direction: "desc" },
-        { field: "_createdAt", direction: "desc" },
-      ],
-    },
-    {
-      title: "Publish date, oldest first",
-      name: "publishDateAsc",
-      by: [
-        { field: "publishedAt", direction: "asc" },
-        { field: "_createdAt", direction: "asc" },
-      ],
-    },
   ],
 });

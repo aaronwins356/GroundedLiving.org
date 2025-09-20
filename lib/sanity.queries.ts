@@ -1,42 +1,61 @@
 import "server-only";
 
 import { groq } from "next-sanity";
+import type { PortableTextBlock } from "sanity";
 
-import type { Post, PostSummary } from "../types/post";
 import { sanityClient } from "./sanity.client";
 
-const POST_SUMMARY_PROJECTION = `
-  _id,
+type SanityImageReference = {
+  _type: "reference";
+  _ref: string;
+};
+
+export type SanityImage = {
+  _type: "image";
+  asset: SanityImageReference;
+};
+
+export interface PostListItem {
+  title: string;
+  slug: string;
+  publishedAt: string;
+  coverImage?: SanityImage;
+  excerpt?: string;
+}
+
+export interface Post extends PostListItem {
+  content: PortableTextBlock[];
+}
+
+const postFields = `
   title,
   "slug": slug.current,
   publishedAt,
-  excerpt,
-  category,
-  tags,
   coverImage{
     _type,
-    alt,
     asset
-  }
+  },
+  content
 `;
 
-const POST_DETAIL_PROJECTION = `
-  ${POST_SUMMARY_PROJECTION},
-  content[]{
-    ...,
-    asset
-  }
-`;
-
-export async function getPosts(): Promise<PostSummary[]> {
-  return sanityClient.fetch<PostSummary[]>(
-    groq`*[_type == "post" && defined(slug.current)] | order(publishedAt desc){${POST_SUMMARY_PROJECTION}}`,
+export async function getPosts(): Promise<PostListItem[]> {
+  return sanityClient.fetch<PostListItem[]>(
+    groq`*[_type == "post" && defined(slug.current)] | order(publishedAt desc){
+      title,
+      "slug": slug.current,
+      publishedAt,
+      coverImage{
+        _type,
+        asset
+      },
+      "excerpt": coalesce(pt::text(content[0]), "")
+    }`,
   );
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   return sanityClient.fetch<Post | null>(
-    groq`*[_type == "post" && slug.current == $slug][0]{${POST_DETAIL_PROJECTION}}`,
+    groq`*[_type == "post" && slug.current == $slug][0]{${postFields}}`,
     { slug },
   );
 }

@@ -1,9 +1,9 @@
 import { defineConfig } from "sanity";
 import { deskTool } from "sanity/desk";
 
-import { schemaTypes } from "./schemas";
+import post from "./schemas/post";
 
-function requireEnv(name: string) {
+function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
     throw new Error(`Missing ${name} environment variable for Sanity configuration.`);
@@ -11,20 +11,13 @@ function requireEnv(name: string) {
   return value;
 }
 
-const projectId = requireEnv("SANITY_PROJECT_ID");
-const dataset = requireEnv("SANITY_DATASET");
-const apiVersion = requireEnv("SANITY_API_VERSION");
-
 export default defineConfig({
   basePath: "/studio",
-  name: "grounded_living_studio",
-  title: "Grounded Living Studio",
-  projectId,
-  dataset,
-  apiVersion,
-  useCdn: false,
-  plugins: [deskTool()],
+  title: "Grounded Living CMS",
+  projectId: requireEnv("SANITY_PROJECT_ID"),
+  dataset: requireEnv("SANITY_DATASET"),
   schema: {
-    types: schemaTypes,
+    types: [post],
   },
+  plugins: [deskTool()],
 });
