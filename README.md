@@ -1,109 +1,125 @@
 # Grounded Living
 
-Grounded Living is a calming wellness blog built with Next.js 14, Tailwind CSS, and Sanity. This guide covers day-to-day development, how editors publish content, and the deploy process so the site is easy to grow.
+Grounded Living is a modern wellness journal built with Next.js 15, Tailwind CSS, and Sanity. The codebase is structured so you
+can spin it up locally in minutes, give editors a welcoming Studio, and ship updates to Vercel with confidence.
 
-## Tech Stack at a Glance
+## Tech stack
 
-- **Framework:** Next.js 14 (App Router) with React Server Components.
-- **Styling:** Tailwind CSS with a soft, wellness-inspired palette.
-- **Content:** Sanity headless CMS for posts and pages, accessed over GROQ queries.
-- **Deployment:** Vercel for previews and production.
+- **Framework:** Next.js 15 (App Router + React Server Components)
+- **Styling:** Tailwind CSS with custom typography and wellness-inspired palette
+- **CMS:** Sanity Studio mounted directly inside the Next.js app at `/studio`
+- **Content:** Portable Text for rich posts and pages
+- **Deployment:** Vercel with automated GitHub Actions deploys
 
-## Quick Start
+## 1. Local development in three steps
 
-1. **Clone the repo**
-   ```bash
-   git clone https://github.com/aaronwins356/GroundedLiving.org.git
-   cd GroundedLiving.org
-   ```
-2. **Install dependencies**
+1. **Install dependencies**
    ```bash
    npm install
    ```
-3. **Copy the environment template**
+2. **Copy the environment template**
    ```bash
    cp .env.local.example .env.local
    ```
-4. **Fill in `.env.local`**
+3. **Fill in `.env.local`**
    ```dotenv
    SANITY_PROJECT_ID=yourProjectId
    SANITY_DATASET=production
-   SANITY_API_VERSION=2023-10-01 # optional, defaults to 2023-10-01
-   SANITY_READ_TOKEN= # optional, only needed for private datasets
-   NEXT_PUBLIC_SANITY_STUDIO_URL=https://yourproject.sanity.studio # optional hosted studio embed
+   SANITY_API_VERSION=2024-05-01
+   SANITY_READ_TOKEN= # optional – only required for private datasets or draft previews
+   SANITY_REVALIDATE_SECRET=choose-a-long-random-string
    ```
-5. **Start the dev server**
-   ```bash
-   npm run dev
-   ```
-6. Visit [http://localhost:3000](http://localhost:3000) for the site and [http://localhost:3000/studio](http://localhost:3000/studio) for the embedded Sanity Studio (if `NEXT_PUBLIC_SANITY_STUDIO_URL` is provided).
 
-> `.env.local` is ignored by Git. Never commit real credentials.
+Then start the dev server:
 
-## Daily Development Commands
+```bash
+npm run dev
+```
+
+- [http://localhost:3000](http://localhost:3000) – the public site
+- [http://localhost:3000/studio](http://localhost:3000/studio) – Sanity Studio embedded in the app
+
+> Tip: If you haven’t created a Sanity project yet, run `npm create sanity@latest` first. Drop the generated `projectId` and
+> `dataset` into `.env.local` and the Studio will instantly connect.
+
+## 2. Sanity Studio editing experience
+
+Sanity Studio is embedded directly in the Next.js app using `next-sanity/studio` so non-technical editors can log in with the
+same URL they use to browse the blog.
+
+- **Posts** include: title, slug, category, publish date, excerpt, cover image with alt text, and rich Portable Text content.
+- **Pages** include: title, slug, optional hero image, and full Portable Text content.
+- The desk structure keeps “Posts” and “Pages” as the only entry points so the interface stays approachable.
+- A webhook can hit `/api/revalidate` with your `SANITY_REVALIDATE_SECRET` to refresh cached content whenever you publish.
+
+### Setting up the webhook
+
+1. In the Sanity manage interface, go to **API → Webhooks**.
+2. Create a new webhook pointing to `https://your-vercel-domain/api/revalidate?secret=YOUR_SECRET` (or your local tunnel when
+   testing).
+3. Enable the webhook for the `create`, `update`, `delete`, and `publish` events on the `post` and `page` document types.
+4. When the webhook fires, the API route revalidates all pages tagged with Sanity content so new posts show up immediately.
+
+## 3. Everyday developer workflows
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start Next.js in development mode with hot reloading. |
-| `npm run lint` | Run ESLint with `next/core-web-vitals`. |
-| `npm run build` | Compile a production build and verify type safety. |
-| `npx tsc --noEmit` | Standalone type checking (optional when `npm run build` already runs). |
+| `npm run dev` | Start the Next.js dev server with fast refresh. |
+| `npm run lint` | Run ESLint using the `next/core-web-vitals` ruleset. |
+| `npm run build` | Create a production build (includes type checking). |
+| `npm run typecheck` | Run `tsc --noEmit` for standalone type safety verification. |
 
-Always run lint and build before opening a PR so CI stays green.
+Always run `npm run lint && npm run build` (or `npm run typecheck`) before opening a PR so CI mirrors local results.
 
-## Sanity Content Workflow
+## 4. Deployment pipeline (GitHub → Vercel)
 
-Sanity Studio lives at `/studio`. Editors see two prominent sections:
+The repository includes `.github/workflows/deploy.yml` which powers CI/CD:
 
-- **Posts** – Create new articles with title, slug, publish date, excerpt, category, cover image, and rich content blocks.
-- **Pages** – Maintain evergreen pages such as About or Contact using the same rich text editor.
+1. Caches npm dependencies for faster builds.
+2. Runs `npm run lint` and `npm run build` on every push and pull request.
+3. On successful pushes to `main`, triggers a production deploy via the Vercel CLI.
 
-Every field includes plain-language descriptions so non-technical editors understand what to enter. Cover images support alt text, and the hero image is optional for pages.
+To enable deployments you need three GitHub repository secrets:
 
-### Publishing Checklist
+| Secret | Description |
+| --- | --- |
+| `VERCEL_TOKEN` | Personal token from the Vercel dashboard (Profile → Account Settings → Tokens). |
+| `VERCEL_ORG_ID` | Found in the Vercel project settings (`vercel link` also prints it). |
+| `VERCEL_PROJECT_ID` | The project identifier from the Vercel dashboard. |
 
-1. Open `/studio` and select **Posts**.
-2. Create a draft, fill out required fields, and upload the cover image (landscape works best).
-3. Choose `Publish` or schedule by setting a future `publishedAt` date.
-4. The post will automatically appear in the homepage hero carousel and `/blog` listing.
+Add them in **GitHub → Settings → Secrets and variables → Actions → New repository secret**. Once configured, every merge into
+`main` will lint, build, and deploy automatically.
 
-For evergreen content, repeat the process under **Pages**.
+## 5. Design system highlights
 
-## Layout + Monetization Placeholders
+- **Homepage hero:** Rotating featured carousel, prominent CTA buttons, and a dedicated affiliate placeholder block.
+- **Category discovery:** Clickable category tags on the homepage and `/blog` to encourage exploration.
+- **Post layout:** Large readable typography, responsive imagery, and a sidebar reserved for future monetization partners.
+- **Global styling:** Google Fonts (Plus Jakarta Sans + Cormorant Garamond) linked in the root layout and applied through Tailwind.
 
-- Homepage hero highlights the latest posts with a rotating carousel and a reserved module for future affiliate spotlights.
-- Blog post pages include a right-rail card earmarked for curated affiliate resources once partnerships launch.
-- The `/shop` route acts as a “coming soon” teaser for future offerings.
+## 6. Future growth hooks
 
-These placeholders keep monetization top-of-mind without adding paid features yet.
+- Monetization placeholders (affiliate cards, banner slots, `/shop` route) are in place but inactive.
+- The design leaves room for newsletter modules or featured product rails without reworking layout fundamentals.
 
-## Deployments & PR Flow
-
-1. Open a feature branch and commit changes.
-2. Push the branch and open a Pull Request targeting `main`.
-3. GitHub Actions (or your CI) should run `npm run lint` and `npm run build`.
-4. Once the PR is approved, merge to `main`. Vercel auto-deploys `main` to production.
-5. Monitor the Vercel deployment dashboard for completion; roll back if an issue is spotted.
-
-For preview testing, Vercel automatically generates preview URLs on every PR.
-
-## Project Structure
+## 7. Project structure
 
 ```
-app/                # Next.js App Router routes and layout
-components/         # Shared UI building blocks (cards, navigation, etc.)
-lib/                # Sanity client helpers and GROQ queries
-public/             # Static assets
+app/                # App Router routes, layout, and API handlers
+components/         # Reusable UI components (cards, navigation, rich text)
+lib/                # Sanity client helpers, GROQ queries, and image utilities
 schemas/            # Sanity schema definitions for posts and pages
-scripts/            # Utility scripts for maintenance
-content/            # Legacy markdown posts (optional reference)
+public/             # Static assets (favicons, OG image)
+.github/workflows/  # GitHub Actions for CI/CD
 ```
 
-## Troubleshooting
+## 8. Troubleshooting
 
-- **Sanity requests return empty arrays** – Confirm `SANITY_PROJECT_ID` and `SANITY_DATASET` in `.env.local`.
-- **Studio embed is blank** – Provide `NEXT_PUBLIC_SANITY_STUDIO_URL` or run Studio separately in your Sanity project.
-- **Images do not load** – Ensure the Sanity dataset has public assets or configure a read token.
-- **Build fails on CI** – Run `npm run lint` and `npm run build` locally to surface actionable errors before pushing.
+- **Blank Studio:** Double-check `SANITY_PROJECT_ID` and `SANITY_DATASET`. Without them the Studio renders an empty shell.
+- **Content not updating:** Confirm the webhook is hitting `/api/revalidate` with the correct secret and that your pages use the
+  provided revalidation tags.
+- **Image URLs look broken:** Ensure the Sanity dataset is public or provide `SANITY_READ_TOKEN` for private datasets.
+- **Build failures:** Run `npm run lint`, `npm run build`, and `npm run typecheck` locally to catch issues before CI.
 
-You’re ready to iterate quickly, keep editors productive, and grow Grounded Living without paid features yet.
+With these pieces in place you can confidently create content, preview changes, and ship updates without touching complex setup
+steps every time.

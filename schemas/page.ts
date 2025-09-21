@@ -1,67 +1,77 @@
-const page = {
+import { defineArrayMember, defineField, defineType } from "sanity";
+
+export default defineType({
   name: "page",
   title: "Page",
   type: "document",
+  groups: [
+    { name: "settings", title: "Settings" },
+    { name: "content", title: "Content" },
+  ],
   fields: [
-    {
+    defineField({
       name: "title",
       type: "string",
       title: "Title",
-      description: "Give the page a clear name like About, Contact, or Offerings.",
-      validation: (rule: any) => rule.required().min(2),
-    },
-    {
+      description: "Use clear titles like About, Contact, or Services.",
+      validation: (rule) => rule.required().min(2),
+      group: "settings",
+    }),
+    defineField({
       name: "slug",
       type: "slug",
       title: "URL slug",
-      description: "This becomes the web address (example: about → groundedliving.org/about).",
+      description: "This becomes the web address (example: about → /about).",
       options: {
         source: "title",
         maxLength: 96,
       },
-      validation: (rule: any) => rule.required(),
-    },
-    {
+      validation: (rule) => rule.required(),
+      group: "settings",
+    }),
+    defineField({
       name: "coverImage",
       type: "image",
       title: "Hero image",
-      description: "Optional — add a welcoming banner image to set the tone of the page.",
+      description: "Optional banner photo shown at the top of the page.",
       options: {
         hotspot: true,
       },
       fields: [
-        {
+        defineField({
           name: "alt",
           type: "string",
           title: "Alt text",
-          description: "Describe the image for accessibility.",
-          validation: (rule: any) => rule.max(120),
-        },
+          description: "Describe the image in one sentence for accessibility.",
+          validation: (rule) => rule.max(120),
+        }),
       ],
-    },
-    {
+      group: "content",
+    }),
+    defineField({
       name: "content",
       type: "array",
       title: "Page content",
-      description: "Write the story or information that belongs on this page. Use headings to keep it skimmable.",
+      description: "Add copy, images, and headings to tell your story.",
       of: [
-        { type: "block" },
-        {
+        defineArrayMember({ type: "block" }),
+        defineArrayMember({
           type: "image",
           options: { hotspot: true },
           fields: [
-            {
+            defineField({
               name: "alt",
               type: "string",
               title: "Alt text",
               description: "Explain what’s shown in the image.",
-              validation: (rule: any) => rule.max(120),
-            },
+              validation: (rule) => rule.max(120),
+            }),
           ],
-        },
+        }),
       ],
-      validation: (rule: any) => rule.required().min(1),
-    },
+      validation: (rule) => rule.required().min(1),
+      group: "content",
+    }),
   ],
   preview: {
     select: {
@@ -70,6 +80,4 @@ const page = {
       media: "coverImage",
     },
   },
-} as const;
-
-export default page;
+});

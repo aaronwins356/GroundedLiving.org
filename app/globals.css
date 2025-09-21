@@ -7,7 +7,7 @@
 }
 
 body {
-  @apply min-h-screen bg-mist text-accent font-sans antialiased;
+  @apply min-h-screen text-accent font-sans antialiased;
 }
 
 a {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { PostCard } from "../../components/blog/PostCard";
 import { getPosts } from "../../lib/sanity.queries";
@@ -8,9 +9,31 @@ export const metadata: Metadata = {
   description: "Soulful wellness notes, nourishing recipes, and gentle rituals from Grounded Living.",
 };
 
-export default async function BlogIndexPage() {
+type BlogPageProps = {
+  searchParams?: {
+    category?: string;
+  };
+};
+
+export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
   const posts = await getPosts();
-  const categories = Array.from(new Set(posts.map((post) => post.category).filter(Boolean)));
+  const categories = Array.from(
+    new Set(
+      posts
+        .map((post) => post.category)
+        .filter((category): category is string => Boolean(category)),
+    ),
+  );
+
+  let requestedCategory: string | undefined;
+  if (searchParams?.category) {
+    try {
+      requestedCategory = decodeURIComponent(searchParams.category);
+    } catch {
+      requestedCategory = searchParams.category;
+    }
+  }
+  const filteredPosts = requestedCategory ? posts.filter((post) => post.category === requestedCategory) : posts;
 
   return (
     <div className="space-y-16">
@@ -23,29 +46,58 @@ export default async function BlogIndexPage() {
         </p>
         {categories.length ? (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {categories.map((category) => (
-              <span
-                key={category}
-                className="rounded-full border border-brand/30 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-accent-soft"
-              >
-                {category}
-              </span>
-            ))}
+            <Link
+              href="/blog"
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                requestedCategory
+                  ? "border-brand/20 bg-white/70 text-accent-soft hover:border-brand-400 hover:text-accent"
+                  : "border-brand-500 bg-brand-500/10 text-accent"
+              }`}
+            >
+              All topics
+            </Link>
+            {categories.map((category) => {
+              const isActive = requestedCategory === category;
+              const href = isActive ? "/blog" : `/blog?category=${encodeURIComponent(category)}`;
+              return (
+                <Link
+                  key={category}
+                  href={href}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                    isActive
+                      ? "border-brand-500 bg-brand-500/10 text-accent"
+                      : "border-brand/20 bg-white/70 text-accent-soft hover:border-brand-400 hover:text-accent"
+                  }`}
+                >
+                  {category}
+                </Link>
+              );
+            })}
           </div>
         ) : null}
       </section>
 
       <section>
-        {posts.length ? (
+        {filteredPosts.length ? (
           <div className="grid gap-10 md:grid-cols-2 xl:grid-cols-3">
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <PostCard key={post._id} post={post} />
             ))}
           </div>
         ) : (
-          <p className="rounded-3xl border border-dashed border-brand/30 bg-white/60 p-12 text-center text-sm text-accent-soft">
-            No posts yet. Publish your first article in Sanity to see it here.
-          </p>
+          <div className="rounded-3xl border border-dashed border-brand/30 bg-white/60 p-12 text-center text-sm text-accent-soft">
+            <p className="text-base font-semibold text-accent">No stories in this category yet</p>
+            <p className="mt-2">
+              Publish a post in Sanity and select the
+              {requestedCategory ? (
+                <>
+                  {" "}
+                  <span className="font-semibold text-accent">{requestedCategory}</span>{" "}
+                </>
+              ) : " "}
+              category to fill this space.
+            </p>
+          </div>
         )}
       </section>
     </div>
