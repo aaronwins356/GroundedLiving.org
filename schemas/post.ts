@@ -1,4 +1,5 @@
-import type { Rule } from "sanity";
+import type React from "react";
+import type { ArrayRule, DatetimeRule, PreviewValue, SlugRule, StringRule } from "sanity";
 import { defineField, defineType } from "sanity";
 
 export default defineType({
@@ -10,7 +11,8 @@ export default defineType({
       name: "title",
       type: "string",
       title: "Title",
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: StringRule) =>
+        rule.required().min(4).error("Posts need a descriptive title."),
     }),
     defineField({
       name: "slug",
@@ -20,13 +22,13 @@ export default defineType({
         source: "title",
         maxLength: 96,
       },
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: SlugRule) => rule.required(),
     }),
     defineField({
       name: "publishedAt",
       type: "datetime",
       title: "Published At",
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: DatetimeRule) => rule.required(),
     }),
     defineField({
       name: "coverImage",
@@ -41,7 +43,23 @@ export default defineType({
       type: "array",
       title: "Content",
       of: [{ type: "block" }],
-      validation: (rule: Rule) => rule.required(),
+      validation: (rule: ArrayRule<unknown[]>) => rule.required(),
     }),
   ],
+  preview: {
+    select: {
+      title: "title",
+      subtitle: "publishedAt",
+      media: "coverImage",
+    },
+    prepare(selection: { title?: string; subtitle?: string; media?: unknown }): PreviewValue {
+      const { title, subtitle, media } = selection;
+      return {
+        title,
+        subtitle,
+        // Sanity expects preview media to be a React node, so we cast the configured asset accordingly.
+        media: media as React.ReactNode,
+      };
+    },
+  },
 });

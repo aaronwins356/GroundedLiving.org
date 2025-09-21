@@ -3,9 +3,6 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.groundedliving.org"),
@@ -39,8 +36,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body>
+    <html lang="en">
+      {/* Use the Tailwind font stack instead of next/font to keep builds deterministic without network access. */}
+      <body className="font-sans">
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <main className="container-base flex-1 py-12">{children}</main>

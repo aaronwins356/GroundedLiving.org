@@ -1,42 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, PageProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  PortableText,
-  type PortableTextComponents,
-  type PortableTextMarkComponentProps,
-} from "@portabletext/react";
+import { PortableText } from "../../../components/sanity/PortableText";
 
 import { getPostBySlug, getPosts } from "../../../lib/sanity.queries";
 import { urlForImage } from "../../../lib/sanity.image";
 
-interface BlogPostPageProps {
+interface BlogPostPageProps extends PageProps {
   params: {
     slug: string;
   };
 }
-
-type LinkAnnotation = {
-  href?: string;
-};
-
-const portableTextComponents: PortableTextComponents = {
-  marks: {
-    link: ({ children, value }: PortableTextMarkComponentProps<LinkAnnotation>) => {
-      const href = typeof value?.href === "string" ? value.href : undefined;
-      if (!href) {
-        return children;
-      }
-
-      return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
-          {children}
-        </a>
-      );
-    },
-  },
-};
 
 export async function generateStaticParams() {
   const posts = await getPosts();
@@ -106,7 +81,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </p>
         </header>
         <div className="prose prose-lg prose-slate mx-auto w-full text-left">
-          <PortableText value={post.content} components={portableTextComponents} />
+          <PortableText value={post.content} />
         </div>
       </div>
     </article>

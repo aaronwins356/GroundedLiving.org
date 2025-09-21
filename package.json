@@ -7,17 +7,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "@sanity/client": "^6.16.3",
-    "@sanity/image-url": "^1.0.4",
-    "@portabletext/react": "^3.0.19",
     "next": "14.2.5",
-    "next-sanity": "^10.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sanity": "^3.54.0",
     "stripe": "^14.23.0",
     "turndown": "^7.2.0",
     "xml2js": "^0.6.2"
