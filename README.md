@@ -23,8 +23,8 @@ can spin it up locally in minutes, give editors a welcoming Studio, and ship upd
    ```
 3. **Fill in `.env.local`**
    ```dotenv
-   SANITY_PROJECT_ID=yourProjectId
-   SANITY_DATASET=production
+   NEXT_PUBLIC_SANITY_PROJECT_ID=yourProjectId
+   NEXT_PUBLIC_SANITY_DATASET=production
    SANITY_API_VERSION=2024-05-01
    SANITY_READ_TOKEN= # optional – only required for private datasets or draft previews
    SANITY_REVALIDATE_SECRET=choose-a-long-random-string
@@ -115,7 +115,7 @@ public/             # Static assets (favicons, OG image)
 
 ## 8. Troubleshooting
 
-- **Blank Studio:** Double-check `SANITY_PROJECT_ID` and `SANITY_DATASET`. Without them the Studio renders an empty shell.
+- **Blank Studio:** Double-check `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET`. Without them the Studio renders an empty shell.
 - **Content not updating:** Confirm the webhook is hitting `/api/revalidate` with the correct secret and that your pages use the
   provided revalidation tags.
 - **Image URLs look broken:** Ensure the Sanity dataset is public or provide `SANITY_READ_TOKEN` for private datasets.

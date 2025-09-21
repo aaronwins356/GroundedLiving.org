@@ -5,10 +5,14 @@ import page from "./schemas/page";
 import post from "./schemas/post";
 
 function readEnv(name: string, fallback?: string) {
-  const value = process.env[name];
+  const legacy = process.env[name];
+  const nextPublic = process.env[`NEXT_PUBLIC_${name}`];
+  const value = legacy || nextPublic;
+
   if (!value && process.env.NODE_ENV !== "production") {
-    console.warn(`Missing ${name} for Sanity configuration. Using fallback value.`);
+    console.warn(`Missing ${name} (or NEXT_PUBLIC_${name}) for Sanity configuration. Using fallback value.`);
   }
+
   return value || fallback || "";
 }
 
@@ -16,6 +20,7 @@ const projectId = readEnv("SANITY_PROJECT_ID");
 const dataset = readEnv("SANITY_DATASET", "production");
 
 export default defineConfig({
+  /** Expose the embedded Studio at /studio so Vercel deployments remain self-contained. */
   basePath: "/studio",
   name: "grounded_living_studio",
   title: "Grounded Living Studio",

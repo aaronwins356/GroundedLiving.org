@@ -3,8 +3,23 @@ import "server-only";
 import type { ClientConfig } from "@sanity/client";
 import { createClient } from "next-sanity";
 
-const projectId = process.env.SANITY_PROJECT_ID;
-const dataset = process.env.SANITY_DATASET;
+/**
+ * Shared helper that reads Sanity environment variables while supporting both the legacy
+ * server-only names and the new Next.js public variants expected by Vercel.
+ */
+function readSanityEnv(name: "SANITY_PROJECT_ID" | "SANITY_DATASET") {
+  const legacy = process.env[name];
+  const nextPublic = process.env[`NEXT_PUBLIC_${name}` as const];
+
+  if (!legacy && !nextPublic && process.env.NODE_ENV !== "production") {
+    console.warn(`${name} (or NEXT_PUBLIC_${name}) is missing. Sanity clients will be disabled.`);
+  }
+
+  return legacy || nextPublic || "";
+}
+
+const projectId = readSanityEnv("SANITY_PROJECT_ID");
+const dataset = readSanityEnv("SANITY_DATASET") || "production";
 const apiVersion = process.env.SANITY_API_VERSION || "2024-05-01";
 const token = process.env.SANITY_READ_TOKEN;
 

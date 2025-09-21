@@ -1,8 +1,11 @@
 import imageUrlBuilder from "@sanity/image-url";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
-const projectId = process.env.SANITY_PROJECT_ID;
-const dataset = process.env.SANITY_DATASET;
+/**
+ * Supports both legacy and NEXT_PUBLIC env names so the URL builder works locally and on Vercel.
+ */
+const projectId = process.env.SANITY_PROJECT_ID || process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
+const dataset = process.env.SANITY_DATASET || process.env.NEXT_PUBLIC_SANITY_DATASET;
 
 const builder = projectId && dataset ? imageUrlBuilder({ projectId, dataset }) : null;
 

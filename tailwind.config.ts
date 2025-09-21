@@ -1,8 +1,13 @@
 import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
 
+/**
+ * Tailwind configuration scoped to both legacy folders and the new ./src convention
+ * so migrations to the src/ tree are seamless.
+ */
 const config: Config = {
   content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./content/**/*.{md,mdx}",
@@ -52,7 +57,10 @@ const config: Config = {
       },
     },
   },
-  plugins: [typography],
+  plugins: [
+    /** Typography plugin keeps long-form content polished out of the box. */
+    typography,
+  ],
 };
 
 export default config;
