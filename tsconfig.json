@@ -20,6 +20,18 @@
     "paths": {
       "@content/*": [
         "./content/*"
+      ],
+      "sanity": [
+        "./stubs/sanity/index.ts"
+      ],
+      "sanity/desk": [
+        "./stubs/sanity/desk.ts"
+      ],
+      "next-sanity/studio": [
+        "./stubs/next-sanity/studio.tsx"
+      ],
+      "html-react-parser": [
+        "./stubs/html-react-parser/index.tsx"
       ]
     },
     "types": [

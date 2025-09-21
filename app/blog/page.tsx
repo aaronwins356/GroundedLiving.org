@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import parse, { Element } from "html-react-parser";
+import type { DOMNode } from "html-react-parser";
+import type { Metadata, PageProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,21 +14,39 @@ export const metadata: Metadata = {
 
 const POSTS_PER_PAGE = 6;
 
-type BlogIndexPageProps = {
+interface BlogIndexPageProps extends PageProps {
   searchParams: {
     search?: string;
     page?: string;
   };
-};
+}
+
+function renderExcerpt(excerpt?: string) {
+  if (!excerpt) {
+    return null;
+  }
+
+  return parse(excerpt, {
+    replace: (node: DOMNode) => {
+      if (node instanceof Element && node.attribs) {
+        const { href, target: _target, rel: _rel, ...rest } = node.attribs;
+        // Normalize anchor attributes so server rendering stays deterministic across environments.
+        return (
+          <a {...rest} href={href}>
+            {href}
+          </a>
+        );
+      }
+    },
+  });
+}
 
 function buildQueryString(params: Record<string, string | undefined>) {
-  const filteredEntries = Object.entries(params).reduce<[string, string][]>((acc, [key, value]) => {
-    if (value && value.length > 0) {
-      acc.push([key, value]);
-    }
-    return acc;
-  }, []);
-  return filteredEntries.length ? `?${new URLSearchParams(filteredEntries).toString()}` : "";
+  const filteredEntries = Object.entries(params).filter(
+    (entry): entry is [string, string] => typeof entry[1] === "string",
+  );
+  const nonEmptyEntries = filteredEntries.filter(([, value]) => value.length > 0);
+  return nonEmptyEntries.length ? `?${new URLSearchParams(nonEmptyEntries).toString()}` : "";
 }
 
 export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps) {
@@ -120,7 +140,7 @@ export default async function BlogIndexPage({ searchParams }: BlogIndexPageProps
                         </Link>
                       </h2>
                       {post.excerpt ? (
-                        <p className="text-sm leading-relaxed text-slate-600">{post.excerpt}</p>
+                        <p className="text-sm leading-relaxed text-slate-600">{renderExcerpt(post.excerpt)}</p>
                       ) : null}
                     </div>
                     <div className="mt-auto">
