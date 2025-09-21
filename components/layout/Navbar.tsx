@@ -4,7 +4,7 @@ const navigation = [
   { href: "/", label: "Home" },
   { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },
-  { href: "/shop", label: "Shop" },
+  { href: "/shop", label: "Shop", comingSoon: true },
 ];
 
 export function Navbar() {
@@ -20,9 +20,14 @@ export function Navbar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="rounded-full px-4 py-2 transition hover:bg-brand-100/70 hover:text-accent"
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 transition hover:bg-brand-100/70 hover:text-accent"
                 >
                   {item.label}
+                  {"comingSoon" in item && item.comingSoon ? (
+                    <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.4em] text-brand-600">
+                      Soon
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             ))}

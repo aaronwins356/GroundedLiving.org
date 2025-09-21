@@ -2,6 +2,10 @@ const post = {
   name: "post",
   title: "Post",
   type: "document",
+  // Pre-fill the publish date so scheduling a post only requires adjusting the time if needed.
+  initialValue: () => ({
+    publishedAt: new Date().toISOString(),
+  }),
   fields: [
     {
       name: "title",
