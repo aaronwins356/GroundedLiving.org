@@ -1,5 +1,5 @@
-import parse, { Element } from "html-react-parser";
-import type { DOMNode } from "html-react-parser";
+import parse, { Element as ParsedElement } from "html-react-parser";
+import type { DOMNode, Element } from "html-react-parser";
 import type { Metadata, PageProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,8 +28,11 @@ function renderExcerpt(excerpt?: string) {
 
   return parse(excerpt, {
     replace: (node: DOMNode) => {
-      if (node instanceof Element && node.attribs) {
-        const { href, target: _target, rel: _rel, ...rest } = node.attribs;
+      if (node instanceof ParsedElement && node.attribs) {
+        const element = node as Element & {
+          attribs: Record<string, string | undefined>;
+        };
+        const { href, target: _target, rel: _rel, ...rest } = element.attribs;
         // Normalize anchor attributes so server rendering stays deterministic across environments.
         return (
           <a {...rest} href={href}>
@@ -43,7 +46,7 @@ function renderExcerpt(excerpt?: string) {
 
 function buildQueryString(params: Record<string, string | undefined>) {
   const filteredEntries = Object.entries(params).filter(
-    (entry): entry is [string, string] => typeof entry[1] === "string",
+    (entry): entry is [string, string] => entry[1] !== undefined,
   );
   const nonEmptyEntries = filteredEntries.filter(([, value]) => value.length > 0);
   return nonEmptyEntries.length ? `?${new URLSearchParams(nonEmptyEntries).toString()}` : "";
