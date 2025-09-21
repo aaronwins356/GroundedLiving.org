@@ -7,13 +7,17 @@
 }
 
 body {
-  @apply bg-white text-slate-900 font-sans;
+  @apply min-h-screen bg-mist text-accent font-sans antialiased;
 }
 
 a {
-  @apply text-primary hover:text-primary-dark transition-colors;
+  @apply text-accent transition-colors duration-200 hover:text-brand-700;
 }
 
 .container-base {
-  @apply mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8;
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.shadow-soft-lg {
+  box-shadow: 0 35px 65px -45px rgba(74, 78, 105, 0.35);
 }

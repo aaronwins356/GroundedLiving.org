@@ -1,3 +1,1 @@
-declare module "some-other-lib";
-
-export {};
+// Global type declarations placeholder. Add shared ambient types here when needed.

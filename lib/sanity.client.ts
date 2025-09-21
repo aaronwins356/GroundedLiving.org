@@ -1,46 +1,49 @@
 import "server-only";
 
-import type { SanityClient } from "@sanity/client";
-import { createClient } from "next-sanity";
-
 const projectId = process.env.SANITY_PROJECT_ID;
 const dataset = process.env.SANITY_DATASET;
 const apiVersion = process.env.SANITY_API_VERSION ?? "2023-10-01";
-const useCdn = process.env.SANITY_USE_CDN !== "false";
+const token = process.env.SANITY_READ_TOKEN;
 
 export const sanityConfig = {
   projectId,
   dataset,
   apiVersion,
-  useCdn,
 } as const;
 
-let cachedClient: SanityClient | null | undefined;
-
-export function getSanityClient(): SanityClient | null {
-  if (cachedClient !== undefined) {
-    return cachedClient;
-  }
-
+async function requestSanityApi<T>(query: string, params: Record<string, unknown> = {}): Promise<T | null> {
   if (!projectId || !dataset) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("SANITY_PROJECT_ID and SANITY_DATASET must be defined");
-    }
-
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("Sanity credentials are missing. Returning empty client in development builds.");
-    }
-
-    cachedClient = null;
-    return cachedClient;
+    console.warn("Sanity credentials are missing. Returning empty results.");
+    return null;
   }
 
-  cachedClient = createClient({
-    projectId,
-    dataset,
-    apiVersion,
-    useCdn,
-  });
+  const url = `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}`;
 
-  return cachedClient;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ query, params }),
+      // Cache responses for a minute to keep the experience snappy while still reflecting new content quickly.
+      next: { revalidate: 60 },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to query Sanity", await response.text());
+      return null;
+    }
+
+    const data = (await response.json()) as { result?: T };
+    return data.result ?? null;
+  } catch (error) {
+    console.error("Sanity fetch error", error);
+    return null;
+  }
+}
+
+export async function fetchSanity<T>(query: string, params: Record<string, unknown> = {}): Promise<T | null> {
+  return requestSanityApi<T>(query, params);
 }
