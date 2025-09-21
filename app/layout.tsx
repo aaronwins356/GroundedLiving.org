@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
+import { Navbar } from "../components/layout/Navbar";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.groundedliving.org"),
   title: {
-    default: "Grounded Living – Mindful Health & Lifestyle",
+    default: "Grounded Living – Soulful Wellness & Lifestyle",
     template: "%s | Grounded Living",
   },
-  description: "Mindful health and lifestyle inspiration to help you live a grounded life.",
+  description:
+    "Soulful wellness rituals, nourishing recipes, and mindful lifestyle guidance to help you feel grounded every day.",
   openGraph: {
     type: "website",
-    title: "Grounded Living – Mindful Health & Lifestyle",
-    description: "Mindful health and lifestyle inspiration to help you live a grounded life.",
+    title: "Grounded Living – Soulful Wellness & Lifestyle",
+    description:
+      "Soulful wellness rituals, nourishing recipes, and mindful lifestyle guidance to help you feel grounded every day.",
     url: "https://www.groundedliving.org",
     siteName: "Grounded Living",
     images: [
@@ -22,14 +24,15 @@ export const metadata: Metadata = {
         url: "/og-image.svg",
         width: 1200,
         height: 630,
-        alt: "Grounded Living – Mindful Health & Lifestyle",
+        alt: "Grounded Living – Soulful Wellness & Lifestyle",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Grounded Living – Mindful Health & Lifestyle",
-    description: "Mindful health and lifestyle inspiration to help you live a grounded life.",
+    title: "Grounded Living – Soulful Wellness & Lifestyle",
+    description:
+      "Soulful wellness rituals, nourishing recipes, and mindful lifestyle guidance to help you feel grounded every day.",
     images: ["/og-image.svg"],
   },
 };
@@ -37,11 +40,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      {/* Use the Tailwind font stack instead of next/font to keep builds deterministic without network access. */}
-      <body className="font-sans">
+      <body className="bg-gradient-to-b from-white via-mist to-white text-accent">
         <div className="flex min-h-screen flex-col">
           <Navbar />
-          <main className="container-base flex-1 py-12">{children}</main>
+          <main className="flex-1">
+            <div className="container-base py-16">
+              {children}
+              {/* Future banner ad placement retained for upcoming monetization experiments. */}
+              {/** <div className="mt-12 h-24 rounded-3xl border border-dashed border-brand/30" /> */}
+            </div>
+          </main>
           <Footer />
         </div>
       </body>

@@ -1,59 +1,71 @@
-import { defineField, defineType } from "sanity";
-
-export default defineType({
+const post = {
   name: "post",
   title: "Post",
   type: "document",
   fields: [
-    defineField({
+    {
       name: "title",
       type: "string",
       title: "Title",
-      validation: (rule) => rule.required().min(4),
-    }),
-    defineField({
+      description: "Give the article a warm, descriptive name that readers will immediately connect with.",
+      validation: (rule: any) => rule.required().min(4),
+    },
+    {
       name: "slug",
       type: "slug",
-      title: "Slug",
+      title: "URL slug",
+      description: "Click “Generate” to create the link from the title. You can edit it to be shorter if you prefer.",
       options: {
         source: "title",
         maxLength: 96,
       },
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
+      validation: (rule: any) => rule.required(),
+    },
+    {
       name: "publishedAt",
       type: "datetime",
-      title: "Published At",
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
+      title: "Publish date",
+      description: "Choose the date the post goes live. Future dates let you schedule upcoming stories.",
+      validation: (rule: any) => rule.required(),
+    },
+    {
       name: "excerpt",
       type: "text",
-      title: "Excerpt",
+      title: "Intro snippet",
+      description: "A short teaser that appears on cards and social previews (1–2 sentences).",
       rows: 3,
-      validation: (rule) => rule.max(280),
-    }),
-    defineField({
+      validation: (rule: any) => rule.max(280),
+    },
+    {
+      name: "category",
+      type: "string",
+      title: "Category",
+      description: "Group posts by theme such as Mindfulness, Nourishing Recipes, or Gentle Movement.",
+      validation: (rule: any) => rule.max(60),
+    },
+    {
       name: "coverImage",
       type: "image",
-      title: "Cover Image",
+      title: "Cover image",
+      description: "Upload a calming photo that represents the feeling of the post. Landscape images work best.",
       options: {
         hotspot: true,
       },
       fields: [
-        defineField({
+        {
           name: "alt",
           type: "string",
-          title: "Alt Text",
-          validation: (rule) => rule.max(120),
-        }),
+          title: "Alt text",
+          description: "Describe the image in a sentence for screen readers (e.g. 'Woman meditating with morning light').",
+          validation: (rule: any) => rule.max(120),
+        },
       ],
-    }),
-    defineField({
+    },
+    {
       name: "content",
       type: "array",
-      title: "Content",
+      title: "Post body",
+      description: "Write or paste your story here. Use headings, lists, and images to create flow.",
       of: [
         { type: "block" },
         {
@@ -62,17 +74,18 @@ export default defineType({
             hotspot: true,
           },
           fields: [
-            defineField({
+            {
               name: "alt",
               type: "string",
-              title: "Alt Text",
-              validation: (rule) => rule.max(120),
-            }),
+              title: "Alt text",
+              description: "Explain what’s happening in the image for accessibility.",
+              validation: (rule: any) => rule.max(120),
+            },
           ],
         },
       ],
-      validation: (rule) => rule.required().min(1),
-    }),
+      validation: (rule: any) => rule.required().min(1),
+    },
   ],
   preview: {
     select: {
@@ -80,5 +93,15 @@ export default defineType({
       subtitle: "publishedAt",
       media: "coverImage",
     },
+    prepare(selection: { title?: string; subtitle?: string; media?: unknown }) {
+      const { title, subtitle, media } = selection;
+      return {
+        title,
+        subtitle: subtitle ? new Date(subtitle).toLocaleDateString() : "Publish date not set",
+        media,
+      };
+    },
   },
-});
+} as const;
+
+export default post;

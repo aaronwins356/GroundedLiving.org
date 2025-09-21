@@ -1,6 +1,4 @@
-import { defineConfig } from "sanity";
-import { deskTool } from "sanity/desk";
-
+import page from "./schemas/page";
 import post from "./schemas/post";
 
 function getEnv(name: string, fallback: string): string {
@@ -11,13 +9,18 @@ function getEnv(name: string, fallback: string): string {
   return value ?? fallback;
 }
 
-export default defineConfig({
+const sanityConfig = {
   basePath: "/studio",
   title: "Grounded Living CMS",
   projectId: getEnv("SANITY_PROJECT_ID", "local"),
   dataset: getEnv("SANITY_DATASET", "development"),
   schema: {
-    types: [post],
+    types: [post, page],
   },
-  plugins: [deskTool()],
-});
+  deskStructure: [
+    { type: "post", title: "Posts" },
+    { type: "page", title: "Pages" },
+  ],
+};
+
+export default sanityConfig;

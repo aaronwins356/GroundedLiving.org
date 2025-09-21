@@ -1,7 +1,20 @@
-import imageUrlBuilder from "@sanity/image-url";
-import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
+const projectId = process.env.SANITY_PROJECT_ID;
+const dataset = process.env.SANITY_DATASET;
 
-import { sanityConfig } from "./sanity.client";
+type ImageUrlParams = {
+  w?: number;
+  h?: number;
+  fit?: string;
+  auto?: string;
+};
+
+export type SanityImageWithAlt = {
+  _key?: string;
+  alt?: string;
+  asset?: {
+    _ref?: string;
+  };
+};
 
 type ImageUrlBuilderApi = {
   width: (value: number) => ImageUrlBuilderApi;
@@ -11,29 +24,67 @@ type ImageUrlBuilderApi = {
   url: () => string;
 };
 
-const hasCredentials = Boolean(sanityConfig.projectId && sanityConfig.dataset);
+function buildBaseUrl(ref: string | undefined): string | null {
+  if (!projectId || !dataset || !ref) {
+    return null;
+  }
 
-const builder = hasCredentials
-  ? imageUrlBuilder({
-      projectId: sanityConfig.projectId!,
-      dataset: sanityConfig.dataset!,
-    })
-  : null;
+  const match = ref.match(/^image-([a-zA-Z0-9-]+)-\d+x\d+-([a-zA-Z0-9]+)/);
+  if (!match) {
+    return null;
+  }
 
-const fallbackBuilder: ImageUrlBuilderApi = {
-  width: () => fallbackBuilder,
-  height: () => fallbackBuilder,
-  fit: () => fallbackBuilder,
-  auto: () => fallbackBuilder,
-  url: () => "/og-image.svg",
-};
+  const [, id, format] = match;
+  return `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}.${format}`;
+}
 
-export type SanityImageWithAlt = SanityImageSource & {
-  alt?: string;
-  asset?: {
-    _ref?: string;
+function createBuilder(ref: string | undefined): ImageUrlBuilderApi {
+  const params: ImageUrlParams = {};
+
+  const builder: ImageUrlBuilderApi = {
+    width(value) {
+      params.w = value;
+      return builder;
+    },
+    height(value) {
+      params.h = value;
+      return builder;
+    },
+    fit(value) {
+      params.fit = value;
+      return builder;
+    },
+    auto(value) {
+      params.auto = value;
+      return builder;
+    },
+    url() {
+      const baseUrl = buildBaseUrl(ref);
+      if (!baseUrl) {
+        return "/og-image.svg";
+      }
+
+      const searchParams = new URLSearchParams();
+      if (params.w) {
+        searchParams.set("w", String(params.w));
+      }
+      if (params.h) {
+        searchParams.set("h", String(params.h));
+      }
+      if (params.fit) {
+        searchParams.set("fit", params.fit);
+      }
+      if (params.auto) {
+        searchParams.set("auto", params.auto);
+      }
+
+      const query = searchParams.toString();
+      return query ? `${baseUrl}?${query}` : baseUrl;
+    },
   };
-};
+
+  return builder;
+}
 
 export function hasSanityImageAsset(image?: SanityImageWithAlt | null): image is SanityImageWithAlt & {
   asset: { _ref: string };
@@ -41,10 +92,6 @@ export function hasSanityImageAsset(image?: SanityImageWithAlt | null): image is
   return Boolean(image?.asset?._ref);
 }
 
-export function urlForImage(source: SanityImageSource): ImageUrlBuilderApi {
-  if (builder) {
-    return builder.image(source);
-  }
-
-  return fallbackBuilder;
+export function urlForImage(image: SanityImageWithAlt): ImageUrlBuilderApi {
+  return createBuilder(image.asset?._ref);
 }
