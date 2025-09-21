@@ -4,16 +4,26 @@ import { deskTool } from "sanity/desk";
 import page from "./schemas/page";
 import post from "./schemas/post";
 
-function readEnv(name: string, fallback?: string) {
-  const value = process.env[name];
+// Allow the Studio to boot even if only legacy environment variables are set, but surface clear warnings for developers.
+function readEnv(primary: string, fallback?: string, legacy?: string) {
+  const value = process.env[primary] || (legacy ? process.env[legacy] : undefined);
+
   if (!value && process.env.NODE_ENV !== "production") {
-    console.warn(`Missing ${name} for Sanity configuration. Using fallback value.`);
+    const message = legacy
+      ? `Missing ${primary} (or legacy ${legacy}) for Sanity configuration. Using fallback value.`
+      : `Missing ${primary} for Sanity configuration. Using fallback value.`;
+    console.warn(message);
   }
+
+  if (!process.env[primary] && legacy && process.env[legacy] && process.env.NODE_ENV !== "production") {
+    console.warn(`Using legacy ${legacy}. Please rename it to ${primary}.`);
+  }
+
   return value || fallback || "";
 }
 
-const projectId = readEnv("SANITY_PROJECT_ID");
-const dataset = readEnv("SANITY_DATASET", "production");
+const projectId = readEnv("NEXT_PUBLIC_SANITY_PROJECT_ID", undefined, "SANITY_PROJECT_ID");
+const dataset = readEnv("NEXT_PUBLIC_SANITY_DATASET", "production", "SANITY_DATASET");
 
 export default defineConfig({
   basePath: "/studio",

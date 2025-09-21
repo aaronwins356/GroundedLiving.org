@@ -19,13 +19,13 @@ can spin it up locally in minutes, give editors a welcoming Studio, and ship upd
    ```
 2. **Copy the environment template**
    ```bash
-   cp .env.local.example .env.local
+   cp .env.example .env.local
    ```
 3. **Fill in `.env.local`**
    ```dotenv
-   SANITY_PROJECT_ID=yourProjectId
-   SANITY_DATASET=production
-   SANITY_API_VERSION=2024-05-01
+   NEXT_PUBLIC_SANITY_PROJECT_ID=yourProjectId
+   NEXT_PUBLIC_SANITY_DATASET=production
+   NEXT_PUBLIC_SANITY_API_VERSION=2024-05-01
    SANITY_READ_TOKEN= # optional – only required for private datasets or draft previews
    SANITY_REVALIDATE_SECRET=choose-a-long-random-string
    ```
@@ -40,7 +40,7 @@ npm run dev
 - [http://localhost:3000/studio](http://localhost:3000/studio) – Sanity Studio embedded in the app
 
 > Tip: If you haven’t created a Sanity project yet, run `npm create sanity@latest` first. Drop the generated `projectId` and
-> `dataset` into `.env.local` and the Studio will instantly connect.
+> `dataset` into `.env.local` (prefixed with `NEXT_PUBLIC_`) and the Studio will instantly connect.
 
 ## 2. Sanity Studio editing experience
 
@@ -115,7 +115,7 @@ public/             # Static assets (favicons, OG image)
 
 ## 8. Troubleshooting
 
-- **Blank Studio:** Double-check `SANITY_PROJECT_ID` and `SANITY_DATASET`. Without them the Studio renders an empty shell.
+- **Blank Studio:** Double-check `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET`. Without them the Studio renders an empty shell.
 - **Content not updating:** Confirm the webhook is hitting `/api/revalidate` with the correct secret and that your pages use the
   provided revalidation tags.
 - **Image URLs look broken:** Ensure the Sanity dataset is public or provide `SANITY_READ_TOKEN` for private datasets.
