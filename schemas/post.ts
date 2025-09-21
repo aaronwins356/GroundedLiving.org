@@ -1,5 +1,3 @@
-import type React from "react";
-import type { ArrayRule, DatetimeRule, PreviewValue, SlugRule, StringRule } from "sanity";
 import { defineField, defineType } from "sanity";
 
 export default defineType({
@@ -11,8 +9,7 @@ export default defineType({
       name: "title",
       type: "string",
       title: "Title",
-      validation: (rule: StringRule) =>
-        rule.required().min(4).error("Posts need a descriptive title."),
+      validation: (rule) => rule.required().min(4),
     }),
     defineField({
       name: "slug",
@@ -22,13 +19,20 @@ export default defineType({
         source: "title",
         maxLength: 96,
       },
-      validation: (rule: SlugRule) => rule.required(),
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "publishedAt",
       type: "datetime",
       title: "Published At",
-      validation: (rule: DatetimeRule) => rule.required(),
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "excerpt",
+      type: "text",
+      title: "Excerpt",
+      rows: 3,
+      validation: (rule) => rule.max(280),
     }),
     defineField({
       name: "coverImage",
@@ -37,13 +41,37 @@ export default defineType({
       options: {
         hotspot: true,
       },
+      fields: [
+        defineField({
+          name: "alt",
+          type: "string",
+          title: "Alt Text",
+          validation: (rule) => rule.max(120),
+        }),
+      ],
     }),
     defineField({
       name: "content",
       type: "array",
       title: "Content",
-      of: [{ type: "block" }],
-      validation: (rule: ArrayRule<unknown[]>) => rule.required(),
+      of: [
+        { type: "block" },
+        {
+          type: "image",
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            defineField({
+              name: "alt",
+              type: "string",
+              title: "Alt Text",
+              validation: (rule) => rule.max(120),
+            }),
+          ],
+        },
+      ],
+      validation: (rule) => rule.required().min(1),
     }),
   ],
   preview: {
@@ -51,15 +79,6 @@ export default defineType({
       title: "title",
       subtitle: "publishedAt",
       media: "coverImage",
-    },
-    prepare(selection: { title?: string; subtitle?: string; media?: unknown }): PreviewValue {
-      const { title, subtitle, media } = selection;
-      return {
-        title,
-        subtitle,
-        // Sanity expects preview media to be a React node, so we cast the configured asset accordingly.
-        media: media as React.ReactNode,
-      };
     },
   },
 });
