@@ -1,23 +1,50 @@
-import type { SanityImage } from "./sanity.queries";
+import imageUrlBuilder from "@sanity/image-url";
+import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 
-type ImageUrlBuilder = {
-  width: (value: number) => ImageUrlBuilder;
-  height: (value: number) => ImageUrlBuilder;
-  fit: (value: string) => ImageUrlBuilder;
-  auto: (value: string) => ImageUrlBuilder;
+import { sanityConfig } from "./sanity.client";
+
+type ImageUrlBuilderApi = {
+  width: (value: number) => ImageUrlBuilderApi;
+  height: (value: number) => ImageUrlBuilderApi;
+  fit: (value: string) => ImageUrlBuilderApi;
+  auto: (value: string) => ImageUrlBuilderApi;
   url: () => string;
 };
 
-export function urlForImage(source: SanityImage): ImageUrlBuilder {
-  const safeRef = source.asset?._ref ?? "placeholder";
-  const builder: ImageUrlBuilder = {
-    width: () => builder,
-    height: () => builder,
-    fit: () => builder,
-    auto: () => builder,
-    // Use a deterministic local path so builds remain stable without remote Sanity assets.
-    url: () => `/og-image.svg?ref=${encodeURIComponent(safeRef)}`,
-  };
+const hasCredentials = Boolean(sanityConfig.projectId && sanityConfig.dataset);
 
-  return builder;
+const builder = hasCredentials
+  ? imageUrlBuilder({
+      projectId: sanityConfig.projectId!,
+      dataset: sanityConfig.dataset!,
+    })
+  : null;
+
+const fallbackBuilder: ImageUrlBuilderApi = {
+  width: () => fallbackBuilder,
+  height: () => fallbackBuilder,
+  fit: () => fallbackBuilder,
+  auto: () => fallbackBuilder,
+  url: () => "/og-image.svg",
+};
+
+export type SanityImageWithAlt = SanityImageSource & {
+  alt?: string;
+  asset?: {
+    _ref?: string;
+  };
+};
+
+export function hasSanityImageAsset(image?: SanityImageWithAlt | null): image is SanityImageWithAlt & {
+  asset: { _ref: string };
+} {
+  return Boolean(image?.asset?._ref);
+}
+
+export function urlForImage(source: SanityImageSource): ImageUrlBuilderApi {
+  if (builder) {
+    return builder.image(source);
+  }
+
+  return fallbackBuilder;
 }
