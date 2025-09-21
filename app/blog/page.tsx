@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 
 export default async function BlogIndexPage() {
   const posts = await getPosts();
+  const categories = Array.from(new Set(posts.map((post) => post.category).filter(Boolean)));
 
   return (
     <div className="space-y-16">
@@ -20,6 +21,18 @@ export default async function BlogIndexPage() {
           Slow down with mindful reflections, seasonal recipes, and wellness practices created to help you feel rooted and
           nourished.
         </p>
+        {categories.length ? (
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {categories.map((category) => (
+              <span
+                key={category}
+                className="rounded-full border border-brand/30 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-accent-soft"
+              >
+                {category}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       <section>

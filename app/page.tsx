@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { FeaturedCarousel } from "../components/blog/FeaturedCarousel";
 import { PostCard } from "../components/blog/PostCard";
 import { PortableTextRenderer } from "../components/rich-text/PortableTextRenderer";
 import { getPageBySlug, getPosts } from "../lib/sanity.queries";
@@ -10,16 +11,12 @@ export default async function HomePage() {
   const [posts, aboutPage] = await Promise.all([getPosts(), getPageBySlug("about")]);
 
   const featuredPosts = posts.slice(0, 3);
-  const heroImage = featuredPosts[0]?.coverImage;
-  const heroImageUrl = heroImage && hasSanityImageAsset(heroImage)
-    ? urlForImage(heroImage).width(1600).height(900).fit("crop").auto("format").url()
-    : null;
   const aboutSnippet = aboutPage?.content?.slice(0, 2) ?? [];
 
   return (
     <div className="space-y-24">
-      <section className="overflow-hidden rounded-3xl bg-white/70 shadow-soft-lg">
-        <div className="grid gap-8 md:grid-cols-[1.15fr_1fr]">
+      <section className="overflow-hidden rounded-3xl bg-white/80 shadow-soft-lg">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
           <div className="flex flex-col justify-center gap-6 p-10 sm:p-14">
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-brand-400">Grounded Living</p>
             <h1 className="text-4xl font-semibold tracking-tight text-accent sm:text-5xl lg:text-6xl">
@@ -43,21 +40,24 @@ export default async function HomePage() {
                 Meet the creator
               </Link>
             </div>
+            <div className="rounded-3xl border border-dashed border-brand/30 bg-brand-50/40 p-6 text-xs text-accent-soft">
+              <p className="font-semibold uppercase tracking-[0.4em] text-brand-400">Future partners</p>
+              <p className="mt-2 leading-relaxed">
+                A dedicated row for mindful affiliate spotlights will live here once collaborations launch.
+              </p>
+            </div>
           </div>
-          <div className="relative min-h-[280px]">
-            {heroImageUrl ? (
-              <Image
-                src={heroImageUrl}
-                alt={heroImage?.alt ?? "Sunlit wellness moment"}
-                fill
-                sizes="(min-width: 768px) 50vw, 100vw"
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-100 via-white to-brand-200" />
-            )}
-            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="flex flex-col gap-6 p-6 sm:p-10">
+            <div className="flex-1">
+              <FeaturedCarousel posts={featuredPosts} />
+            </div>
+            <div className="hidden rounded-3xl bg-white/70 p-6 text-sm text-accent-soft shadow-soft-lg lg:block">
+              <p className="font-semibold text-accent">In case you missed it</p>
+              <p className="mt-2 leading-relaxed">
+                Add more stories in Sanity to expand this rotating hero. The most recent five posts are highlighted above for
+                new readers.
+              </p>
+            </div>
           </div>
         </div>
       </section>
