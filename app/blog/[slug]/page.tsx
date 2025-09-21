@@ -73,7 +73,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-10 text-white sm:p-14">
             <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.3em]">
-              <span>{post.category ?? "Mindful Living"}</span>
+              {post.category ? (
+                <Link href={`/blog?category=${encodeURIComponent(post.category)}`} className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold tracking-[0.3em] text-white transition hover:bg-white/30">
+                  {post.category}
+                </Link>
+              ) : (
+                <span>Mindful Living</span>
+              )}
               <span className="text-white/60">•</span>
               <time dateTime={post.publishedAt}>{formattedDate}</time>
             </div>

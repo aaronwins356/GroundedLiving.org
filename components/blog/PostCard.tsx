@@ -34,9 +34,18 @@ export function PostCard({ post }: PostCardProps) {
       </div>
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div className="flex items-center justify-between text-xs font-medium text-accent-soft">
-          <span className="rounded-full bg-brand-50 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-brand-600">
-            {post.category ?? "Mindful Living"}
-          </span>
+          {post.category ? (
+            <Link
+              href={`/blog?category=${encodeURIComponent(post.category)}`}
+              className="rounded-full bg-brand-50 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-brand-600 transition hover:bg-brand-100"
+            >
+              {post.category}
+            </Link>
+          ) : (
+            <span className="rounded-full bg-brand-50 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-brand-600">
+              Mindful Living
+            </span>
+          )}
           <time dateTime={post.publishedAt} className="uppercase tracking-[0.3em]">
             {formattedDate}
           </time>

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
@@ -40,8 +41,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap"
+        />
+      </head>
       <body className="bg-gradient-to-b from-white via-mist to-white text-accent">
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen flex-col font-sans">
           <Navbar />
           <main className="flex-1">
             <div className="container-base py-16">

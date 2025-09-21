@@ -1,95 +1,105 @@
-const post = {
+import { defineArrayMember, defineField, defineType } from "sanity";
+
+export default defineType({
   name: "post",
   title: "Post",
   type: "document",
-  // Pre-fill the publish date so scheduling a post only requires adjusting the time if needed.
+  groups: [
+    { name: "settings", title: "Settings" },
+    { name: "content", title: "Content" },
+  ],
   initialValue: () => ({
     publishedAt: new Date().toISOString(),
   }),
   fields: [
-    {
+    defineField({
       name: "title",
       type: "string",
       title: "Title",
-      description: "Give the article a warm, descriptive name that readers will immediately connect with.",
-      validation: (rule: any) => rule.required().min(4),
-    },
-    {
+      description: "Give the article a descriptive, welcoming headline.",
+      validation: (rule) => rule.required().min(4),
+      group: "settings",
+    }),
+    defineField({
       name: "slug",
       type: "slug",
       title: "URL slug",
-      description: "Click “Generate” to create the link from the title. You can edit it to be shorter if you prefer.",
+      description: "Click Generate to create the link from the title.",
       options: {
         source: "title",
         maxLength: 96,
       },
-      validation: (rule: any) => rule.required(),
-    },
-    {
+      validation: (rule) => rule.required(),
+      group: "settings",
+    }),
+    defineField({
       name: "publishedAt",
       type: "datetime",
       title: "Publish date",
-      description: "Choose the date the post goes live. Future dates let you schedule upcoming stories.",
-      validation: (rule: any) => rule.required(),
-    },
-    {
-      name: "excerpt",
-      type: "text",
-      title: "Intro snippet",
-      description: "A short teaser that appears on cards and social previews (1–2 sentences).",
-      rows: 3,
-      validation: (rule: any) => rule.max(280),
-    },
-    {
+      description: "Choose when the story goes live. Future dates schedule posts automatically.",
+      validation: (rule) => rule.required(),
+      group: "settings",
+    }),
+    defineField({
       name: "category",
       type: "string",
       title: "Category",
-      description: "Group posts by theme such as Mindfulness, Nourishing Recipes, or Gentle Movement.",
-      validation: (rule: any) => rule.max(60),
-    },
-    {
+      description: "Organize posts by theme such as Mindfulness, Recipes, or Rituals.",
+      validation: (rule) => rule.max(60),
+      group: "settings",
+    }),
+    defineField({
+      name: "excerpt",
+      type: "text",
+      title: "Intro snippet",
+      description: "1–2 sentence teaser used on cards and social previews.",
+      rows: 3,
+      validation: (rule) => rule.max(280),
+      group: "settings",
+    }),
+    defineField({
       name: "coverImage",
       type: "image",
       title: "Cover image",
-      description: "Upload a calming photo that represents the feeling of the post. Landscape images work best.",
+      description: "Landscape images feel best for the hero and cards.",
       options: {
         hotspot: true,
       },
       fields: [
-        {
+        defineField({
           name: "alt",
           type: "string",
           title: "Alt text",
-          description: "Describe the image in a sentence for screen readers (e.g. 'Woman meditating with morning light').",
-          validation: (rule: any) => rule.max(120),
-        },
+          description: "Describe the image in a short sentence for accessibility.",
+          validation: (rule) => rule.max(120),
+        }),
       ],
-    },
-    {
+      group: "content",
+    }),
+    defineField({
       name: "content",
       type: "array",
       title: "Post body",
-      description: "Write or paste your story here. Use headings, lists, and images to create flow.",
+      description: "Write or paste your story. Use headings, quotes, and images to add flow.",
       of: [
-        { type: "block" },
-        {
+        defineArrayMember({ type: "block" }),
+        defineArrayMember({
           type: "image",
-          options: {
-            hotspot: true,
-          },
+          options: { hotspot: true },
           fields: [
-            {
+            defineField({
               name: "alt",
               type: "string",
               title: "Alt text",
-              description: "Explain what’s happening in the image for accessibility.",
-              validation: (rule: any) => rule.max(120),
-            },
+              description: "Explain what’s happening in the photo.",
+              validation: (rule) => rule.max(120),
+            }),
           ],
-        },
+        }),
       ],
-      validation: (rule: any) => rule.required().min(1),
-    },
+      validation: (rule) => rule.required().min(1),
+      group: "content",
+    }),
   ],
   preview: {
     select: {
@@ -97,15 +107,13 @@ const post = {
       subtitle: "publishedAt",
       media: "coverImage",
     },
-    prepare(selection: { title?: string; subtitle?: string; media?: unknown }) {
-      const { title, subtitle, media } = selection;
+    prepare(selection) {
+      const { title, subtitle, media } = selection as { title?: string; subtitle?: string; media?: unknown };
       return {
         title,
         subtitle: subtitle ? new Date(subtitle).toLocaleDateString() : "Publish date not set",
-        media,
+        media: media as any,
       };
     },
   },
-} as const;
-
-export default post;
+});

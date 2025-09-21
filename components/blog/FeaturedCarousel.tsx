@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PostListItem } from "../../lib/sanity.queries";
-import { hasSanityImageAsset, urlForImage } from "../../lib/sanity.image";
 
 // Rotate highlighted stories every eight seconds to mimic the calm cadence of the brand.
 const AUTO_ROTATE_INTERVAL = 8000;
 
+type FeaturedCarouselPost = PostListItem & {
+  imageUrl: string | null;
+};
+
 type FeaturedCarouselProps = {
-  posts: PostListItem[];
+  posts: FeaturedCarouselPost[];
 };
 
 export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
@@ -39,9 +42,7 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   }
 
   const activePost = slides[index];
-  const imageUrl = hasSanityImageAsset(activePost.coverImage)
-    ? urlForImage(activePost.coverImage).width(1200).height(800).fit("crop").auto("format").url()
-    : null;
+  const imageUrl = activePost.imageUrl;
 
   return (
     <div className="relative h-full min-h-[320px] overflow-hidden rounded-3xl bg-white shadow-soft-lg">
@@ -60,7 +61,16 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-6 text-white sm:p-10">
         <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.3em]">
-          <span>{activePost.category ?? "Mindful Living"}</span>
+          {activePost.category ? (
+            <Link
+              href={`/blog?category=${encodeURIComponent(activePost.category)}`}
+              className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold tracking-[0.3em] text-white transition hover:bg-white/30"
+            >
+              {activePost.category}
+            </Link>
+          ) : (
+            <span>Mindful Living</span>
+          )}
           <span className="text-white/60">•</span>
           <time dateTime={activePost.publishedAt}>
             {new Date(activePost.publishedAt).toLocaleDateString(undefined, {
