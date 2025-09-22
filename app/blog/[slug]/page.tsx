@@ -7,14 +7,14 @@ import { PortableTextRenderer } from "../../../components/rich-text/PortableText
 import { getPostBySlug, getPosts } from "../../../lib/sanity.queries";
 import { hasSanityImageAsset, urlForImage } from "../../../lib/sanity.image";
 
-type BlogRouteParams = Promise<{ slug: string }>;
+type BlogRouteParams = Record<string, string | string[] | undefined>;
 
 type BlogPageProps = {
   /**
-   * Next.js types route params as a Promise in v15 to accommodate streaming.
-   * Awaiting seamlessly handles that promise (and still resolves plain objects at runtime).
+   * Next.js 15 passes route params as a promise to support streaming.
+   * Awaiting the value maintains compatibility with synchronous callers at runtime.
    */
-  params: BlogRouteParams;
+  params: Promise<BlogRouteParams>;
 };
 
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
@@ -23,7 +23,13 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
 }
 
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const slugParam = resolvedParams.slug;
+  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+  if (!slug) {
+    return { title: "Post not found" };
+  }
+
   const post = await getPostBySlug(slug);
 
   if (!post) {
@@ -50,7 +56,14 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
 }
 
 export default async function BlogPostPage({ params }: BlogPageProps) {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const slugParam = resolvedParams.slug;
+  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+
+  if (!slug) {
+    notFound();
+  }
+
   const post = await getPostBySlug(slug);
 
   if (!post) {

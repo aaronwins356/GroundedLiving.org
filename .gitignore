@@ -4,6 +4,7 @@ out
 .env
 .env.local
 .env.*
+!.env.example
 !.env.local.example
 .DS_Store
 npm-debug.log*
