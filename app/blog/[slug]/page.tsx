@@ -2,49 +2,44 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PrismicRichText } from "@prismicio/react";
 
 import { SocialShareButtons } from "../../../components/blog/SocialShareButtons";
-import { PortableTextRenderer } from "../../../components/rich-text/PortableTextRenderer";
-import { getPageBySlug, getPostBySlug, getPosts } from "../../../lib/sanity.queries";
-import { hasSanityImageAsset, urlForImage } from "../../../lib/sanity.image";
-import styles from "./page.module.css";
+import { getPageByUID, getPostByUID, getPosts } from "../../../lib/prismic";
+
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
 
 type BlogRouteParams = Record<string, string | string[] | undefined>;
 
 type BlogPageProps = {
-  /**
-   * Next.js 15 passes route params as a promise to support streaming.
-   * Awaiting the value maintains compatibility with synchronous callers at runtime.
-   */
   params: Promise<BlogRouteParams>;
 };
 
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   const posts = await getPosts();
-  return posts.map((post) => ({ slug: post.slug }));
+  return posts.map((post) => ({ slug: post.uid }));
 }
 
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const slugParam = resolvedParams.slug;
   const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+
   if (!slug) {
     return { title: "Post not found" };
   }
 
-  const post = await getPostBySlug(slug);
-
+  const post = await getPostByUID(slug);
   if (!post) {
-    return {
-      title: "Post not found",
-    };
+    return { title: "Post not found" };
   }
 
-  const coverImageUrl = post.coverImage && hasSanityImageAsset(post.coverImage)
-    ? urlForImage(post.coverImage).width(1600).height(900).fit("crop").auto("format").url()
-    : undefined;
-  const metaTitle = post.seo?.metaTitle || post.title;
-  const metaDescription = post.seo?.metaDescription || post.excerpt || undefined;
+  const metaTitle = post.title;
+  const metaDescription = post.excerpt ?? undefined;
 
   return {
     title: metaTitle,
@@ -54,7 +49,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
       description: metaDescription,
       type: "article",
       publishedTime: post.publishedAt,
-      images: coverImageUrl ? [coverImageUrl] : undefined,
+      images: post.coverImage?.url ? [post.coverImage.url] : undefined,
     },
   };
 }
@@ -68,105 +63,128 @@ export default async function BlogPostPage({ params }: BlogPageProps) {
     notFound();
   }
 
-  const [post, aboutPage] = await Promise.all([getPostBySlug(slug), getPageBySlug("about")]);
+  const [post, aboutPage] = await Promise.all([getPostByUID(slug), getPageByUID("about")]);
 
   if (!post) {
     notFound();
   }
 
-  const coverImageUrl = post.coverImage && hasSanityImageAsset(post.coverImage)
-    ? urlForImage(post.coverImage).width(2000).height(1200).fit("crop").auto("format").url()
-    : null;
-  const formattedDate = new Date(post.publishedAt).toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  const aboutSnippet = aboutPage?.content?.slice(0, 2) ?? [];
+  const formattedDate = dateFormatter.format(new Date(post.publishedAt));
   const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  // Default to production domain so share URLs remain valid during local previews or misconfigured envs.
   const siteUrl = envSiteUrl && envSiteUrl.startsWith("http") ? envSiteUrl : "https://www.groundedliving.org";
-  const postUrl = new URL(`/blog/${post.slug}`, siteUrl).toString();
+  const postUrl = new URL(`/blog/${post.uid}`, siteUrl).toString();
 
   return (
-    <article className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroImage}>
-          {coverImageUrl ? (
+    <article className="space-y-16 text-emerald-950">
+      <header className="space-y-10">
+        <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-emerald-100 via-white to-rose-100 shadow-[0_60px_140px_rgba(150,170,160,0.18)] ring-1 ring-emerald-100/70">
+          {post.coverImage?.url ? (
             <Image
-              src={coverImageUrl}
-              alt={post.coverImage?.alt ?? post.title}
+              src={post.coverImage.url}
+              alt={post.coverImage.alt ?? post.title}
               fill
-              sizes="(min-width: 1024px) 1000px, 100vw"
+              sizes="(min-width: 1280px) 1100px, 100vw"
+              className="h-full w-full object-cover"
               priority
             />
+          ) : (
+            <div className="h-[420px] w-full" />
+          )}
+        </div>
+        <div className="mx-auto max-w-3xl space-y-6 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-500">
+            {post.category ? (
+              <Link
+                href={`/blog?category=${encodeURIComponent(post.category.slug)}`}
+                className="rounded-full bg-emerald-50 px-4 py-1 text-emerald-700"
+              >
+                {post.category.name}
+              </Link>
+            ) : null}
+            <time dateTime={post.publishedAt} className="tracking-[0.32em] text-emerald-400">
+              {formattedDate}
+            </time>
+          </div>
+          <h1 className="font-serif text-4xl leading-tight tracking-tight text-emerald-950 sm:text-5xl">
+            {post.title}
+          </h1>
+          {post.excerpt ? (
+            <p className="text-lg leading-relaxed text-emerald-900/70">
+              {post.excerpt}
+            </p>
           ) : null}
         </div>
-        <div className={styles.heroOverlay} aria-hidden />
-        <div className={styles.heroContent}>
-          <div className={styles.heroMeta}>
-            {post.category ? (
-              <Link href={`/blog?category=${encodeURIComponent(post.category.slug)}`} className={styles.category}>
-                {post.category.title}
-              </Link>
-            ) : (
-              <span className={styles.category}>Mindful Living</span>
-            )}
-            <span>•</span>
-            <time dateTime={post.publishedAt}>{formattedDate}</time>
-          </div>
-          <h1 className={styles.title}>{post.title}</h1>
-        </div>
-      </section>
+      </header>
 
       <SocialShareButtons title={post.title} url={postUrl} />
 
-      <div className={styles.layout}>
-        <div className={styles.article}>
-          <PortableTextRenderer value={post.content} />
+      <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:text-emerald-950 prose-p:text-slate-700 prose-strong:text-emerald-900 prose-a:text-emerald-600 hover:prose-a:text-emerald-500">
+          <PrismicRichText field={post.content} />
         </div>
-        <aside className={styles.sidebar}>
-          <div className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>About the author</span>
-            {aboutSnippet.length ? (
-              <PortableTextRenderer value={aboutSnippet} />
+        <aside className="space-y-6">
+          <div className="rounded-3xl bg-white/90 p-6 shadow-[0_30px_80px_rgba(160,180,170,0.16)] ring-1 ring-emerald-100/80">
+            <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">
+              About the author
+            </span>
+            {aboutPage ? (
+              <div className="mt-4 space-y-4 text-sm leading-relaxed text-slate-700">
+                <PrismicRichText field={aboutPage.content?.slice(0, 2) ?? null} />
+              </div>
             ) : (
-              <p>
-                Add an About page in Sanity to automatically introduce yourself beside each story.
+              <p className="mt-4 text-sm leading-relaxed text-slate-700">
+                Create an About page in Prismic to introduce yourself beside each story.
               </p>
             )}
-            <Link href="/about" className={styles.sidebarLink}>
-              Read the full story →
+            <Link
+              href="/about"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-700 transition hover:text-emerald-500"
+            >
+              Read the full story
+              <span aria-hidden>→</span>
             </Link>
           </div>
-          <div className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Mindful ad spot</span>
-            <p>
-              Reserve this space for aligned sponsors or affiliate partnerships. It keeps monetization present without disrupting the reading experience.
+          <div className="rounded-3xl bg-gradient-to-br from-rose-100/80 via-white to-emerald-100/80 p-6 shadow-[0_30px_80px_rgba(170,190,180,0.18)] ring-1 ring-emerald-100/80">
+            <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">
+              Mindful partner space
+            </span>
+            <p className="mt-3 text-sm leading-relaxed text-slate-700">
+              Reserve this spot for aligned sponsors, affiliate offerings, or seasonal shop features.
             </p>
           </div>
-          <div className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Categories</span>
-            <Link href="/blog?category=lifestyle" className={styles.sidebarLink}>
-              Lifestyle inspiration
-            </Link>
-            <Link href="/blog?category=movement" className={styles.sidebarLink}>
-              Gentle movement
-            </Link>
-            <Link href="/blog?category=nutrition" className={styles.sidebarLink}>
-              Nourishing recipes
-            </Link>
+          <div className="rounded-3xl bg-white/90 p-6 shadow-[0_30px_80px_rgba(170,190,180,0.18)] ring-1 ring-emerald-100/80">
+            <span className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">
+              Categories
+            </span>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/blog?category=rituals"
+                className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700"
+              >
+                Rituals
+              </Link>
+              <Link
+                href="/blog?category=recipes"
+                className="rounded-full bg-rose-50/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700"
+              >
+                Recipes
+              </Link>
+              <Link
+                href="/blog?category=lifestyle"
+                className="rounded-full bg-emerald-50/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700"
+              >
+                Lifestyle
+              </Link>
+            </div>
           </div>
         </aside>
       </div>
 
-      <div className={styles.footerNav}>
-        <Link href="/blog" className={styles.footerBack}>
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-white/80 px-6 py-4 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-500 shadow-[0_24px_60px_rgba(170,190,180,0.16)] ring-1 ring-emerald-100/80">
+        <Link href="/blog" className="transition hover:text-emerald-600">
           ← Back to all posts
         </Link>
-        <time dateTime={post.publishedAt} className={styles.footerDate}>
-          {formattedDate}
-        </time>
+        <time dateTime={post.publishedAt}>{formattedDate}</time>
       </div>
     </article>
   );

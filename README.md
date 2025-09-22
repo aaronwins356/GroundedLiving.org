@@ -1,19 +1,16 @@
 # Grounded Living
 
-Grounded Living is a modern wellness journal built with Next.js 15, Tailwind CSS, and Sanity. The codebase is structured so you
-can spin it up locally in minutes, give editors a welcoming Studio, and ship updates to Vercel with confidence. The refreshed
-design leans into a soft cream backdrop, muted sage accents, and elegant typography to mirror the calm presence of Healing
-Soulfully.
+Grounded Living is a calming wellness journal built with Next.js 15, Tailwind CSS, and Prismic. The refreshed design leans into a soft cream palette, airy spacing, and elegant serif typography to echo the Healing Soulfully aesthetic while remaining future-ready for affiliate features, ads, and an eventual shop.
 
 ## Tech stack
 
-- **Framework:** Next.js 15 (App Router + React Server Components)
-- **Styling:** Tailwind CSS with custom typography and a muted sage/blue palette inspired by Healing Soulfully
-- **CMS:** Sanity Studio mounted directly inside the Next.js app at `/studio`
-- **Content:** Portable Text for rich posts and pages
-- **Deployment:** Vercel with automated GitHub Actions deploys
+- **Framework:** Next.js 15 with the App Router and React Server Components
+- **Styling:** Tailwind CSS utility layers with custom prose typography
+- **CMS:** Prismic (hosted UI) with custom Post and Page types
+- **Language:** TypeScript with strict settings
+- **Deployment:** Vercel (runs `npm run lint`, `npm run typecheck`, `npm run build`)
 
-## 1. Local development in three steps
+## Local development
 
 1. **Install dependencies**
    ```bash
@@ -25,103 +22,71 @@ Soulfully.
    ```
 3. **Fill in `.env.local`**
    ```dotenv
-   NEXT_PUBLIC_SANITY_PROJECT_ID=yourProjectId
-   NEXT_PUBLIC_SANITY_DATASET=production
-   SANITY_API_VERSION=2024-05-01
-   SANITY_READ_TOKEN= # optional – only required for private datasets or draft previews
-   SANITY_REVALIDATE_SECRET=choose-a-long-random-string
+   PRISMIC_REPOSITORY_NAME=groundedliving
+   PRISMIC_ACCESS_TOKEN= # optional for public repos
+   PRISMIC_REVALIDATE_SECRET=choose-a-long-random-string
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
    ```
 
-Then start the dev server:
+4. **Run the dev server**
+   ```bash
+   npm run dev
+   ```
 
-```bash
-npm run dev
-```
+Visit [http://localhost:3000](http://localhost:3000) to browse the site.
 
-- [http://localhost:3000](http://localhost:3000) – the public site
-- [http://localhost:3000/studio](http://localhost:3000/studio) – Sanity Studio embedded in the app
+## Prismic setup
 
-> Tip: If you haven’t created a Sanity project yet, run `npm create sanity@latest` first. Drop the generated `projectId` and
-> `dataset` into `.env.local` and the Studio will instantly connect.
+1. Create (or open) a Prismic repository named `groundedliving`.
+2. In **Custom Types**, create two new repeatable types using the JSON files in [`prismic-custom-types/`](./prismic-custom-types/):
+   - `post.json` – Title, UID, publish date, category, excerpt, rich body content, and cover image.
+   - `page.json` – Title, UID, rich content, and hero image.
+3. Publish at least one Post and an About Page.
+4. In **Settings → Webhooks**, add a webhook pointing to:
+   ```
+   https://YOUR-VERCEL-DEPLOYMENT/api/revalidate?secret=PRISMIC_REVALIDATE_SECRET
+   ```
+   Enable it for `documents.publish` events. Use the same secret you placed in `.env.local`.
 
-## 2. Sanity Studio editing experience
+Non-technical editors only need to log in at [https://prismic.io](https://prismic.io) to manage posts and pages—no embedded Studio is required.
 
-Sanity Studio is embedded directly in the Next.js app using `next-sanity/studio` so non-technical editors can log in with the
-same URL they use to browse the blog.
-
-- **Posts** include: title, slug, category, publish date, excerpt, cover image with alt text, and rich Portable Text content. The editor uses a pared-back WYSIWYG with headings, lists, links, and inline formatting to keep writing approachable.
-- **Pages** include: title, slug, optional hero image, and full Portable Text content using the same simplified toolbar.
-- The desk structure keeps “Posts” and “Pages” as the only entry points so the interface stays approachable.
-- A webhook can hit `/api/revalidate` with your `SANITY_REVALIDATE_SECRET` to refresh cached content whenever you publish.
-
-### Setting up the webhook
-
-1. In the Sanity manage interface, go to **API → Webhooks**.
-2. Create a new webhook pointing to `https://your-vercel-domain/api/revalidate?secret=YOUR_SECRET` (or your local tunnel when
-   testing).
-3. Enable the webhook for the `create`, `update`, `delete`, and `publish` events on the `post` and `page` document types.
-4. When the webhook fires, the API route revalidates all pages tagged with Sanity content so new posts show up immediately.
-
-## 3. Everyday developer workflows
+## Available scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Next.js dev server with fast refresh. |
+| `npm run dev` | Start the Next.js dev server. |
 | `npm run lint` | Run ESLint using the `next/core-web-vitals` ruleset. |
-| `npm run build` | Create a production build (includes type checking). |
-| `npm run typecheck` | Run `tsc --noEmit` for standalone type safety verification. |
+| `npm run typecheck` | Run `tsc --noEmit` for type safety. |
+| `npm run build` | Create a production build. |
 
-Always run `npm run lint && npm run build` (or `npm run typecheck`) before opening a PR so CI mirrors local results.
+Always run lint, typecheck, and build before pushing to ensure CI mirrors local results.
 
-## 4. Deployment pipeline (GitHub → Vercel)
+## Deployment workflow
 
-The repository includes `.github/workflows/deploy.yml` which powers CI/CD:
+1. Push to GitHub – GitHub Actions runs `npm run lint`, `npm run typecheck`, and `npm run build`.
+2. On success, Vercel creates a preview deployment.
+3. Merging to `main` triggers a production deploy.
 
-1. Caches npm dependencies for faster builds.
-2. Runs `npm run lint` and `npm run build` on every push and pull request.
-3. On successful pushes to `main`, triggers a production deploy via the Vercel CLI.
+Ensure the Vercel project has the same environment variables configured as `.env.local`.
 
-To enable deployments you need three GitHub repository secrets:
+## Content editing flow
 
-| Secret | Description |
-| --- | --- |
-| `VERCEL_TOKEN` | Personal token from the Vercel dashboard (Profile → Account Settings → Tokens). |
-| `VERCEL_ORG_ID` | Found in the Vercel project settings (`vercel link` also prints it). |
-| `VERCEL_PROJECT_ID` | The project identifier from the Vercel dashboard. |
+- **Posts**: Publish through Prismic using the “Post” custom type. The blog index auto-features the latest post, category filters, and renders body copy with Tailwind Typography.
+- **Pages**: Use the “Page” custom type for evergreen pages like About, Contact, or Shop landing content.
+- **Revalidation**: Publishing content triggers the webhook to refresh cached pages via `/api/revalidate`.
 
-Add them in **GitHub → Settings → Secrets and variables → Actions → New repository secret**. Once configured, every merge into
-`main` will lint, build, and deploy automatically.
+## Design highlights
 
-## 5. Design system highlights
+- **Navigation**: Sticky cream navigation bar with hover underlines for Home, Blog, About, and Shop (coming soon).
+- **Blog index**: Hero spotlight with featured post, gentle category chips, and a 3-column journal grid.
+- **Post page**: Full-width rounded cover image, centered typography, Tailwind-powered prose, share buttons, and sidebar space for affiliates.
+- **Home page**: Hero CTA, category discovery chips, recent stories grid, and an About preview pulled directly from Prismic.
 
-- **Homepage hero:** Rotating featured carousel framed by a cream-and-sage gradient, serif headlines, and CTA buttons that echo the Healing Soulfully aesthetic.
-- **Category discovery:** Clickable category badges with hover animations on the homepage and `/blog` index encourage exploration.
-- **Post layout:** Large cover imagery, share buttons, linked categories, an about sidebar, and a mindful ad placeholder make every article feel editorial.
-- **Global styling:** Google Fonts (Work Sans + Fraunces) linked in the root layout and applied through Tailwind for a polished, calming voice.
+## Troubleshooting
 
-## 6. Future growth hooks
+- **Missing content**: Confirm your Prismic repository matches `PRISMIC_REPOSITORY_NAME` and that custom types are published.
+- **Revalidation failing**: Double-check the webhook URL and that `PRISMIC_REVALIDATE_SECRET` matches the environment variable.
+- **Images not loading**: Ensure assets are published in Prismic and that the Next.js image remote patterns allow your repository domain.
+- **Build errors**: Run `npm run lint`, `npm run typecheck`, and `npm run build` locally to surface issues early.
 
-- Monetization placeholders (affiliate cards, banner slots, `/shop` route) are in place but inactive.
-- The design leaves room for newsletter modules or featured product rails without reworking layout fundamentals.
-
-## 7. Project structure
-
-```
-app/                # App Router routes, layout, and API handlers
-components/         # Reusable UI components (cards, navigation, rich text)
-lib/                # Sanity client helpers, GROQ queries, and image utilities
-schemas/            # Sanity schema definitions for posts and pages
-public/             # Static assets (favicons, OG image)
-.github/workflows/  # GitHub Actions for CI/CD
-```
-
-## 8. Troubleshooting
-
-- **Blank Studio:** Double-check `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET`. Without them the Studio renders an empty shell.
-- **Content not updating:** Confirm the webhook is hitting `/api/revalidate` with the correct secret and that your pages use the
-  provided revalidation tags.
-- **Image URLs look broken:** Ensure the Sanity dataset is public or provide `SANITY_READ_TOKEN` for private datasets.
-- **Build failures:** Run `npm run lint`, `npm run build`, and `npm run typecheck` locally to catch issues before CI.
-
-With these pieces in place you can confidently create content, preview changes, and ship updates without touching complex setup
-steps every time.
+With this setup, editors can create and publish soulful stories directly in Prismic, while the codebase remains production-ready for Vercel deployments and future growth.
