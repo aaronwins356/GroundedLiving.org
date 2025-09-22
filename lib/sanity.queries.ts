@@ -71,7 +71,7 @@ export async function getPosts(): Promise<PostListItem[]> {
   const result = await fetchSanity<PostListItem[]>(
     `*[_type == "post" && defined(slug.current) && defined(publishedAt)] | order(publishedAt desc) { ${postListFields} }`,
     {},
-    { tags: ["sanity", "posts"], revalidate: 60 },
+    { tags: ["sanity", "posts"], revalidate: 60, fallback: [] },
   );
   return result ?? [];
 }
@@ -80,7 +80,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const result = await fetchSanity<Post | null>(
     `*[_type == "post" && slug.current == $slug][0] { ${postDetailFields} }`,
     { slug },
-    { tags: ["sanity", "posts", `post:${slug}`], revalidate: 60 },
+    { tags: ["sanity", "posts", `post:${slug}`], revalidate: 60, fallback: null },
   );
   return result ?? null;
 }
@@ -95,7 +95,7 @@ export async function getPageBySlug(slug: string): Promise<Page | null> {
       ${imageSelection}
     }`,
     { slug },
-    { tags: ["sanity", "pages", `page:${slug}`], revalidate: 60 },
+    { tags: ["sanity", "pages", `page:${slug}`], revalidate: 60, fallback: null },
   );
   return result ?? null;
 }
