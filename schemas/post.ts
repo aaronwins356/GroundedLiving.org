@@ -1,4 +1,13 @@
-import { defineArrayMember, defineField, defineType } from "sanity";
+import {
+  defineArrayMember,
+  defineField,
+  defineType,
+  type ArrayRule,
+  type DatetimeRule,
+  type SlugRule,
+  type StringRule,
+  type TextRule,
+} from "sanity";
 
 export default defineType({
   name: "post",
@@ -17,7 +26,7 @@ export default defineType({
       type: "string",
       title: "Title",
       description: "Give the article a descriptive, welcoming headline.",
-      validation: (rule) => rule.required().min(4),
+      validation: (rule: StringRule) => rule.required().min(4),
       group: "settings",
     }),
     defineField({
@@ -29,7 +38,7 @@ export default defineType({
         source: "title",
         maxLength: 96,
       },
-      validation: (rule) => rule.required(),
+      validation: (rule: SlugRule) => rule.required(),
       group: "settings",
     }),
     defineField({
@@ -37,7 +46,7 @@ export default defineType({
       type: "datetime",
       title: "Publish date",
       description: "Choose when the story goes live. Future dates schedule posts automatically.",
-      validation: (rule) => rule.required(),
+      validation: (rule: DatetimeRule) => rule.required(),
       group: "settings",
     }),
     defineField({
@@ -45,7 +54,7 @@ export default defineType({
       type: "string",
       title: "Category",
       description: "Organize posts by theme such as Mindfulness, Recipes, or Rituals.",
-      validation: (rule) => rule.max(60),
+      validation: (rule: StringRule) => rule.max(60),
       group: "settings",
     }),
     defineField({
@@ -54,7 +63,7 @@ export default defineType({
       title: "Intro snippet",
       description: "1–2 sentence teaser used on cards and social previews.",
       rows: 3,
-      validation: (rule) => rule.max(280),
+      validation: (rule: TextRule) => rule.max(280),
       group: "settings",
     }),
     defineField({
@@ -71,7 +80,7 @@ export default defineType({
           type: "string",
           title: "Alt text",
           description: "Describe the image in a short sentence for accessibility.",
-          validation: (rule) => rule.max(120),
+          validation: (rule: StringRule) => rule.max(120),
         }),
       ],
       group: "content",
@@ -92,12 +101,12 @@ export default defineType({
               type: "string",
               title: "Alt text",
               description: "Explain what’s happening in the photo.",
-              validation: (rule) => rule.max(120),
+              validation: (rule: StringRule) => rule.max(120),
             }),
           ],
         }),
       ],
-      validation: (rule) => rule.required().min(1),
+      validation: (rule: ArrayRule<unknown[]>) => rule.required().min(1),
       group: "content",
     }),
   ],

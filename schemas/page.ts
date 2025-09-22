@@ -1,4 +1,11 @@
-import { defineArrayMember, defineField, defineType } from "sanity";
+import {
+  defineArrayMember,
+  defineField,
+  defineType,
+  type ArrayRule,
+  type SlugRule,
+  type StringRule,
+} from "sanity";
 
 export default defineType({
   name: "page",
@@ -14,7 +21,7 @@ export default defineType({
       type: "string",
       title: "Title",
       description: "Use clear titles like About, Contact, or Services.",
-      validation: (rule) => rule.required().min(2),
+      validation: (rule: StringRule) => rule.required().min(2),
       group: "settings",
     }),
     defineField({
@@ -26,7 +33,7 @@ export default defineType({
         source: "title",
         maxLength: 96,
       },
-      validation: (rule) => rule.required(),
+      validation: (rule: SlugRule) => rule.required(),
       group: "settings",
     }),
     defineField({
@@ -43,7 +50,7 @@ export default defineType({
           type: "string",
           title: "Alt text",
           description: "Describe the image in one sentence for accessibility.",
-          validation: (rule) => rule.max(120),
+          validation: (rule: StringRule) => rule.max(120),
         }),
       ],
       group: "content",
@@ -64,12 +71,12 @@ export default defineType({
               type: "string",
               title: "Alt text",
               description: "Explain what’s shown in the image.",
-              validation: (rule) => rule.max(120),
+              validation: (rule: StringRule) => rule.max(120),
             }),
           ],
         }),
       ],
-      validation: (rule) => rule.required().min(1),
+      validation: (rule: ArrayRule<unknown[]>) => rule.required().min(1),
       group: "content",
     }),
   ],

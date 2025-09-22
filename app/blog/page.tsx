@@ -9,14 +9,14 @@ export const metadata: Metadata = {
   description: "Soulful wellness notes, nourishing recipes, and gentle rituals from Grounded Living.",
 };
 
+type BlogSearchParams = Record<string, string | string[] | undefined>;
+
 type BlogPageProps = {
   /**
    * Next.js v15 models search params as a promise for streaming compatibility.
-   * Awaiting the value keeps runtime support for plain objects while satisfying the type contract.
+   * Awaiting the promise keeps the runtime flexible and satisfies the new type contract.
    */
-  searchParams?: Promise<{
-    category?: string;
-  }>;
+  searchParams?: Promise<BlogSearchParams>;
 };
 
 export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
@@ -31,12 +31,14 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
 
   const resolvedSearchParams = searchParams ? await searchParams : {};
 
+  const rawCategory = resolvedSearchParams.category;
   let requestedCategory: string | undefined;
-  if (resolvedSearchParams.category) {
+  if (rawCategory) {
+    const categoryValue = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory;
     try {
-      requestedCategory = decodeURIComponent(resolvedSearchParams.category);
+      requestedCategory = decodeURIComponent(categoryValue);
     } catch {
-      requestedCategory = resolvedSearchParams.category;
+      requestedCategory = categoryValue;
     }
   }
   const filteredPosts = requestedCategory ? posts.filter((post) => post.category === requestedCategory) : posts;
