@@ -2,10 +2,17 @@ import "server-only";
 import type { ClientConfig } from "@sanity/client";
 import { createClient } from "next-sanity";
 
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "";
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET;
 const apiVersion = process.env.SANITY_API_VERSION || "2024-05-01";
 const token = process.env.SANITY_READ_TOKEN;
+
+if (!projectId) {
+  console.error("❌ Missing NEXT_PUBLIC_SANITY_PROJECT_ID in environment variables");
+}
+if (!dataset) {
+  console.error("❌ Missing NEXT_PUBLIC_SANITY_DATASET in environment variables");
+}
 
 const baseConfig: ClientConfig | null =
   projectId && dataset
@@ -35,10 +42,10 @@ type FetchOptions = {
 export async function fetchSanity<T>(
   query: string,
   params: Record<string, unknown> = {},
-  { revalidate = 60, tags = ["sanity"] }: FetchOptions = {},
+  { revalidate = 60, tags = ["sanity"] }: FetchOptions = {}
 ): Promise<T | null> {
   if (!client) {
-    console.warn("Sanity credentials are missing. Returning empty results.");
+    console.warn("⚠️ Sanity client not initialized. Returning null.");
     return null;
   }
 
@@ -48,13 +55,12 @@ export async function fetchSanity<T>(
       next: { revalidate, tags },
     });
   } catch (error) {
-    console.error("Sanity fetch error", error);
+    console.error("Sanity fetch error:", error);
     return null;
   }
 }
 
 export const sanityProjectDetails = {
-  projectId: projectId || null,
-  dataset: dataset || null,
+  projectId: projectId ?? null,
+  dataset: dataset ?? null,
 };
-
