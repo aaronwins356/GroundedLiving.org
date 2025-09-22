@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import type { BlogPostListItem } from "../../lib/prismic";
+import type { BlogPostListItem } from "../../lib/contentful";
 
 type PostCardProps = {
   post: BlogPostListItem;
@@ -47,7 +47,7 @@ export function PostCard({ post }: PostCardProps) {
           <span>Slow ritual</span>
         </div>
         <h3 className="text-2xl font-semibold leading-snug tracking-tight text-emerald-950">
-          <Link href={`/blog/${post.uid}`} className="transition hover:text-emerald-600">
+          <Link href={`/blog/${post.slug}`} className="transition hover:text-emerald-600">
             {post.title}
           </Link>
         </h3>
@@ -57,7 +57,7 @@ export function PostCard({ post }: PostCardProps) {
           </p>
         ) : null}
         <div className="mt-auto flex items-center justify-between pt-2 text-sm font-semibold text-emerald-700">
-          <Link href={`/blog/${post.uid}`} className="inline-flex items-center gap-2 transition hover:text-emerald-500">
+          <Link href={`/blog/${post.slug}`} className="inline-flex items-center gap-2 transition hover:text-emerald-500">
             Read story
             <span aria-hidden className="text-lg leading-none transition group-hover:translate-x-0.5">
               →

@@ -20,9 +20,6 @@
     "// clean-reinstall": "Run `rm -rf node_modules package-lock.json && npm install` to refresh dependencies."
   },
   "dependencies": {
-    "@prismicio/client": "^7.8.0",
-    "@prismicio/next": "^1.6.0",
-    "@prismicio/react": "^2.6.0",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "next": "^15.5.0",

@@ -1,14 +1,14 @@
 import type { MetadataRoute } from "next";
 
-import { getPosts } from "../lib/prismic";
+import { getBlogPosts } from "../lib/contentful";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.groundedliving.org";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const posts = await getPosts();
+  const posts = await getBlogPosts();
 
   const postEntries = posts.map((post) => ({
-    url: `${baseUrl}/blog/${post.uid}`,
+    url: `${baseUrl}/blog/${post.slug}`,
     lastModified: post.publishedAt,
   }));
 
