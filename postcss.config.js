@@ -1,12 +1,14 @@
 /**
- * PostCSS pipeline configured for Tailwind CSS v4.
+ * PostCSS pipeline configured for Tailwind CSS.
  * The Tailwind plugin processes directives while Autoprefixer ensures browser compatibility.
  */
-module.exports = {
+const config = {
   plugins: {
-    /** Tailwind v4 PostCSS plugin keeps directives colocated with component styles. */
-    '@tailwindcss/postcss': {},
+    /** Tailwind PostCSS plugin keeps directives colocated with component styles. */
+    tailwindcss: {},
     /** Autoprefixer adds vendor prefixes for the targeted browserslist. */
     autoprefixer: {},
   },
 };
+
+export default config;
