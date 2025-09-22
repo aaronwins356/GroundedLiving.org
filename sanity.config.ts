@@ -3,6 +3,8 @@ import { deskTool } from "sanity/desk";
 
 import page from "./schemas/page";
 import post from "./schemas/post";
+import category from "./schemas/category";
+import { PostPreviewPane } from "./schemas/components/PostPreviewPane";
 
 function readEnv(name: string, fallback?: string) {
   const legacy = process.env[name];
@@ -27,7 +29,7 @@ export default defineConfig({
   projectId,
   dataset,
   schema: {
-    types: [post, page],
+    types: [post, page, category],
   },
   plugins: [
     deskTool({
@@ -37,10 +39,17 @@ export default defineConfig({
           .items([
             S.listItem().title("Posts").schemaType("post").child(S.documentTypeList("post").title("Posts")),
             S.listItem().title("Pages").schemaType("page").child(S.documentTypeList("page").title("Pages")),
+            S.listItem().title("Categories").schemaType("category").child(S.documentTypeList("category").title("Categories")),
           ]),
+      defaultDocumentNode: (S, { schemaType }) => {
+        if (schemaType === "post") {
+          return S.document().views([S.view.form(), S.view.component(PostPreviewPane).title("Preview")]);
+        }
+        return S.document().views([S.view.form()]);
+      },
     }),
   ],
   document: {
-    newDocumentOptions: (prev) => prev.filter((template) => ["page", "post"].includes(template.templateId)),
+    newDocumentOptions: (prev) => prev.filter((template) => ["page", "post", "category"].includes(template.templateId)),
   },
 });

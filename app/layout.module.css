@@ -1,0 +1,33 @@
+.body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.radiance {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(168, 193, 173, 0.22), transparent 65%),
+    radial-gradient(90% 80% at 10% 20%, rgba(241, 228, 220, 0.3), transparent 70%),
+    radial-gradient(110% 80% at 90% 15%, rgba(203, 216, 206, 0.25), transparent 72%);
+  pointer-events: none;
+}
+
+.main {
+  flex: 1;
+  padding-block: clamp(3.5rem, 8vw, 5.5rem);
+}
+
+.inner {
+  width: min(100%, var(--max-width));
+  margin: 0 auto;
+  padding-inline: var(--layout-padding-inline);
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding-block: clamp(2.5rem, 8vw, 3.5rem);
+  }
+}

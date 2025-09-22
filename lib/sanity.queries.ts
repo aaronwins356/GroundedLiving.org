@@ -4,14 +4,25 @@ import type { PortableTextNode } from "../types/portableText";
 import { fetchSanity } from "./sanity.client";
 import type { SanityImageWithAlt } from "./sanity.image";
 
+export type CategorySummary = {
+  _id: string;
+  title: string;
+  slug: string;
+  color?: string;
+};
+
 export type PostListItem = {
   _id: string;
   title: string;
   slug: string;
   publishedAt: string;
   excerpt?: string;
-  category?: string;
+  category?: CategorySummary;
   coverImage?: SanityImageWithAlt;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+  };
 };
 
 export type Post = PostListItem & {
@@ -41,7 +52,16 @@ const postListFields = `
   "slug": slug.current,
   publishedAt,
   excerpt,
-  category,
+  category->{
+    _id,
+    "title": name,
+    "slug": slug.current,
+    color,
+  },
+  seo {
+    metaTitle,
+    metaDescription,
+  },
   ${imageSelection}
 `;
 

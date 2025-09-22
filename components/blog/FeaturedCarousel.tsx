@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PostListItem } from "../../lib/sanity.queries";
+import styles from "./FeaturedCarousel.module.css";
 
-// Rotate highlighted stories every eight seconds to mimic the calm cadence of the brand.
 const AUTO_ROTATE_INTERVAL = 8000;
 
 type FeaturedCarouselPost = PostListItem & {
@@ -34,86 +34,63 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   }, [slides.length]);
 
   if (!slides.length) {
-    return (
-      <div className="flex h-full min-h-[260px] items-center justify-center rounded-[2rem] border border-dashed border-brand-200 bg-white/80 p-8 text-center text-sm text-accent-soft">
-        Publish a post in Sanity to feature it here.
-      </div>
-    );
+    return <div className={styles.empty}>Publish a post in Sanity to feature it here.</div>;
   }
 
   const activePost = slides[index];
   const imageUrl = activePost.imageUrl;
+  const formattedDate = new Date(activePost.publishedAt).toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return (
-    <div className="relative h-full min-h-[340px] overflow-hidden rounded-[2rem] bg-brand-900/80 shadow-soft-lg">
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={activePost.coverImage?.alt ?? activePost.title}
-          fill
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-cover"
-          priority
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-100 via-white to-brand-200" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-accent/80 via-accent/10 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-5 p-6 text-white sm:p-10">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.3em]">
+    <div className={styles.carousel}>
+      <div className={styles.slideImage}>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={activePost.coverImage?.alt ?? activePost.title}
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            priority
+          />
+        ) : null}
+      </div>
+      <div className={styles.overlay} aria-hidden />
+      <div className={styles.content}>
+        <div className={styles.meta}>
           {activePost.category ? (
-            <Link
-              href={`/blog?category=${encodeURIComponent(activePost.category)}`}
-              className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold tracking-[0.3em] text-white transition hover:bg-white/30"
-            >
-              {activePost.category}
+            <Link href={`/blog?category=${encodeURIComponent(activePost.category.slug)}`} className={styles.category}>
+              {activePost.category.title}
             </Link>
           ) : (
-            <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold tracking-[0.3em] text-white">
-              Mindful Living
-            </span>
+            <span className={styles.category}>Mindful Living</span>
           )}
-          <span className="text-white/60">•</span>
-          <time dateTime={activePost.publishedAt}>
-            {new Date(activePost.publishedAt).toLocaleDateString(undefined, {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </time>
+          <span>•</span>
+          <time dateTime={activePost.publishedAt}>{formattedDate}</time>
         </div>
-        <div className="space-y-3">
-          <h2 className="font-serif text-2xl font-semibold sm:text-3xl lg:text-4xl">
-            <Link href={`/blog/${activePost.slug}`} className="transition hover:text-brand-200">
-              {activePost.title}
-            </Link>
+        <div>
+          <h2 className={styles.title}>
+            <Link href={`/blog/${activePost.slug}`}>{activePost.title}</Link>
           </h2>
-          {activePost.excerpt ? (
-            <p className="max-w-2xl text-sm leading-relaxed text-white/80 sm:text-base">
-              {activePost.excerpt}
-            </p>
-          ) : null}
+          {activePost.excerpt ? <p className={styles.excerpt}>{activePost.excerpt}</p> : null}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.3em]">
-          <div className="flex items-center gap-1">
+        <div className={styles.footer}>
+          <div className={styles.dots}>
             {slides.map((post, slideIndex) => (
               <button
                 key={post._id}
                 type="button"
-                className={`h-2 w-6 rounded-full transition ${
-                  slideIndex === index ? "bg-white" : "bg-white/40"
-                }`}
+                className={`${styles.dot} ${slideIndex === index ? styles.dotActive : ""}`}
                 aria-label={`View slide ${slideIndex + 1}`}
                 onClick={() => setIndex(slideIndex)}
               />
             ))}
           </div>
-          <Link
-            href={`/blog/${activePost.slug}`}
-            className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:text-brand-100"
-          >
-            Read more
-            <span aria-hidden>→</span>
+          <Link href={`/blog/${activePost.slug}`} className={styles.readMore}>
+            Read more <span aria-hidden>→</span>
           </Link>
         </div>
       </div>

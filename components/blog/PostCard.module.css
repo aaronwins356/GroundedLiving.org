@@ -1,0 +1,123 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(199, 203, 192, 0.5);
+  box-shadow: 0 16px 40px rgba(120, 130, 120, 0.16);
+  transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+  min-height: 100%;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 46px rgba(120, 130, 120, 0.22);
+}
+
+.media {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  background: rgba(203, 216, 206, 0.5);
+}
+
+.media img {
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(32, 38, 36, 0.35), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+}
+
+.card:hover .media img {
+  transform: scale(1.05);
+}
+
+.card:hover .media::after {
+  opacity: 1;
+}
+
+.badgeRow {
+  position: absolute;
+  inset: auto 1.2rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  font-weight: 600;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--color-ink);
+  flex: 1;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.title {
+  font-size: clamp(1.35rem, 2.2vw, 1.6rem);
+  line-height: 1.35;
+}
+
+.title a {
+  color: inherit;
+  transition: color var(--transition-base);
+}
+
+.title a:hover {
+  color: var(--color-moss);
+}
+
+.excerpt {
+  font-size: 0.95rem;
+  color: var(--color-ink-soft);
+}
+
+.footer {
+  margin-top: auto;
+}
+
+.readMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--color-moss);
+  transition: color var(--transition-base), transform var(--transition-base);
+}
+
+.readMore:hover {
+  color: var(--color-ink);
+  transform: translateX(4px);
+}
