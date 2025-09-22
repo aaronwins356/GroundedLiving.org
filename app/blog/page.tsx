@@ -10,9 +10,13 @@ export const metadata: Metadata = {
 };
 
 type BlogPageProps = {
-  searchParams?: {
+  /**
+   * Next.js v15 models search params as a promise for streaming compatibility.
+   * Awaiting the value keeps runtime support for plain objects while satisfying the type contract.
+   */
+  searchParams?: Promise<{
     category?: string;
-  };
+  }>;
 };
 
 export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
@@ -25,12 +29,14 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
     ),
   );
 
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+
   let requestedCategory: string | undefined;
-  if (searchParams?.category) {
+  if (resolvedSearchParams.category) {
     try {
-      requestedCategory = decodeURIComponent(searchParams.category);
+      requestedCategory = decodeURIComponent(resolvedSearchParams.category);
     } catch {
-      requestedCategory = searchParams.category;
+      requestedCategory = resolvedSearchParams.category;
     }
   }
   const filteredPosts = requestedCategory ? posts.filter((post) => post.category === requestedCategory) : posts;

@@ -7,13 +7,24 @@ import { PortableTextRenderer } from "../../../components/rich-text/PortableText
 import { getPostBySlug, getPosts } from "../../../lib/sanity.queries";
 import { hasSanityImageAsset, urlForImage } from "../../../lib/sanity.image";
 
-export async function generateStaticParams() {
+type BlogRouteParams = Promise<{ slug: string }>;
+
+type BlogPageProps = {
+  /**
+   * Next.js types route params as a Promise in v15 to accommodate streaming.
+   * Awaiting seamlessly handles that promise (and still resolves plain objects at runtime).
+   */
+  params: BlogRouteParams;
+};
+
+export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   const posts = await getPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await getPostBySlug(params.slug);
+export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return {
@@ -38,8 +49,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = await getPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: BlogPageProps) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
