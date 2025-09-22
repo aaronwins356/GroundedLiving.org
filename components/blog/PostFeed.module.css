@@ -1,0 +1,42 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.grid {
+  display: grid;
+  gap: clamp(1.6rem, 4vw, 2.6rem);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.moreButton {
+  padding: 0.85rem 1.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(168, 193, 173, 0.55);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-moss);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.moreButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgba(112, 124, 111, 0.2);
+}
+
+.endMessage {
+  font-size: 0.85rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}

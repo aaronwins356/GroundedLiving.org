@@ -7,11 +7,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.prismic.io",
-      },
-      {
-        protocol: "https",
-        hostname: "groundedliving.cdn.prismic.io",
+        hostname: "cdn.sanity.io",
       },
     ],
   },

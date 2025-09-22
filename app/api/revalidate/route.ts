@@ -8,9 +8,9 @@ type RevalidatePayload = {
 };
 
 function getSecret(): string | null {
-  const secret = process.env.PRISMIC_REVALIDATE_SECRET;
+  const secret = process.env.SANITY_REVALIDATE_SECRET;
   if (!secret) {
-    console.warn("PRISMIC_REVALIDATE_SECRET is not set. Revalidation requests will be ignored.");
+    console.warn("SANITY_REVALIDATE_SECRET is not set. Revalidation requests will be ignored.");
     return null;
   }
   return secret;
@@ -49,7 +49,7 @@ async function parsePayload(request: NextRequest): Promise<RevalidatePayload | n
 export async function POST(request: NextRequest) {
   const secret = getSecret();
   if (!secret) {
-    return NextResponse.json({ message: "Missing PRISMIC_REVALIDATE_SECRET" }, { status: 500 });
+    return NextResponse.json({ message: "Missing SANITY_REVALIDATE_SECRET" }, { status: 500 });
   }
 
   const payload = await parsePayload(request);
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
   }
 
-  const tags = Array.isArray(payload.tags) && payload.tags.length > 0 ? payload.tags : [payload.tag ?? "prismic"];
+  const tags = Array.isArray(payload.tags) && payload.tags.length > 0 ? payload.tags : [payload.tag ?? "sanity"];
   revalidate(tags);
 
   return NextResponse.json({ revalidated: true, tags });
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const secret = getSecret();
   if (!secret) {
-    return NextResponse.json({ message: "Missing PRISMIC_REVALIDATE_SECRET" }, { status: 500 });
+    return NextResponse.json({ message: "Missing SANITY_REVALIDATE_SECRET" }, { status: 500 });
   }
 
   const payload = await parsePayload(request);
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
   }
 
-  const tag = payload.tag ?? "prismic";
+  const tag = payload.tag ?? "sanity";
   revalidate([tag]);
 
   return NextResponse.json({ revalidated: true, tags: [tag] });

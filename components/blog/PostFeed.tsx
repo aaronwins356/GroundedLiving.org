@@ -2,44 +2,48 @@
 
 import { useState } from "react";
 
-import type { BlogPostListItem } from "../../lib/prismic";
+import type { PostListItem } from "../../lib/sanity.queries";
 import { PostCard } from "./PostCard";
+import styles from "./PostFeed.module.css";
 
 type PostFeedProps = {
-  posts: BlogPostListItem[];
+  posts: PostListItem[];
   initialCount?: number;
   step?: number;
 };
 
 export function PostFeed({ posts, initialCount = 9, step = 6 }: PostFeedProps) {
-  const safeInitial = Math.min(Math.max(initialCount, 1), posts.length || 1);
-  const safeStep = Math.max(step, 1);
-  const [visible, setVisible] = useState(safeInitial);
+  const safeInitialCount = Math.min(posts.length, Math.max(1, initialCount));
+  /**
+   * Guard against invalid step values so the control always reveals at least one new post.
+   */
+  const safeStep = Math.max(1, step);
+  const [visibleCount, setVisibleCount] = useState(safeInitialCount);
 
-  const visiblePosts = posts.slice(0, visible);
-  const hasMore = visible < posts.length;
+  const visiblePosts = posts.slice(0, visibleCount);
+  const hasMore = visibleCount < posts.length;
 
   return (
-    <div className="space-y-12">
-      <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
+    <div className={styles.wrapper}>
+      <div className={styles.grid}>
         {visiblePosts.map((post) => (
-          <PostCard key={post.id} post={post} />
+          <PostCard key={post._id} post={post} />
         ))}
       </div>
       {hasMore ? (
-        <div className="flex justify-center">
+        <div className={styles.pagination}>
           <button
             type="button"
-            onClick={() => setVisible((count) => Math.min(posts.length, count + safeStep))}
-            className="rounded-full border border-emerald-200/80 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700 shadow-sm transition hover:border-emerald-400/80 hover:bg-emerald-50"
+            className={styles.moreButton}
+            onClick={() => setVisibleCount((count) => Math.min(posts.length, count + safeStep))}
           >
             Load more stories
           </button>
         </div>
       ) : posts.length ? (
-        <p className="text-center text-sm font-medium uppercase tracking-[0.3em] text-emerald-300">
-          You have reached the end of the journal
-        </p>
+        <div className={styles.pagination}>
+          <span className={styles.endMessage}>You&rsquo;ve reached the end of the journal.</span>
+        </div>
       ) : null}
     </div>
   );
