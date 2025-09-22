@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import styles from "./page.module.css";
+
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "Understand how Grounded Living collects, uses, and protects your personal information.",
@@ -7,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <article className="prose prose-slate max-w-none">
+    <article className={styles.page}>
       <h1>Privacy Policy</h1>
       <p>Effective date: September 20, 2024</p>
       <p>

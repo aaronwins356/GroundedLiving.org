@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
-import { PostCard } from "../../components/blog/PostCard";
+import { PostFeed } from "../../components/blog/PostFeed";
 import { getPosts } from "../../lib/sanity.queries";
+import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -22,11 +24,11 @@ type BlogPageProps = {
 export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
   const posts = await getPosts();
   const categories = Array.from(
-    new Set(
+    new Map(
       posts
-        .map((post) => post.category)
-        .filter((category): category is string => Boolean(category)),
-    ),
+        .filter((post) => post.category)
+        .map((post) => [post.category!.slug, post.category!]),
+    ).values(),
   );
 
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -41,43 +43,49 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
       requestedCategory = categoryValue;
     }
   }
-  const filteredPosts = requestedCategory ? posts.filter((post) => post.category === requestedCategory) : posts;
+  const filteredPosts = requestedCategory
+    ? posts.filter(
+        (post) =>
+          post.category?.slug === requestedCategory ||
+          post.category?.title === requestedCategory,
+      )
+    : posts;
 
   return (
-    <div className="space-y-16">
-      <section className="overflow-hidden rounded-[2.5rem] bg-white/80 p-12 text-center shadow-soft-lg ring-1 ring-brand-100">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-500">The Journal</p>
-        <h1 className="mt-4 font-serif text-4xl font-semibold text-accent sm:text-5xl">Stories to ground and grow with you</h1>
-        <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-accent-soft sm:text-lg">
-          Slow down with mindful reflections, seasonal recipes, and wellness practices created to help you feel rooted and
-          nourished.
+    <div className={styles.page}>
+      <section className={styles.hero}>
+        <span className={styles.heroEyebrow}>The journal</span>
+        <h1 className={styles.heroTitle}>Stories to ground and grow with you</h1>
+        <p className={styles.heroIntro}>
+          Slow down with mindful reflections, seasonal recipes, and wellness practices created to help you feel rooted and nourished.
         </p>
         {categories.length ? (
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className={styles.filters}>
             <Link
               href="/blog"
-              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.35em] transition ${
-                requestedCategory
-                  ? "border-brand-200 bg-white/80 text-accent-soft hover:border-brand-400 hover:text-accent"
-                  : "border-brand-500 bg-brand-200/60 text-accent"
-              }`}
+              className={`${styles.filterButton} ${requestedCategory ? "" : styles.filterActive}`}
             >
               All topics
             </Link>
             {categories.map((category) => {
-              const isActive = requestedCategory === category;
-              const href = isActive ? "/blog" : `/blog?category=${encodeURIComponent(category)}`;
+              const isActive = requestedCategory === category.title || requestedCategory === category.slug;
+              const href = isActive ? "/blog" : `/blog?category=${encodeURIComponent(category.slug)}`;
               return (
                 <Link
-                  key={category}
+                  key={category.slug}
                   href={href}
-                  className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.35em] transition ${
-                    isActive
-                      ? "border-brand-500 bg-brand-200/60 text-accent"
-                      : "border-brand-200 bg-white/80 text-accent-soft hover:-translate-y-0.5 hover:border-brand-400 hover:text-accent"
-                  }`}
+                  className={`${styles.filterButton} ${isActive ? styles.filterActive : ""}`}
+                  style={
+                    category.color
+                      ? ({
+                          color: category.color,
+                          borderColor: `${category.color}66`,
+                          backgroundColor: isActive ? `${category.color}33` : undefined,
+                        } as CSSProperties)
+                      : undefined
+                  }
                 >
-                  {category}
+                  {category.title}
                 </Link>
               );
             })}
@@ -87,20 +95,17 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
 
       <section>
         {filteredPosts.length ? (
-          <div className="grid gap-10 md:grid-cols-2 xl:grid-cols-3">
-            {filteredPosts.map((post) => (
-              <PostCard key={post._id} post={post} />
-            ))}
-          </div>
+          <PostFeed posts={filteredPosts} />
         ) : (
-          <div className="rounded-[2rem] border border-dashed border-brand-200 bg-white/70 p-12 text-center text-sm text-accent-soft">
-            <p className="text-base font-semibold text-accent">No stories in this category yet</p>
-            <p className="mt-2">
-              Publish a post in Sanity and select the
+          <div className={styles.emptyState}>
+            <p>No stories in this category yet.</p>
+            <p>
+              Publish a post in Sanity and assign the
               {requestedCategory ? (
                 <>
                   {" "}
-                  <span className="font-semibold text-accent">{requestedCategory}</span>{" "}
+                  <strong>{requestedCategory}</strong>
+                  {" "}
                 </>
               ) : " "}
               category to fill this space.

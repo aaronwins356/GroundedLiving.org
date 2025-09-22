@@ -4,6 +4,7 @@ import {
   defineType,
   type ArrayRule,
   type DatetimeRule,
+  type ReferenceRule,
   type SlugRule,
   type StringRule,
   type TextRule,
@@ -52,11 +53,15 @@ export default defineType({
     }),
     defineField({
       name: "category",
-      type: "string",
+      type: "reference",
+      to: [{ type: "category" }],
       title: "Category",
-      description: "Organize posts by theme such as Mindfulness, Recipes, or Rituals.",
-      validation: (rule: StringRule) => rule.max(60),
+      description: "Select the theme that best matches this post.",
+      validation: (rule: ReferenceRule) => rule.required(),
       group: "settings",
+      options: {
+        disableNew: true,
+      },
     }),
     defineField({
       name: "excerpt",
@@ -66,6 +71,34 @@ export default defineType({
       rows: 3,
       validation: (rule: TextRule) => rule.max(280),
       group: "settings",
+    }),
+    defineField({
+      name: "seo",
+      type: "object",
+      title: "SEO",
+      description: "Customize how this post appears in search and on social media.",
+      group: "settings",
+      options: {
+        collapsible: true,
+        collapsed: true,
+      },
+      fields: [
+        defineField({
+          name: "metaTitle",
+          type: "string",
+          title: "Meta title",
+          description: "Optional override for the browser and social title.",
+          validation: (rule: StringRule) => rule.max(70),
+        }),
+        defineField({
+          name: "metaDescription",
+          type: "text",
+          title: "Meta description",
+          rows: 3,
+          description: "1–2 sentence summary for search results and social previews.",
+          validation: (rule: TextRule) => rule.max(160),
+        }),
+      ],
     }),
     defineField({
       name: "coverImage",

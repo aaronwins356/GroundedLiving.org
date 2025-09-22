@@ -1,0 +1,108 @@
+.prose {
+  display: contents;
+}
+
+.paragraph {
+  margin: 1.5rem 0;
+  color: var(--color-ink-soft);
+  line-height: 1.9;
+  font-size: 1.02rem;
+}
+
+.heading2 {
+  margin-top: 3rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.9rem, 2.6vw, 2.4rem);
+  position: relative;
+  padding-bottom: 0.8rem;
+}
+
+.heading2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 68px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(168, 193, 173, 0.8), rgba(214, 195, 172, 0));
+}
+
+.heading3 {
+  margin-top: 2.4rem;
+  margin-bottom: 0.8rem;
+  font-size: clamp(1.4rem, 2.2vw, 1.8rem);
+}
+
+.heading4 {
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+  font-size: 1.3rem;
+}
+
+.blockquote {
+  margin: 2.5rem 0;
+  padding: 1.8rem 2rem;
+  border-radius: 26px;
+  border: 1px solid rgba(203, 216, 206, 0.6);
+  background: rgba(241, 228, 220, 0.35);
+  font-style: italic;
+  color: var(--color-moss);
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.list {
+  margin: 1.5rem 0;
+  padding-left: 1.4rem;
+  display: grid;
+  gap: 0.75rem;
+  color: var(--color-ink-soft);
+}
+
+.code {
+  background: rgba(203, 216, 206, 0.35);
+  border-radius: 10px;
+  padding: 0.3rem 0.6rem;
+  font-family: "IBM Plex Mono", "Menlo", monospace;
+  font-size: 0.9rem;
+  color: var(--color-moss);
+}
+
+.underline {
+  text-decoration: underline;
+  text-decoration-color: rgba(168, 193, 173, 0.7);
+  text-decoration-thickness: 2px;
+}
+
+.link {
+  color: var(--color-moss);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  transition: color var(--transition-base);
+}
+
+.link:hover {
+  color: var(--color-ink);
+}
+
+.figure {
+  margin: 2.5rem 0;
+  border-radius: 28px;
+  overflow: hidden;
+  background: rgba(203, 216, 206, 0.3);
+}
+
+.figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.caption {
+  padding: 0.75rem 1.2rem 1.3rem;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}

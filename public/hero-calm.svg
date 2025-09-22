@@ -1,0 +1,19 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#F8F4EF"/>
+  <g filter="url(#shadow)">
+    <path d="M-120 540C60 280 420 260 620 360C820 460 900 760 680 880C460 1000 120 800 -120 540Z" fill="#E9D9CE"/>
+  </g>
+  <g filter="url(#shadow)" opacity="0.9">
+    <path d="M1340 140C1480 280 1520 520 1400 660C1280 800 1040 780 900 660C760 540 760 360 880 240C1000 120 1200 0 1340 140Z" fill="#D5E0D7"/>
+  </g>
+  <g filter="url(#shadow)" opacity="0.75">
+    <path d="M420 120C520 20 720 20 840 120C960 220 940 400 820 500C700 600 520 640 420 560C320 480 320 220 420 120Z" fill="#C4D2C7"/>
+  </g>
+  <defs>
+    <filter id="shadow" x="-260" y="-160" width="2060" height="1320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="60" result="effect1_foregroundBlur"/>
+    </filter>
+  </defs>
+</svg>

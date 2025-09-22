@@ -3,10 +3,11 @@
 import { NextStudio } from "next-sanity/studio";
 
 import config from "../../../sanity.config";
+import styles from "./page.module.css";
 
 export default function StudioPage() {
   return (
-    <section className="min-h-[70vh] overflow-hidden rounded-[2.5rem] bg-white/90 shadow-soft-lg ring-1 ring-brand-100">
+    <section className={styles.shell}>
       <NextStudio config={config} />
     </section>
   );

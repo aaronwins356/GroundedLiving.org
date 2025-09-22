@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { hasSanityImageAsset, urlForImage, type SanityImageWithAlt } from "../../lib/sanity.image";
 import type { PortableTextBlock, PortableTextMarkDef, PortableTextNode, PortableTextSpan } from "../../types/portableText";
+import styles from "./PortableTextRenderer.module.css";
 
 type PortableTextRendererProps = {
   value: PortableTextNode[];
@@ -18,7 +19,7 @@ function renderSpan(span: PortableTextSpan, markDefs: PortableTextMarkDef[] | un
 
   for (const mark of span.marks ?? []) {
     if (mark === "strong") {
-      content = <strong className="text-accent">{content}</strong>;
+      content = <strong>{content}</strong>;
       continue;
     }
 
@@ -28,14 +29,12 @@ function renderSpan(span: PortableTextSpan, markDefs: PortableTextMarkDef[] | un
     }
 
     if (mark === "underline") {
-      content = <span className="underline decoration-brand-400">{content}</span>;
+      content = <span className={styles.underline}>{content}</span>;
       continue;
     }
 
     if (mark === "code") {
-      content = (
-        <code className="rounded bg-brand-50 px-2 py-1 font-mono text-sm text-brand-700">{content}</code>
-      );
+      content = <code className={styles.code}>{content}</code>;
       continue;
     }
 
@@ -46,7 +45,7 @@ function renderSpan(span: PortableTextSpan, markDefs: PortableTextMarkDef[] | un
           href={definition.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-medium text-brand-600 underline underline-offset-4 transition hover:text-brand-800"
+          className={styles.link}
         >
           {content}
         </a>
@@ -71,34 +70,31 @@ function renderBlock(block: PortableTextBlock): ReactNode {
     case "h1":
     case "h2":
       return (
-        <h2 {...baseProps} className="mt-14 font-serif text-3xl font-semibold text-accent">
+        <h2 {...baseProps} className={styles.heading2}>
           {children}
         </h2>
       );
     case "h3":
       return (
-        <h3 {...baseProps} className="mt-10 font-serif text-2xl font-semibold text-accent">
+        <h3 {...baseProps} className={styles.heading3}>
           {children}
         </h3>
       );
     case "h4":
       return (
-        <h4 {...baseProps} className="mt-8 font-serif text-xl font-semibold text-accent">
+        <h4 {...baseProps} className={styles.heading4}>
           {children}
         </h4>
       );
     case "blockquote":
       return (
-        <blockquote
-          {...baseProps}
-          className="my-10 rounded-[2rem] border border-brand-200 bg-brand-50/70 px-8 py-6 text-lg italic text-brand-700"
-        >
+        <blockquote {...baseProps} className={styles.blockquote}>
           {children}
         </blockquote>
       );
     default:
       return (
-        <p {...baseProps} className="my-6 leading-relaxed text-accent-soft">
+        <p {...baseProps} className={styles.paragraph}>
           {children}
         </p>
       );
@@ -113,18 +109,15 @@ function renderImage(node: SanityImageWithAlt & { _key: string }) {
   const imageUrl = urlForImage(node).width(1600).fit("max").auto("format").url();
 
   return (
-    <figure key={node._key} className="my-12 overflow-hidden rounded-[2rem] bg-mist">
+    <figure key={node._key} className={styles.figure}>
       <Image
         src={imageUrl}
         alt={node.alt ?? "Blog post illustration"}
         width={1600}
         height={900}
         sizes="(min-width: 1024px) 768px, 100vw"
-        className="h-auto w-full object-cover"
       />
-      {node.alt ? (
-        <figcaption className="px-6 pb-6 pt-3 text-center text-sm text-accent-soft">{node.alt}</figcaption>
-      ) : null}
+      {node.alt ? <figcaption className={styles.caption}>{node.alt}</figcaption> : null}
     </figure>
   );
 }
@@ -140,10 +133,7 @@ export function PortableTextRenderer({ value }: PortableTextRendererProps) {
 
     const Tag = listBuffer.type === "bullet" ? "ul" : "ol";
     elements.push(
-      <Tag
-        key={`list-${elements.length}`}
-        className="my-6 list-outside space-y-2 pl-6 text-accent-soft"
-      >
+      <Tag key={`list-${elements.length}`} className={styles.list}>
         {listBuffer.items.map((item) => (
           <li key={item._key}>{renderChildren(item)}</li>
         ))}
@@ -174,5 +164,5 @@ export function PortableTextRenderer({ value }: PortableTextRendererProps) {
 
   flushList();
 
-  return <>{elements}</>;
+  return <div className={styles.prose}>{elements}</div>;
 }
