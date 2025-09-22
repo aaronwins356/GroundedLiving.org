@@ -24,6 +24,8 @@
   "dependencies": {
     "@sanity/client": "^7.0.1",
     "@sanity/image-url": "^1.0.3",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "next": "^15.5.0",
     "next-sanity": "^9.3.6",
     "react": "^19.0.0",
