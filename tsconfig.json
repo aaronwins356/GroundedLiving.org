@@ -20,6 +20,9 @@
     "paths": {
       "@content/*": [
         "./content/*"
+      ],
+      "@vercel/speed-insights/*": [
+        "./stubs/@vercel/speed-insights/*"
       ]
     },
     "types": [
