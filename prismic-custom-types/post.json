@@ -1,0 +1,68 @@
+{
+  "id": "post",
+  "label": "Post",
+  "repeatable": true,
+  "status": true,
+  "json": {
+    "Main": {
+      "uid": {
+        "type": "UID",
+        "config": {
+          "label": "Slug",
+          "placeholder": "healing-morning-ritual"
+        }
+      },
+      "title": {
+        "type": "Title",
+        "config": {
+          "label": "Title"
+        }
+      },
+      "date": {
+        "type": "Date",
+        "config": {
+          "label": "Publish Date"
+        }
+      },
+      "category": {
+        "type": "KeyText",
+        "config": {
+          "label": "Category"
+        }
+      },
+      "category_slug": {
+        "type": "KeyText",
+        "config": {
+          "label": "Category Slug",
+          "placeholder": "rituals"
+        }
+      },
+      "category_color": {
+        "type": "Color",
+        "config": {
+          "label": "Category Accent Color"
+        }
+      },
+      "excerpt": {
+        "type": "RichText",
+        "config": {
+          "label": "Excerpt",
+          "single": "paragraph"
+        }
+      },
+      "body": {
+        "type": "RichText",
+        "config": {
+          "label": "Body",
+          "multi": "heading1,heading2,heading3,paragraph,preformatted,unordered_list,ordered_list,quote,image"
+        }
+      },
+      "cover_image": {
+        "type": "Image",
+        "config": {
+          "label": "Cover Image"
+        }
+      }
+    }
+  }
+}

@@ -1,3 +1,5 @@
+@import "tailwindcss/index.css";
+
 :root {
   color-scheme: light;
   --font-serif: "Playfair Display", "Iowan Old Style", "Georgia", serif;
@@ -41,6 +43,72 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative;
+}
+
+.prose {
+  color: var(--color-ink-soft);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.prose p {
+  margin-bottom: 1.25em;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-serif);
+  color: var(--color-ink);
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.prose h2 {
+  font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+}
+
+.prose h3 {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+}
+
+.prose h4 {
+  font-size: clamp(1.25rem, 1.8vw, 1.6rem);
+}
+
+.prose ul,
+.prose ol {
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.75rem;
+}
+
+.prose a {
+  color: var(--color-moss);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+.prose blockquote {
+  border-left: 3px solid rgba(111, 140, 123, 0.35);
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+}
+
+.prose figure {
+  margin: 2rem 0;
+}
+
+.prose figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  text-align: center;
 }
 
 body::before {
