@@ -1,12 +1,14 @@
 # Grounded Living
 
 Grounded Living is a modern wellness journal built with Next.js 15, Tailwind CSS, and Sanity. The codebase is structured so you
-can spin it up locally in minutes, give editors a welcoming Studio, and ship updates to Vercel with confidence.
+can spin it up locally in minutes, give editors a welcoming Studio, and ship updates to Vercel with confidence. The refreshed
+design leans into a soft cream backdrop, muted sage accents, and elegant typography to mirror the calm presence of Healing
+Soulfully.
 
 ## Tech stack
 
 - **Framework:** Next.js 15 (App Router + React Server Components)
-- **Styling:** Tailwind CSS with custom typography and wellness-inspired palette
+- **Styling:** Tailwind CSS with custom typography and a muted sage/blue palette inspired by Healing Soulfully
 - **CMS:** Sanity Studio mounted directly inside the Next.js app at `/studio`
 - **Content:** Portable Text for rich posts and pages
 - **Deployment:** Vercel with automated GitHub Actions deploys
@@ -47,8 +49,8 @@ npm run dev
 Sanity Studio is embedded directly in the Next.js app using `next-sanity/studio` so non-technical editors can log in with the
 same URL they use to browse the blog.
 
-- **Posts** include: title, slug, category, publish date, excerpt, cover image with alt text, and rich Portable Text content.
-- **Pages** include: title, slug, optional hero image, and full Portable Text content.
+- **Posts** include: title, slug, category, publish date, excerpt, cover image with alt text, and rich Portable Text content. The editor uses a pared-back WYSIWYG with headings, lists, links, and inline formatting to keep writing approachable.
+- **Pages** include: title, slug, optional hero image, and full Portable Text content using the same simplified toolbar.
 - The desk structure keeps “Posts” and “Pages” as the only entry points so the interface stays approachable.
 - A webhook can hit `/api/revalidate` with your `SANITY_REVALIDATE_SECRET` to refresh cached content whenever you publish.
 
@@ -92,10 +94,10 @@ Add them in **GitHub → Settings → Secrets and variables → Actions → New 
 
 ## 5. Design system highlights
 
-- **Homepage hero:** Rotating featured carousel, prominent CTA buttons, and a dedicated affiliate placeholder block.
-- **Category discovery:** Clickable category tags on the homepage and `/blog` to encourage exploration.
-- **Post layout:** Large readable typography, responsive imagery, and a sidebar reserved for future monetization partners.
-- **Global styling:** Google Fonts (Plus Jakarta Sans + Cormorant Garamond) linked in the root layout and applied through Tailwind.
+- **Homepage hero:** Rotating featured carousel framed by a cream-and-sage gradient, serif headlines, and CTA buttons that echo the Healing Soulfully aesthetic.
+- **Category discovery:** Clickable category badges with hover animations on the homepage and `/blog` index encourage exploration.
+- **Post layout:** Large cover imagery, share buttons, linked categories, an about sidebar, and a mindful ad placeholder make every article feel editorial.
+- **Global styling:** Google Fonts (Work Sans + Fraunces) linked in the root layout and applied through Tailwind for a polished, calming voice.
 
 ## 6. Future growth hooks
 

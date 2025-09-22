@@ -15,28 +15,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /**
+         * Palette intentionally mirrors the calming neutrals from Healing Soulfully while
+         * keeping naming aligned with existing utility classes in the codebase.
+         */
         brand: {
-          DEFAULT: "#a88574",
-          50: "#f9f5f1",
-          100: "#f3e9e2",
-          200: "#e6d3c5",
-          300: "#d7bcab",
-          400: "#c2a18f",
-          500: "#a88574",
-          600: "#8b6b5d",
-          700: "#705347",
-          800: "#4e3830",
-          900: "#2f1f1b",
+          DEFAULT: "#6b9080",
+          50: "#f3f6f3",
+          100: "#e5efe8",
+          200: "#c6ddcf",
+          300: "#a5cab6",
+          400: "#84b89e",
+          500: "#6b9080",
+          600: "#4f7364",
+          700: "#39574a",
+          800: "#2d453b",
+          900: "#1f312a",
         },
         accent: {
-          DEFAULT: "#4a4e69",
-          soft: "#6b708d",
+          DEFAULT: "#2f3e46",
+          soft: "#4e5d64",
         },
-        mist: "#f4f7f6",
+        cream: "#fdf8f3",
+        mist: "#eef2ef",
       },
       fontFamily: {
         sans: [
-          "'Plus Jakarta Sans'",
+          "'Work Sans'",
           "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
@@ -44,7 +49,7 @@ const config: Config = {
           "sans-serif",
         ],
         serif: [
-          "'Cormorant Garamond'",
+          "'Fraunces'",
           "'Times New Roman'",
           "serif",
         ],

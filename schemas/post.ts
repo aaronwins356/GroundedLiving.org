@@ -7,6 +7,7 @@ import {
   type SlugRule,
   type StringRule,
   type TextRule,
+  type UrlRule,
 } from "sanity";
 
 export default defineType({
@@ -91,7 +92,45 @@ export default defineType({
       title: "Post body",
       description: "Write or paste your story. Use headings, quotes, and images to add flow.",
       of: [
-        defineArrayMember({ type: "block" }),
+        defineArrayMember({
+          type: "block",
+          styles: [
+            { title: "Normal", value: "normal" },
+            { title: "Heading", value: "h2" },
+            { title: "Subheading", value: "h3" },
+            { title: "Quote", value: "blockquote" },
+          ],
+          lists: [
+            { title: "Bulleted list", value: "bullet" },
+            { title: "Numbered list", value: "number" },
+          ],
+          marks: {
+            decorators: [
+              { title: "Strong", value: "strong" },
+              { title: "Emphasis", value: "em" },
+              { title: "Underline", value: "underline" },
+            ],
+            annotations: [
+              {
+                name: "link",
+                type: "object",
+                title: "Link",
+                fields: [
+                  defineField({
+                    name: "href",
+                    type: "url",
+                    title: "URL",
+                    description: "Paste a full link including https://",
+                    validation: (rule: UrlRule) => rule.uri({ allowRelative: false }).required(),
+                  }),
+                ],
+              },
+            ],
+          },
+          options: {
+            spellCheck: true,
+          },
+        }),
         defineArrayMember({
           type: "image",
           options: { hotspot: true },

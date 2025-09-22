@@ -71,19 +71,19 @@ function renderBlock(block: PortableTextBlock): ReactNode {
     case "h1":
     case "h2":
       return (
-        <h2 {...baseProps} className="mt-14 text-3xl font-semibold text-accent">
+        <h2 {...baseProps} className="mt-14 font-serif text-3xl font-semibold text-accent">
           {children}
         </h2>
       );
     case "h3":
       return (
-        <h3 {...baseProps} className="mt-10 text-2xl font-semibold text-accent">
+        <h3 {...baseProps} className="mt-10 font-serif text-2xl font-semibold text-accent">
           {children}
         </h3>
       );
     case "h4":
       return (
-        <h4 {...baseProps} className="mt-8 text-xl font-semibold text-accent">
+        <h4 {...baseProps} className="mt-8 font-serif text-xl font-semibold text-accent">
           {children}
         </h4>
       );
@@ -91,7 +91,7 @@ function renderBlock(block: PortableTextBlock): ReactNode {
       return (
         <blockquote
           {...baseProps}
-          className="my-10 rounded-3xl border-l-4 border-brand-300 bg-brand-50/70 px-6 py-5 text-lg italic text-brand-700"
+          className="my-10 rounded-[2rem] border border-brand-200 bg-brand-50/70 px-8 py-6 text-lg italic text-brand-700"
         >
           {children}
         </blockquote>
@@ -113,7 +113,7 @@ function renderImage(node: SanityImageWithAlt & { _key: string }) {
   const imageUrl = urlForImage(node).width(1600).fit("max").auto("format").url();
 
   return (
-    <figure key={node._key} className="my-12 overflow-hidden rounded-3xl bg-mist">
+    <figure key={node._key} className="my-12 overflow-hidden rounded-[2rem] bg-mist">
       <Image
         src={imageUrl}
         alt={node.alt ?? "Blog post illustration"}

@@ -45,9 +45,9 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
 
   return (
     <div className="space-y-16">
-      <section className="overflow-hidden rounded-3xl bg-white/70 p-12 text-center shadow-soft-lg">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-400">The Journal</p>
-        <h1 className="mt-4 text-4xl font-semibold text-accent sm:text-5xl">Stories to ground and grow with you</h1>
+      <section className="overflow-hidden rounded-[2.5rem] bg-white/80 p-12 text-center shadow-soft-lg ring-1 ring-brand-100">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-500">The Journal</p>
+        <h1 className="mt-4 font-serif text-4xl font-semibold text-accent sm:text-5xl">Stories to ground and grow with you</h1>
         <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-accent-soft sm:text-lg">
           Slow down with mindful reflections, seasonal recipes, and wellness practices created to help you feel rooted and
           nourished.
@@ -56,10 +56,10 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/blog"
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+              className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.35em] transition ${
                 requestedCategory
-                  ? "border-brand/20 bg-white/70 text-accent-soft hover:border-brand-400 hover:text-accent"
-                  : "border-brand-500 bg-brand-500/10 text-accent"
+                  ? "border-brand-200 bg-white/80 text-accent-soft hover:border-brand-400 hover:text-accent"
+                  : "border-brand-500 bg-brand-200/60 text-accent"
               }`}
             >
               All topics
@@ -71,10 +71,10 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
                 <Link
                   key={category}
                   href={href}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] transition ${
+                  className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.35em] transition ${
                     isActive
-                      ? "border-brand-500 bg-brand-500/10 text-accent"
-                      : "border-brand/20 bg-white/70 text-accent-soft hover:border-brand-400 hover:text-accent"
+                      ? "border-brand-500 bg-brand-200/60 text-accent"
+                      : "border-brand-200 bg-white/80 text-accent-soft hover:-translate-y-0.5 hover:border-brand-400 hover:text-accent"
                   }`}
                 >
                   {category}
@@ -93,7 +93,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
             ))}
           </div>
         ) : (
-          <div className="rounded-3xl border border-dashed border-brand/30 bg-white/60 p-12 text-center text-sm text-accent-soft">
+          <div className="rounded-[2rem] border border-dashed border-brand-200 bg-white/70 p-12 text-center text-sm text-accent-soft">
             <p className="text-base font-semibold text-accent">No stories in this category yet</p>
             <p className="mt-2">
               Publish a post in Sanity and select the
