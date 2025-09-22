@@ -47,16 +47,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Work+Sans:wght@300;400;500;600;700&display=swap"
         />
       </head>
-      <body className="bg-gradient-to-b from-white via-mist to-white text-accent">
-        <div className="flex min-h-screen flex-col font-sans">
+      <body className="bg-[#fdf8f3] text-accent">
+        <div className="relative flex min-h-screen flex-col font-sans">
+          {/* Radial wash recreates the soft vignette from the Healing Soulfully inspiration while staying lightweight. */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(107,144,128,0.16),_transparent_58%)]" aria-hidden />
           <Navbar />
-          <main className="flex-1">
-            <div className="container-base py-16">
+          <main className="relative flex-1 pb-24">
+            <div className="container-base relative py-16">
               {children}
-              {/* Future banner ad placement retained for upcoming monetization experiments. */}
+              {/* Reserving space for future monetization modules keeps layout planning visible in design discussions. */}
               {/** <div className="mt-12 h-24 rounded-3xl border border-dashed border-brand/30" /> */}
             </div>
           </main>

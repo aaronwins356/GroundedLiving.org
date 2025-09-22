@@ -35,7 +35,7 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
 
   if (!slides.length) {
     return (
-      <div className="flex h-full min-h-[240px] items-center justify-center rounded-3xl border border-dashed border-brand/30 bg-white/60 p-8 text-center text-sm text-accent-soft">
+      <div className="flex h-full min-h-[260px] items-center justify-center rounded-[2rem] border border-dashed border-brand-200 bg-white/80 p-8 text-center text-sm text-accent-soft">
         Publish a post in Sanity to feature it here.
       </div>
     );
@@ -45,7 +45,7 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   const imageUrl = activePost.imageUrl;
 
   return (
-    <div className="relative h-full min-h-[320px] overflow-hidden rounded-3xl bg-white shadow-soft-lg">
+    <div className="relative h-full min-h-[340px] overflow-hidden rounded-[2rem] bg-brand-900/80 shadow-soft-lg">
       {imageUrl ? (
         <Image
           src={imageUrl}
@@ -58,8 +58,8 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-brand-100 via-white to-brand-200" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-6 text-white sm:p-10">
+      <div className="absolute inset-0 bg-gradient-to-t from-accent/80 via-accent/10 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-5 p-6 text-white sm:p-10">
         <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.3em]">
           {activePost.category ? (
             <Link
@@ -69,7 +69,9 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
               {activePost.category}
             </Link>
           ) : (
-            <span>Mindful Living</span>
+            <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold tracking-[0.3em] text-white">
+              Mindful Living
+            </span>
           )}
           <span className="text-white/60">•</span>
           <time dateTime={activePost.publishedAt}>
@@ -81,7 +83,7 @@ export function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
           </time>
         </div>
         <div className="space-y-3">
-          <h2 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
+          <h2 className="font-serif text-2xl font-semibold sm:text-3xl lg:text-4xl">
             <Link href={`/blog/${activePost.slug}`} className="transition hover:text-brand-200">
               {activePost.title}
             </Link>
