@@ -1,65 +1,69 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 
-import type { PostListItem } from "../../lib/sanity.queries";
-import { hasSanityImageAsset, urlForImage } from "../../lib/sanity.image";
-import styles from "./PostCard.module.css";
+import type { BlogPostListItem } from "../../lib/prismic";
 
 type PostCardProps = {
-  post: PostListItem;
+  post: BlogPostListItem;
 };
 
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
+
 export function PostCard({ post }: PostCardProps) {
-  const coverImageUrl = hasSanityImageAsset(post.coverImage)
-    ? urlForImage(post.coverImage).width(900).height(600).fit("crop").auto("format").url()
-    : null;
-
-  const formattedDate = new Date(post.publishedAt).toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const category = post.category;
-  const badgeStyle: CSSProperties | undefined = category?.color
-    ? { backgroundColor: `${category.color}33`, color: category.color }
-    : undefined;
+  const publishedLabel = dateFormatter.format(new Date(post.publishedAt));
 
   return (
-    <article className={styles.card}>
-      <div className={styles.media}>
-        {coverImageUrl ? (
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl bg-white/90 shadow-[0_25px_60px_rgba(134,160,142,0.15)] ring-1 ring-emerald-100/70 transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_80px_rgba(134,160,142,0.22)]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-rose-100 via-slate-50 to-emerald-100/60">
+        {post.coverImage?.url ? (
           <Image
-            src={coverImageUrl}
-            alt={post.coverImage?.alt ?? post.title}
+            src={post.coverImage.url}
+            alt={post.coverImage.alt ?? post.title}
             fill
-            sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 1280px) 420px, (min-width: 768px) 50vw, 100vw"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
           />
         ) : null}
-        <div className={styles.badgeRow}>
-          {category ? (
-            <Link href={`/blog?category=${encodeURIComponent(category.slug)}`} className={styles.badge} style={badgeStyle}>
-              {category.title}
-            </Link>
-          ) : (
-            <span className={styles.badge}>Mindful Living</span>
-          )}
-        </div>
-      </div>
-      <div className={styles.body}>
-        <div className={styles.meta}>
-          <time dateTime={post.publishedAt}>{formattedDate}</time>
-          <span>Read</span>
-        </div>
-        <h2 className={styles.title}>
-          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-        </h2>
-        {post.excerpt ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
-        <div className={styles.footer}>
-          <Link href={`/blog/${post.slug}`} className={styles.readMore}>
-            Read story <span aria-hidden>→</span>
+        {post.category ? (
+          <Link
+            href={`/blog?category=${encodeURIComponent(post.category.slug)}`}
+            className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 shadow-sm ring-1 ring-emerald-100 transition hover:bg-emerald-50/90"
+            style={post.category.color ? { color: post.category.color } : undefined}
+          >
+            {post.category.name}
           </Link>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col gap-4 p-6">
+        <div className="flex items-center gap-2 text-sm font-medium text-emerald-800/70">
+          <time dateTime={post.publishedAt}>{publishedLabel}</time>
+          <span aria-hidden className="text-emerald-200">
+            •
+          </span>
+          <span>Slow ritual</span>
+        </div>
+        <h3 className="text-2xl font-semibold leading-snug tracking-tight text-emerald-950">
+          <Link href={`/blog/${post.uid}`} className="transition hover:text-emerald-600">
+            {post.title}
+          </Link>
+        </h3>
+        {post.excerpt ? (
+          <p className="text-base leading-relaxed text-slate-600">
+            {post.excerpt}
+          </p>
+        ) : null}
+        <div className="mt-auto flex items-center justify-between pt-2 text-sm font-semibold text-emerald-700">
+          <Link href={`/blog/${post.uid}`} className="inline-flex items-center gap-2 transition hover:text-emerald-500">
+            Read story
+            <span aria-hidden className="text-lg leading-none transition group-hover:translate-x-0.5">
+              →
+            </span>
+          </Link>
+          <span aria-hidden className="text-xs uppercase tracking-[0.28em] text-emerald-300">Glow</span>
         </div>
       </div>
     </article>
