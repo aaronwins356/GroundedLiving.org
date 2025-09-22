@@ -1,8 +1,6 @@
 {
-  "// purpose": "Ensure Sanity Studio behaves like an SPA when deployed on Vercel.",
   "rewrites": [
     {
-      "// studio": "Redirect nested Studio routes back to the root so the client router can handle them.",
       "source": "/studio/:path*",
       "destination": "/studio"
     }
