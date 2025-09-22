@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { PrismicRichText } from "@prismicio/react";
+import { PrismicRichText } from "../../components/prismic/RichText";
 
 import { getPageByUID } from "../../lib/prismic";
 

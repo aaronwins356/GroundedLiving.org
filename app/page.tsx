@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PrismicRichText } from "@prismicio/react";
+import { PrismicRichText } from "../components/prismic/RichText";
 
 import { PostCard } from "../components/blog/PostCard";
-import { getCategoryFilters, getPageByUID, getPosts } from "../lib/prismic";
+import { getBlogPosts, getCategoryFilters } from "../lib/contentful";
+import { getPageByUID } from "../lib/prismic";
 
 export default async function HomePage() {
-  const [posts, aboutPage] = await Promise.all([getPosts(), getPageByUID("about")]);
+  const [posts, aboutPage] = await Promise.all([getBlogPosts(), getPageByUID("about")]);
   const categories = getCategoryFilters(posts);
   const featured = posts[0];
   const recentPosts = posts.slice(0, 6);
@@ -47,7 +48,7 @@ export default async function HomePage() {
                   Featured story
                 </span>
                 <h2 className="font-serif text-3xl leading-snug text-emerald-950">
-                  <Link href={`/blog/${featured.uid}`} className="transition hover:text-emerald-600">
+                  <Link href={`/blog/${featured.slug}`} className="transition hover:text-emerald-600">
                     {featured.title}
                   </Link>
                 </h2>
@@ -55,7 +56,7 @@ export default async function HomePage() {
                   <p className="text-base leading-relaxed text-slate-600">{featured.excerpt}</p>
                 ) : null}
                 <Link
-                  href={`/blog/${featured.uid}`}
+                  href={`/blog/${featured.slug}`}
                   className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-700 transition hover:text-emerald-500"
                 >
                   Read the feature
@@ -109,7 +110,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <p className="rounded-3xl bg-white/80 p-6 text-sm text-emerald-800/80 ring-1 ring-emerald-100">
-            Add categories in Prismic to help readers discover topics quickly.
+            Add categories to your Contentful entries to help readers discover topics quickly.
           </p>
         )}
       </section>
@@ -135,7 +136,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className="rounded-[2.5rem] bg-white/80 p-12 text-center text-lg text-emerald-800/80 shadow-[0_40px_120px_rgba(160,180,170,0.18)] ring-1 ring-emerald-100/70">
-            Publish your first Prismic post to see it highlighted here.
+            Publish your first Contentful post to see it highlighted here.
           </div>
         )}
       </section>

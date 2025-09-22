@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { BlogPostListItem } from "../../lib/prismic";
+import type { BlogPostListItem } from "../../lib/contentful";
 import { PostCard } from "./PostCard";
 
 type PostFeedProps = {

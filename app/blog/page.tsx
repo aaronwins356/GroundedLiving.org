@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { PostFeed } from "../../components/blog/PostFeed";
-import { getCategoryFilters, getPosts } from "../../lib/prismic";
+import { getBlogPosts, getCategoryFilters } from "../../lib/contentful";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -24,7 +24,7 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
-  const posts = await getPosts();
+  const posts = await getBlogPosts();
   const categories = getCategoryFilters(posts);
   const resolvedSearchParams = searchParams ? await searchParams : {};
 
@@ -80,7 +80,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
                   </time>
                 </div>
                 <h2 className="font-serif text-3xl leading-snug text-emerald-950">
-                  <Link href={`/blog/${featuredPost.uid}`} className="transition hover:text-emerald-600">
+                  <Link href={`/blog/${featuredPost.slug}`} className="transition hover:text-emerald-600">
                     {featuredPost.title}
                   </Link>
                 </h2>
@@ -90,7 +90,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
                   </p>
                 ) : null}
                 <Link
-                  href={`/blog/${featuredPost.uid}`}
+                  href={`/blog/${featuredPost.slug}`}
                   className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-700 transition hover:text-emerald-500"
                 >
                   Read the feature
@@ -99,7 +99,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
               </div>
             ) : (
               <p className="rounded-3xl bg-white/70 p-6 text-sm text-emerald-800/80 ring-1 ring-emerald-100">
-                Publish your first Prismic post to introduce your readers to the journal. Featured stories will appear here automatically.
+                Publish your first Contentful blog entry to introduce your readers to the journal. Featured stories will appear here automatically.
               </p>
             )}
           </div>
@@ -168,7 +168,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
         ) : (
           <div className="rounded-[2.5rem] bg-white/80 p-12 text-center shadow-[0_40px_120px_rgba(170,190,180,0.18)] ring-1 ring-emerald-100/70">
             <p className="text-lg text-emerald-800/80">
-              No stories have been published in this category yet. Open Prismic, create a post, and watch this space bloom.
+              No stories have been published in this category yet. Publish a new entry in Contentful and watch this space bloom.
             </p>
           </div>
         )}
