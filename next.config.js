@@ -4,6 +4,7 @@ const nextConfig = {
     optimizePackageImports: ["react", "react-dom"],
   },
   images: {
+    domains: ["images.ctfassets.net", "assets.ctfassets.net", "downloads.ctfassets.net"],
     remotePatterns: [
       {
         protocol: "https",

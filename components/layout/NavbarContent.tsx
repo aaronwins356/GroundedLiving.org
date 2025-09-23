@@ -18,11 +18,24 @@ export function NavContent({ categories, pages }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
 
-  const baseLinks: PageSummary[] = [
+  const staticLinks: PageSummary[] = [
     { title: "Home", slug: "", href: "/" },
-    { title: "Journal", slug: "journal", href: "/journal" },
-    ...pages.map((page) => ({ ...page, href: `/pages/${page.slug}` })),
+    { title: "Blog", slug: "blog", href: "/blog" },
   ];
+
+  const marketingLinks = pages.map((page) => ({ ...page, href: `/pages/${page.slug}` }));
+
+  const preferredOrder = ["about", "contact"];
+  const orderedMarketing = [...marketingLinks].sort((a, b) => {
+    const indexA = preferredOrder.indexOf(a.slug.toLowerCase());
+    const indexB = preferredOrder.indexOf(b.slug.toLowerCase());
+    if (indexA === -1 && indexB === -1) return a.title.localeCompare(b.title);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  const baseLinks = [...staticLinks, ...orderedMarketing];
 
   const toggleMenu = () => setIsMenuOpen((value) => !value);
   const closeMenu = () => setIsMenuOpen(false);
@@ -33,20 +46,24 @@ export function NavContent({ categories, pages }: Props) {
         <div className="flex items-center justify-between gap-4">
           <BrandMark />
           <div className="hidden items-center gap-1 lg:flex">
-            {baseLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={clsx(
-                  "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
-                  pathname === link.href
-                    ? "bg-sage-100/70 text-sage-600 shadow-inner"
-                    : "text-[#3b443b] hover:bg-cream-100 hover:text-sage-600",
-                )}
-              >
-                {link.title}
-              </Link>
-            ))}
+            {baseLinks.map((link) => {
+              const isActive =
+                link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(`${link.href}/`);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={clsx(
+                    "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-sage-100/70 text-sage-600 shadow-inner"
+                      : "text-[#3b443b] hover:bg-cream-100 hover:text-sage-600",
+                  )}
+                >
+                  {link.title}
+                </Link>
+              );
+            })}
             {categories.length > 0 ? (
               <div className="relative">
                 <button
@@ -123,19 +140,23 @@ export function NavContent({ categories, pages }: Props) {
         ) : null}
         {isMenuOpen ? (
           <div className="mt-4 space-y-2 rounded-3xl border border-cream-200 bg-white/80 p-4 shadow-[0_18px_50px_rgba(108,159,136,0.16)] lg:hidden">
-            {baseLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={clsx(
-                  "block rounded-2xl px-4 py-3 text-base font-medium text-[#3b443b] transition",
-                  pathname === link.href ? "bg-sage-100/70 text-sage-600" : "hover:bg-cream-100 hover:text-sage-600",
-                )}
-                onClick={closeMenu}
-              >
-                {link.title}
-              </Link>
-            ))}
+            {baseLinks.map((link) => {
+              const isActive =
+                link.href === "/" ? pathname === "/" : pathname === link.href || pathname.startsWith(`${link.href}/`);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={clsx(
+                    "block rounded-2xl px-4 py-3 text-base font-medium text-[#3b443b] transition",
+                    isActive ? "bg-sage-100/70 text-sage-600" : "hover:bg-cream-100 hover:text-sage-600",
+                  )}
+                  onClick={closeMenu}
+                >
+                  {link.title}
+                </Link>
+              );
+            })}
           </div>
         ) : null}
       </nav>

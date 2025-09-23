@@ -1,91 +1,131 @@
 # Grounded Living
 
-Grounded Living is an elegant, editorial-quality Next.js 14 blog experience inspired by the soft, healing palette of [Healing Soulfully](https://healingsoulfully.com) and the polished content structure of [My TX Kitchen](https://www.mytxkitchen.com/easy-homemade-brownies/). Content is managed in Contentful and served statically by Vercel with automatic ISR revalidation, so non-technical editors can publish stories without touching code.
+Grounded Living is a production-grade, Contentful-powered publishing system built with Next.js 15, React 19, TypeScript, and Tailwind CSS. The experience blends a calm, intentional aesthetic with serious technical foundations—ready for SEO, monetization, and rapid editorial workflows.
 
-## ✨ Features
+## ✨ Platform Highlights
 
-- **App Router + TypeScript** – Built on Next.js 14 with server components, streaming metadata, and typed Contentful helpers.
-- **Contentful-first workflow** – Typed models for posts, categories, and pages with reusable fetching utilities (`getPosts`, `getPostBySlug`, `getPageSummaries`, etc.).
-- **On-demand revalidation** – `/api/revalidate` endpoint accepts Contentful webhook payloads to refresh cached routes instantly.
-- **Healing Soulfully aesthetic** – Tailwind-powered theme with creamy neutrals, muted sages, dusty pinks, and refined typography (Playfair Display + Lato).
-- **Immersive homepage** – Hero carousel for featured stories, “Browse by Intention” category chips, and a hover-rich latest posts grid using blur-up `next/image` placeholders.
-- **Polished article pages** – Full-width banner, centered metadata, Tailwind Typography prose, accessible image styling, share buttons, and a related stories/affiliate sidebar.
-- **Navigation & footer** – Sticky, glassmorphism-inspired top bar with responsive menu + Contentful pages, and a minimal footer with socials.
-- **Deployment ready** – Works with `npm run build`, `npm run lint`, and `npm run typecheck`. Vercel auto-detects the Next.js app and deploys on push.
+- **Headless by design** – Typed Contentful client (`lib/contentful.ts`) exposes helpers such as `getBlogPosts`, `getBlogPostBySlug`, `getCategories`, `getPages`, and `getAuthors` with ISR and webhook-driven cache busting.
+- **App Router architecture** – Uses the Next.js App Router with streaming metadata, edge OG image generation, and layouts optimized for Vercel.
+- **Polished design system** – Gradient backgrounds, sticky nav, hero carousel, drop-cap prose styling, Prism-powered code snippets, and responsive imagery tuned for editorial storytelling.
+- **Growth ready** – Next SEO defaults, GA4 integration, JSON-LD, newsletter capture, affiliate disclosures, sponsor modules, and a scaffolded Stripe checkout page make monetization turnkey.
+- **Testing & quality** – Jest unit tests for data helpers, Cypress e2e scaffolding, and lint/typecheck scripts ensure regressions are caught before deploys.
 
-## 🧱 Contentful Models
+## 🧱 Contentful Content Models
 
-Create the following content models in Contentful (all fields “localized” disabled unless needed):
+Create these models with the fields below (all fields non-localized unless noted):
 
-### Post
-- `title` – Text (short)
-- `slug` – Text (short, unique)
-- `coverImage` – Media (asset)
-- `category` – Reference (one entry, Category)
-- `excerpt` – Text (long)
-- `body` – Rich text
-- `date` – Date & time
+### BlogPost
+- `title` (Short text)
+- `slug` (Short text, unique)
+- `excerpt` (Long text)
+- `content` (Rich text)
+- `coverImage` (Asset)
+- `author` (Reference → Author)
+- `category` (Reference → Category)
+- `tags` (Array of short text)
+- `datePublished` (Date & time)
+- `seoDescription` (Short text)
+- `affiliate` (Boolean)
 
 ### Category
-- `name` – Text (short)
-- `slug` – Text (short, unique)
+- `name` (Short text)
+- `slug` (Short text, unique)
+- `description` (Long text)
 
 ### Page
-- `title` – Text (short)
-- `slug` – Text (short, unique)
-- `content` – Rich text
+- `title` (Short text)
+- `slug` (Short text, unique)
+- `content` (Rich text)
+- `heroImage` (Asset, optional)
+- `seoDescription` (Short text)
 
-> ℹ️ Optional: add a boolean “Featured” field to Post entries if you want to manually curate the hero carousel. The UI gracefully falls back to the latest posts when unset.
+### Author
+- `name` (Short text)
+- `bio` (Long text)
+- `avatarImage` (Asset)
 
-## 🚀 Getting Started
+> 💡 Tip: Configure Contentful webhooks to POST to `/api/revalidate?secret=<SECRET>` so publishing or updating entries revalidates the correct pages instantly.
+
+## 🔧 Environment Variables
+
+Copy `.env.local.example` → `.env.local` and populate:
+
+```
+CONTENTFUL_SPACE_ID=3xlrzd32ll73
+CONTENTFUL_DELIVERY_TOKEN=-wvyXNxFPwtx3haCVkdFrCUcyG41-4MqXYw0Xo4pgas
+CONTENTFUL_PREVIEW_TOKEN=lukdbkF9dZ-eJzyYISC8DomoEKL27ldgWF3T6ffgJa4
+CONTENTFUL_ENVIRONMENT=master
+CONTENTFUL_REVALIDATE_SECRET=<random-long-string>
+CONTENTFUL_REVALIDATE_INTERVAL=120
+NEXT_PUBLIC_SITE_URL=https://www.groundedliving.org
+NEXT_PUBLIC_GA_TRACKING_ID=<ga4-id>
+NEXT_PUBLIC_NEWSLETTER_ENDPOINT=<mailchimp-or-convertkit-endpoint>
+NEXT_PUBLIC_NEWSLETTER_PROVIDER=ConvertKit
+```
+
+On Vercel, add the same variables (Environment Variables → Production/Preview) and wire the Contentful webhook to the Vercel deploy hook or `/api/revalidate` endpoint.
+
+## 🚀 Local Development
 
 1. **Install dependencies**
    ```bash
    npm install
    ```
-
-2. **Configure environment variables** – Duplicate `.env.local.example` and rename it to `.env.local`, then fill in the values from your Contentful space:
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-3. **Run the development server**
+2. **Run dev server**
    ```bash
    npm run dev
    ```
+3. **Lint, typecheck, and tests**
+   ```bash
+   npm run lint
+   npm run typecheck
+   npm run test
+   ```
 
-4. **Create Contentful webhook** – Point a webhook to `https://<your-vercel-domain>/api/revalidate` with the secret from `CONTENTFUL_REVALIDATE_SECRET`. Include the entry ID, slug, and content type in the body (default Contentful payload works) so published/updated content instantly refreshes on the site.
+## 🧭 Editorial Workflow
 
-## 📦 Available Scripts
+1. Draft or update entries inside Contentful.
+2. Publish the entry → Contentful webhook calls `/api/revalidate`.
+3. Tagged cache entries are invalidated and Vercel rebuilds the affected ISR pages.
+4. `app/blog`, `app/blog/[slug]`, `app/pages/[slug]`, `app/categories/[slug]`, and the home page pick up the new content automatically.
 
-- `npm run dev` – Start the Next.js dev server.
-- `npm run build` – Create an optimized production build.
-- `npm run start` – Run the production server locally.
-- `npm run lint` – Lint with `next/core-web-vitals` rules.
-- `npm run typecheck` – Validate TypeScript types with `tsc --noEmit`.
+## 🧱 Site Structure
 
-## 🧭 Content Editing Workflow
+- `/` – Hero carousel, category ribbons, latest stories, and newsletter CTA.
+- `/blog` – Featured carousel, category chips, pagination, newsletter CTA.
+- `/blog/[slug]` – Hero image, author/date, affiliate disclaimer, Prism-highlighted prose, share buttons, structured data, related posts, sponsor block, newsletter signup.
+- `/pages/[slug]` – Generic marketing or evergreen pages sourced from Contentful Page entries.
+- `/categories` & `/categories/[slug]` – Category index and intention-specific hubs.
+- `/products/checkout` – Stripe-ready checkout scaffold with implementation notes.
+- `/sitemap.xml` & `/robots.txt` – Generated with Contentful slugs for SEO.
+- `/api/og` – Vercel OG image generator for dynamic sharing images.
+- `/api/revalidate` – Webhook endpoint for on-demand ISR.
 
-1. Log in to Contentful and open the **Grounded Living** space.
-2. Create a new **Post**, attach a cover image (add alt text!), choose a Category, write your rich text body, and publish.
-3. Optional: create or edit **Page** entries for About, Contact, or custom landing pages.
-4. Contentful fires the webhook → `/api/revalidate` → relevant routes (`/`, `/journal`, `/posts/[slug]`, `/categories/[slug]`, `/pages/[slug]`) are revalidated automatically.
+## 🛠️ Testing & Tooling
 
-The navigation surfaces any Pages you publish, and the homepage carousel + grid update automatically from the latest entries.
+- **Unit tests** – `npm run test` executes Jest tests in `__tests__/` (ts-jest ESM preset).
+- **E2E scaffolding** – Cypress config + example specs (`cypress/e2e`) for homepage, blog index, and detail routes.
+- **Static analysis** – `npm run lint` (Next core web vitals) and `npm run typecheck` (strict TypeScript).
 
-## 🌐 Deploying to Vercel
+## 🌐 Deployment Checklist
 
-1. Push this repository to GitHub.
-2. Connect the repo to Vercel – it auto-detects Next.js and installs dependencies.
-3. Add the environment variables from `.env.local` in the Vercel dashboard (Project Settings → Environment Variables).
-4. Trigger a build; your preview URL will update in a few minutes.
-5. Configure the Contentful webhook to hit the production `/api/revalidate` endpoint for instant cache busting after editors publish.
+1. Connect the repository to Vercel (custom domain `groundedliving.org` recommended).
+2. Add environment variables in Vercel (Project Settings → Environment Variables).
+3. Configure a Vercel Deploy Hook and place the URL in a Contentful webhook for instant rebuilds.
+4. Enable HTTPS (automatic on Vercel) and point DNS to Vercel if using the custom domain.
+5. Monitor GA4 (via `NEXT_PUBLIC_GA_TRACKING_ID`) and Vercel Analytics for performance insights.
 
-## 🛠️ Additional Notes
+## 📄 Monetization Hooks
 
-- Remote images are served from `images.ctfassets.net` and `assets.ctfassets.net`; update `next.config.js` if you use a custom CDN.
-- If you add third-party packages without TypeScript definitions, declare ambient types in `global.d.ts` (per project conventions).
-- Tailwind tokens live in `tailwind.config.ts`, with custom animations, shadows, and gradients to mimic Healing Soulfully’s aesthetic.
-- The design intentionally avoids hardcoded copy so you can customize the tone within Contentful entries.
+- Newsletter signup integrates with Mailchimp/ConvertKit via `NEXT_PUBLIC_NEWSLETTER_ENDPOINT`.
+- `affiliate` flag on BlogPost entries adds disclosure + CTA styling.
+- Sponsor spotlight blocks live on post detail pages—update via Contentful copy.
+- Stripe checkout scaffold (`/products/checkout`) documents how to wire sessions when ready.
 
-Welcome to a calmer, softer web publishing flow. 🌿
+## 🧰 Maintenance Notes
+
+- Tailwind tokens live in `tailwind.config.ts`. Gradients, shadows, and typography utilities are centralized for consistency.
+- Ambient types belong in `global.d.ts` if you introduce packages without TypeScript definitions.
+- To extend OG images, tweak `app/api/og/route.tsx` for additional props (e.g., background images, author avatars).
+
+Grounded Living is engineered to scale from first post to six-figure media business—while staying soft, soulful, and intentional. 🌿

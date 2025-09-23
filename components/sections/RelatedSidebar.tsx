@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { PostSummary } from "@/lib/contentful";
+import type { BlogPostSummary } from "@/lib/contentful";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, {
@@ -9,7 +9,7 @@ function formatDate(date: string) {
 }
 
 type Props = {
-  posts: PostSummary[];
+  posts: BlogPostSummary[];
   title?: string;
 };
 
@@ -23,8 +23,8 @@ export function RelatedSidebar({ posts, title = "More to explore" }: Props) {
       <h3 className="font-heading text-xl text-[#3b443b]">{title}</h3>
       <div className="space-y-4">
         {posts.map((post) => (
-          <Link key={post.id} href={`/posts/${post.slug}`} className="block rounded-2xl border border-transparent p-3 transition hover:border-sage-200 hover:bg-sage-100/40">
-            <p className="text-xs uppercase tracking-[0.35em] text-sage-500">{formatDate(post.date)}</p>
+          <Link key={post.id} href={`/blog/${post.slug}`} className="block rounded-2xl border border-transparent p-3 transition hover:border-sage-200 hover:bg-sage-100/40">
+            <p className="text-xs uppercase tracking-[0.35em] text-sage-500">{formatDate(post.datePublished)}</p>
             <p className="mt-2 font-heading text-lg text-[#3b443b]">{post.title}</p>
             {post.excerpt ? <p className="text-xs text-[#4c544c]">{post.excerpt}</p> : null}
           </Link>

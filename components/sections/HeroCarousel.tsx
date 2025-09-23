@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
-import type { PostSummary } from "@/lib/contentful";
+import type { BlogPostSummary } from "@/lib/contentful";
 import { getPlaceholderImage } from "@/lib/contentful";
 
 const AUTO_ROTATE_INTERVAL = 7000;
 
 type Props = {
-  posts: PostSummary[];
+  posts: BlogPostSummary[];
 };
 
 export function HeroCarousel({ posts }: Props) {
@@ -64,11 +64,11 @@ export function HeroCarousel({ posts }: Props) {
               ) : null}
             </div>
             <h1 className="mt-6 max-w-3xl font-heading text-4xl sm:text-5xl md:text-6xl">
-              <Link href={`/posts/${activePost.slug}`}>{activePost.title}</Link>
+              <Link href={`/blog/${activePost.slug}`}>{activePost.title}</Link>
             </h1>
             {activePost.excerpt ? <p className="mt-4 max-w-2xl text-base text-white/85">{activePost.excerpt}</p> : null}
             <Link
-              href={`/posts/${activePost.slug}`}
+              href={`/blog/${activePost.slug}`}
               className="mt-6 inline-flex items-center gap-3 rounded-full bg-white/90 px-6 py-3 text-sm font-semibold uppercase tracking-[0.4em] text-[#3b443b] shadow-lg transition hover:bg-white"
             >
               Read the story
@@ -103,7 +103,7 @@ export function HeroCarousel({ posts }: Props) {
                   <div className="flex-1">
                     <p className="text-xs uppercase tracking-[0.35em] text-sage-500">{post.category?.name ?? "Journal"}</p>
                     <p className="mt-2 font-heading text-lg text-[#3b443b]">{post.title}</p>
-                    <p className="text-xs text-[#4c544c]">{new Date(post.date).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</p>
+                    <p className="text-xs text-[#4c544c]">{new Date(post.datePublished).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</p>
                   </div>
                   <span className={clsx("h-3 w-3 rounded-full", isActive ? "bg-sage-500" : "bg-cream-200 group-hover:bg-sage-400")} />
                 </button>

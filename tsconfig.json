@@ -25,9 +25,7 @@
         "./stubs/@vercel/speed-insights/*"
       ]
     },
-    "types": [
-      "node"
-    ],
+    "types": [],
     "incremental": true,
     "plugins": [
       {

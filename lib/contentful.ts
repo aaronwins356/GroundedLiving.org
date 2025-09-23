@@ -1,99 +1,146 @@
 import "server-only";
 
-import { unstable_cache } from "next/cache";
-import type { Asset, EntryCollection } from "contentful";
+import { cache } from "react";
+import { unstable_cache, revalidateTag } from "next/cache";
+import type {
+  Asset,
+  ClientApi,
+  EntryCollection,
+  EntryFieldTypes,
+  EntrySkeletonType,
+} from "contentful";
 import { createClient } from "contentful";
+
 import type { RichTextDocument, RichTextNode } from "@/lib/rich-text";
 import { BLOCKS } from "@/lib/rich-text";
 
 const SPACE_ID = process.env.CONTENTFUL_SPACE_ID;
-const ENVIRONMENT = process.env.CONTENTFUL_ENVIRONMENT || "master";
 const DELIVERY_TOKEN = process.env.CONTENTFUL_DELIVERY_TOKEN;
 const PREVIEW_TOKEN = process.env.CONTENTFUL_PREVIEW_TOKEN;
+const ENVIRONMENT = process.env.CONTENTFUL_ENVIRONMENT ?? "master";
 
-const FALLBACK_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4//8/AwAI/AL+q0P+WAAAAABJRU5ErkJggg==";
+export const CONTENTFUL_REVALIDATE_INTERVAL = Number.parseInt(
+  process.env.CONTENTFUL_REVALIDATE_INTERVAL ?? "120",
+  10,
+);
 
-export type ContentfulImage = {
+export const contentfulTags = {
+  posts: "contentful:posts",
+  pages: "contentful:pages",
+  categories: "contentful:categories",
+  authors: "contentful:authors",
+} as const;
+
+export interface ContentfulImage {
   url: string;
   width?: number;
   height?: number;
   alt?: string | null;
-};
+}
 
-export type CategorySummary = {
+export interface CategorySummary {
   id: string;
   name: string;
   slug: string;
-};
+  description?: string | null;
+}
 
-export type PostSummary = {
+export interface AuthorSummary {
+  id: string;
+  name: string;
+  bio?: string | null;
+  avatar?: ContentfulImage | null;
+}
+
+export interface BlogPostSummary {
   id: string;
   slug: string;
   title: string;
   excerpt: string | null;
-  date: string;
-  category: CategorySummary | null;
   coverImage: ContentfulImage | null;
-};
+  category: CategorySummary | null;
+  author: AuthorSummary | null;
+  tags: string[];
+  datePublished: string;
+  affiliate: boolean;
+  seoDescription?: string | null;
+}
 
-export type Post = PostSummary & {
-  body: RichTextDocument | null;
+export interface BlogPost extends BlogPostSummary {
+  content: RichTextDocument | null;
   seoDescription: string | null;
-  imageGallery: ContentfulImage[];
   assets: Record<string, ContentfulImage>;
-};
+}
 
-export type Page = {
+export interface SitePage {
   id: string;
   title: string;
   slug: string;
   content: RichTextDocument | null;
+  heroImage: ContentfulImage | null;
+  seoDescription: string | null;
+}
+
+export type PageSummary = Pick<SitePage, "id" | "title" | "slug"> & { href?: string };
+
+const FALLBACK_IMAGE =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4//8/AwAI/AL+q0P+WAAAAABJRU5ErkJggg==";
+
+interface BlogPostFields {
+  title: EntryFieldTypes.Text;
+  slug: EntryFieldTypes.Symbol;
+  excerpt: EntryFieldTypes.Text;
+  content: EntryFieldTypes.RichText;
+  coverImage: EntryFieldTypes.AssetLink;
+  author: EntryFieldTypes.EntryLink<AuthorSkeleton>;
+  category: EntryFieldTypes.EntryLink<CategorySkeleton>;
+  tags: EntryFieldTypes.Array<EntryFieldTypes.Symbol>;
+  datePublished: EntryFieldTypes.Date;
+  seoDescription: EntryFieldTypes.Text;
+  affiliate: EntryFieldTypes.Boolean;
+}
+
+interface CategoryFields {
+  name: EntryFieldTypes.Text;
+  slug: EntryFieldTypes.Symbol;
+  description: EntryFieldTypes.Text;
+}
+
+interface AuthorFields {
+  name: EntryFieldTypes.Text;
+  bio: EntryFieldTypes.Text;
+  avatarImage: EntryFieldTypes.AssetLink;
+}
+
+interface PageFields {
+  title: EntryFieldTypes.Text;
+  slug: EntryFieldTypes.Symbol;
+  content: EntryFieldTypes.RichText;
+  heroImage: EntryFieldTypes.AssetLink;
+  seoDescription: EntryFieldTypes.Text;
+}
+
+type BlogPostSkeleton = EntrySkeletonType<BlogPostFields, "blogPost">;
+type CategorySkeleton = EntrySkeletonType<CategoryFields, "category">;
+type AuthorSkeleton = EntrySkeletonType<AuthorFields, "author">;
+type PageSkeleton = EntrySkeletonType<PageFields, "page">;
+
+type FetchOptions = {
+  preview?: boolean;
 };
 
-export type PageSummary = Pick<Page, "id" | "title" | "slug"> & { href?: string };
+type ContentfulClient = ClientApi<undefined>;
 
-type PostFields = {
-  title?: string;
-  slug?: string;
-  excerpt?: string;
-  body?: RichTextDocument;
-  coverImage?: Asset;
-  category?: BasicEntry<CategoryFields>;
-  date?: string;
-};
-
-type CategoryFields = {
-  name?: string;
-  slug?: string;
-};
-
-type PageFields = {
-  title?: string;
-  slug?: string;
-  content?: RichTextDocument;
-};
-
-type SysFields = {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type BasicEntry<TFields> = {
-  sys: SysFields;
-  fields: TFields;
-};
-
-function getBaseClient(preview = false) {
+const createContentfulClient = cache((preview = false): ContentfulClient | null => {
   if (!SPACE_ID || !DELIVERY_TOKEN) {
     if (process.env.NODE_ENV === "development") {
-      console.warn("Contentful credentials are not configured. Returning empty collections.");
+      console.warn("Missing Contentful credentials. Returning null client.");
     }
     return null;
   }
 
   if (preview && !PREVIEW_TOKEN) {
-    console.warn("CONTENTFUL_PREVIEW_TOKEN is missing. Falling back to delivery API.");
+    console.warn("CONTENTFUL_PREVIEW_TOKEN is not configured. Using delivery token.");
   }
 
   return createClient({
@@ -102,52 +149,53 @@ function getBaseClient(preview = false) {
     accessToken: preview && PREVIEW_TOKEN ? PREVIEW_TOKEN : DELIVERY_TOKEN,
     host: preview && PREVIEW_TOKEN ? "preview.contentful.com" : undefined,
   });
-}
+});
 
-async function fetchEntries<TFields>(
-  params: Record<string, unknown>,
-  options?: { preview?: boolean; contentType: string },
-): Promise<EntryCollection<BasicEntry<TFields>>> {
-  const client = getBaseClient(options?.preview);
+async function fetchEntries<TSkeleton extends EntrySkeletonType<undefined, string>>(
+  query: Record<string, unknown>,
+  options: FetchOptions & { contentType: TSkeleton["contentTypeId"]; preview?: boolean },
+): Promise<EntryCollection<TSkeleton>> {
+  const client = createContentfulClient(options.preview ?? false);
   if (!client) {
-    return { items: [] } as EntryCollection<BasicEntry<TFields>>;
+    return { items: [] } as EntryCollection<TSkeleton>;
   }
 
-  return client.getEntries<TFields>({
-    content_type: options?.contentType,
-    include: 3,
-    order: "-fields.date",
-    ...params,
-  }) as unknown as EntryCollection<BasicEntry<TFields>>;
+  return client.getEntries<TSkeleton>({
+    content_type: options.contentType,
+    include: 4,
+    order: "-fields.datePublished",
+    ...query,
+  });
 }
 
-function normalizeAsset(asset?: Asset | null): ContentfulImage | null {
-  if (!asset || !asset.fields || !asset.fields.file) {
+function normaliseAsset(asset?: Asset | null): ContentfulImage | null {
+  if (!asset) {
     return null;
   }
 
   const file = asset.fields.file as { url?: string; details?: { image?: { width?: number; height?: number } } };
-  const url = file.url ? (file.url.startsWith("http") ? file.url : `https:${file.url}`) : null;
-
-  if (!url) {
+  if (!file?.url) {
     return null;
   }
 
-  const alt = asset.fields.description || asset.fields.title || null;
+  const url = file.url.startsWith("http") ? file.url : `https:${file.url}`;
 
   return {
     url,
     width: file.details?.image?.width,
     height: file.details?.image?.height,
-    alt,
+    alt: (asset.fields.description as string | undefined) ?? (asset.fields.title as string | undefined) ?? null,
   };
 }
 
-function normalizeCategory(entry?: BasicEntry<CategoryFields> | null): CategorySummary | null {
-  const name = entry?.fields?.name?.trim();
-  const slug = entry?.fields?.slug?.trim();
+function normaliseCategory(entry?: CategorySkeleton | null): CategorySummary | null {
+  if (!entry) {
+    return null;
+  }
 
-  if (!entry || !name || !slug) {
+  const name = (entry.fields.name as string | undefined)?.trim();
+  const slug = (entry.fields.slug as string | undefined)?.trim();
+  if (!name || !slug) {
     return null;
   }
 
@@ -155,133 +203,153 @@ function normalizeCategory(entry?: BasicEntry<CategoryFields> | null): CategoryS
     id: entry.sys.id,
     name,
     slug,
+    description: ((entry.fields.description as string | undefined) ?? null)?.trim() ?? null,
   };
 }
 
-function mapPost(entry: BasicEntry<PostFields>): Post {
-  const slug = entry.fields.slug?.trim() ?? entry.sys.id;
-  const category = normalizeCategory(entry.fields.category);
-  const coverImage = normalizeAsset(entry.fields.coverImage) ?? null;
+function normaliseAuthor(entry?: AuthorSkeleton | null): AuthorSummary | null {
+  if (!entry) {
+    return null;
+  }
 
-  const allAssets = (entry.fields.body as RichTextDocument | undefined)?.content
-    ?.flatMap((node) => extractAssetFromNode(node))
-    .filter(Boolean) as Asset[] | undefined;
+  const name = (entry.fields.name as string | undefined)?.trim();
+  if (!name) {
+    return null;
+  }
 
-  const gallery = allAssets?.map((asset) => normalizeAsset(asset)).filter(Boolean) as ContentfulImage[] | undefined;
-  const assetMap: Record<string, ContentfulImage> = {};
+  return {
+    id: entry.sys.id,
+    name,
+    bio: ((entry.fields.bio as string | undefined) ?? null)?.trim() ?? null,
+    avatar: normaliseAsset(entry.fields.avatarImage as unknown as Asset),
+  };
+}
 
-  allAssets?.forEach((asset) => {
-    const normalized = normalizeAsset(asset);
-    if (asset?.sys?.id && normalized) {
-      assetMap[asset.sys.id] = normalized;
+function extractAssetsFromRichText(node: RichTextNode): Asset[] {
+  const results: Asset[] = [];
+
+  if (node.nodeType === BLOCKS.EMBEDDED_ASSET) {
+    const target = (node.data as { target?: Asset } | undefined)?.target;
+    if (target) {
+      results.push(target);
+    }
+  }
+
+  node.content?.forEach((child) => {
+    results.push(...extractAssetsFromRichText(child));
+  });
+
+  return results;
+}
+
+function mapBlogPost(entry: BlogPostSkeleton): BlogPost {
+  const slug = (entry.fields.slug as string | undefined)?.trim() ?? entry.sys.id;
+  const content = (entry.fields.content as RichTextDocument | null) ?? null;
+  const relatedAssets = content?.content.flatMap((block) => extractAssetsFromRichText(block)) ?? [];
+
+  const assets: Record<string, ContentfulImage> = {};
+  relatedAssets.forEach((asset) => {
+    const mapped = normaliseAsset(asset);
+    if (asset.sys.id && mapped) {
+      assets[asset.sys.id] = mapped;
     }
   });
 
+  const cover = normaliseAsset(entry.fields.coverImage as unknown as Asset) ?? null;
+
   return {
     id: entry.sys.id,
     slug,
-    title: entry.fields.title?.trim() ?? "Untitled Post",
-    excerpt: entry.fields.excerpt?.trim() ?? null,
-    date: entry.fields.date ?? entry.sys.updatedAt ?? entry.sys.createdAt,
-    category,
-    coverImage: coverImage ?? (gallery?.[0] ?? null),
-    body: entry.fields.body ?? null,
-    seoDescription: entry.fields.excerpt?.trim() ?? null,
-    imageGallery: gallery ?? [],
-    assets: assetMap,
+    title: (entry.fields.title as string | undefined)?.trim() ?? "Untitled",
+    excerpt: ((entry.fields.excerpt as string | undefined) ?? null)?.trim() ?? null,
+    coverImage: cover,
+    category: normaliseCategory(entry.fields.category as unknown as CategorySkeleton),
+    author: normaliseAuthor(entry.fields.author as unknown as AuthorSkeleton),
+    tags: Array.isArray(entry.fields.tags)
+      ? (entry.fields.tags as string[]).map((tag) => tag.trim()).filter(Boolean)
+      : [],
+    datePublished: (entry.fields.datePublished as string | undefined) ?? entry.sys.updatedAt ?? entry.sys.createdAt,
+    affiliate: Boolean(entry.fields.affiliate),
+    content,
+    seoDescription: ((entry.fields.seoDescription as string | undefined) ?? null)?.trim() ?? null,
+    assets,
   };
 }
 
-function extractAssetFromNode(node: RichTextNode): (Asset | null)[] {
-  const collected: (Asset | null)[] = [];
-  if (node.nodeType === BLOCKS.EMBEDDED_ASSET) {
-    const target = (node.data as { target?: Asset } | undefined)?.target ?? null;
-    collected.push(target ?? null);
-  }
-  if (node.content) {
-    node.content.forEach((child) => {
-      collected.push(...extractAssetFromNode(child));
-    });
-  }
-  return collected;
-}
-
-function mapPostSummary(entry: BasicEntry<PostFields>): PostSummary {
-  const post = mapPost(entry);
+function mapBlogPostSummary(entry: BlogPostSkeleton): BlogPostSummary {
+  const mapped = mapBlogPost(entry);
   return {
-    id: post.id,
-    slug: post.slug,
-    title: post.title,
-    excerpt: post.excerpt,
-    date: post.date,
-    category: post.category,
-    coverImage: post.coverImage,
+    id: mapped.id,
+    slug: mapped.slug,
+    title: mapped.title,
+    excerpt: mapped.excerpt,
+    coverImage: mapped.coverImage,
+    category: mapped.category,
+    author: mapped.author,
+    tags: mapped.tags,
+    datePublished: mapped.datePublished,
+    affiliate: mapped.affiliate,
+    seoDescription: mapped.seoDescription,
   };
 }
 
-function mapPage(entry: BasicEntry<PageFields>): Page {
-  const slug = entry.fields.slug?.trim() ?? entry.sys.id;
+function mapPage(entry: PageSkeleton): SitePage {
+  const slug = (entry.fields.slug as string | undefined)?.trim() ?? entry.sys.id;
   return {
     id: entry.sys.id,
-    title: entry.fields.title?.trim() ?? "Untitled Page",
+    title: (entry.fields.title as string | undefined)?.trim() ?? "Untitled Page",
     slug,
-    content: entry.fields.content ?? null,
+    content: (entry.fields.content as RichTextDocument | null) ?? null,
+    heroImage: normaliseAsset(entry.fields.heroImage as unknown as Asset),
+    seoDescription: ((entry.fields.seoDescription as string | undefined) ?? null)?.trim() ?? null,
   };
 }
 
-function sortByDate<T extends { date: string }>(items: T[]): T[] {
-  return [...items].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-}
-
-const getPostsCached = unstable_cache(
+const getBlogPostsCached = unstable_cache(
   async (preview = false) => {
-    const { items } = await fetchEntries<PostFields>({ order: "-fields.date" }, { contentType: "post", preview });
-    return items.map(mapPostSummary).filter((post) => Boolean(post.slug));
+    const { items } = await fetchEntries<BlogPostSkeleton>({}, { contentType: "blogPost", preview });
+    return items.map(mapBlogPostSummary).filter((post) => Boolean(post.slug));
   },
-  ["contentful-posts"],
-  { tags: ["posts"] },
+  ["contentful:blogPosts"],
+  { tags: [contentfulTags.posts], revalidate: CONTENTFUL_REVALIDATE_INTERVAL },
 );
 
-export async function getPosts(options?: { preview?: boolean }): Promise<PostSummary[]> {
-  const posts = await getPostsCached(options?.preview ?? false);
-  return sortByDate(posts);
+export async function getBlogPosts(options?: { preview?: boolean }): Promise<BlogPostSummary[]> {
+  const posts = await getBlogPostsCached(options?.preview ?? false);
+  return posts.sort((a, b) => new Date(b.datePublished).getTime() - new Date(a.datePublished).getTime());
 }
 
-const getPostBySlugCached = unstable_cache(
+const getBlogPostBySlugCached = unstable_cache(
   async (slug: string, preview = false) => {
     if (!slug) {
       return null;
     }
 
-    const { items } = await fetchEntries<PostFields>({
+    const { items } = await fetchEntries<BlogPostSkeleton>({
       limit: 1,
       "fields.slug": slug,
-    }, { contentType: "post", preview });
+    }, { contentType: "blogPost", preview });
 
     const entry = items[0];
-    return entry ? mapPost(entry) : null;
+    return entry ? mapBlogPost(entry) : null;
   },
-  ["contentful-post-by-slug"],
-  { tags: ["posts"] },
+  ["contentful:blogPost"],
+  { tags: [contentfulTags.posts], revalidate: CONTENTFUL_REVALIDATE_INTERVAL },
 );
 
-export async function getPostBySlug(slug: string, options?: { preview?: boolean }): Promise<Post | null> {
-  return getPostBySlugCached(slug, options?.preview ?? false);
+export async function getBlogPostBySlug(slug: string, options?: { preview?: boolean }): Promise<BlogPost | null> {
+  return getBlogPostBySlugCached(slug, options?.preview ?? false);
 }
 
 const getCategoriesCached = unstable_cache(
   async () => {
-    const { items } = await fetchEntries<CategoryFields>({ order: "fields.name" }, { contentType: "category" });
+    const { items } = await fetchEntries<CategorySkeleton>({ order: "fields.name" }, { contentType: "category" });
     return items
-      .map((entry) => ({
-        id: entry.sys.id,
-        name: entry.fields.name?.trim() ?? "Untitled",
-        slug: entry.fields.slug?.trim() ?? entry.sys.id,
-      }))
-      .filter((category) => Boolean(category.slug));
+      .map((entry) => normaliseCategory(entry))
+      .filter((category): category is CategorySummary => Boolean(category));
   },
-  ["contentful-categories"],
-  { tags: ["categories"] },
+  ["contentful:categories"],
+  { tags: [contentfulTags.categories], revalidate: CONTENTFUL_REVALIDATE_INTERVAL },
 );
 
 export async function getCategories(): Promise<CategorySummary[]> {
@@ -289,60 +357,83 @@ export async function getCategories(): Promise<CategorySummary[]> {
   return categories.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-const getCategoryPostsCached = unstable_cache(
+const getPagesCached = unstable_cache(
+  async () => {
+    const { items } = await fetchEntries<PageSkeleton>({ order: "fields.title" }, { contentType: "page" });
+    return items.map(mapPage);
+  },
+  ["contentful:pages"],
+  { tags: [contentfulTags.pages], revalidate: CONTENTFUL_REVALIDATE_INTERVAL },
+);
+
+export async function getPages(): Promise<SitePage[]> {
+  return getPagesCached();
+}
+
+export async function getPageBySlug(slug: string): Promise<SitePage | null> {
+  if (!slug) {
+    return null;
+  }
+
+  const pages = await getPagesCached();
+  return pages.find((page) => page.slug === slug) ?? null;
+}
+
+export async function getPageSummaries(): Promise<PageSummary[]> {
+  const pages = await getPagesCached();
+  return pages.map(({ id, title, slug }) => ({ id, title, slug, href: `/pages/${slug}` }));
+}
+
+const getAuthorsCached = unstable_cache(
+  async () => {
+    const { items } = await fetchEntries<AuthorSkeleton>({ order: "fields.name" }, { contentType: "author" });
+    return items
+      .map((entry) => normaliseAuthor(entry))
+      .filter((author): author is AuthorSummary => Boolean(author));
+  },
+  ["contentful:authors"],
+  { tags: [contentfulTags.authors], revalidate: CONTENTFUL_REVALIDATE_INTERVAL },
+);
+
+export async function getAuthors(): Promise<AuthorSummary[]> {
+  return getAuthorsCached();
+}
+
+const getPostsByCategoryCached = unstable_cache(
   async (slug: string) => {
     if (!slug) {
       return [];
     }
 
-    const { items } = await fetchEntries<PostFields>({
-      "fields.category.fields.slug": slug,
-    }, { contentType: "post" });
+    const { items } = await fetchEntries<BlogPostSkeleton>(
+      {
+        "fields.category.fields.slug": slug,
+      },
+      { contentType: "blogPost" },
+    );
 
-    return items.map(mapPostSummary);
+    return items.map(mapBlogPostSummary);
   },
-  ["contentful-category-posts"],
-  { tags: ["posts", "categories"] },
+  ["contentful:postsByCategory"],
+  { tags: [contentfulTags.posts, contentfulTags.categories], revalidate: CONTENTFUL_REVALIDATE_INTERVAL },
 );
 
-export async function getPostsByCategory(slug: string): Promise<PostSummary[]> {
-  const posts = await getCategoryPostsCached(slug);
-  return sortByDate(posts);
+export async function getBlogPostsByCategory(slug: string): Promise<BlogPostSummary[]> {
+  const posts = await getPostsByCategoryCached(slug);
+  return posts.sort((a, b) => new Date(b.datePublished).getTime() - new Date(a.datePublished).getTime());
 }
 
-const getPagesCached = unstable_cache(
-  async () => {
-    const { items } = await fetchEntries<PageFields>({ order: "fields.title" }, { contentType: "page" });
-    return items.map(mapPage);
-  },
-  ["contentful-pages"],
-  { tags: ["pages"] },
-);
-
-export async function getPages(): Promise<Page[]> {
-  return getPagesCached();
-}
-
-export async function getPageSummaries(): Promise<PageSummary[]> {
-  const pages = await getPagesCached();
-  return pages.map(({ id, slug, title }) => ({ id, slug, title }));
-}
-
-export async function getPageBySlug(slug: string): Promise<Page | null> {
-  if (!slug) {
-    return null;
-  }
-
-  const pages = (await getPagesCached()).filter((page) => page.slug === slug);
-  return pages[0] ?? null;
-}
-
-export function getFeaturedPosts(posts: PostSummary[], count = 3): PostSummary[] {
-  return posts.slice(0, count);
-}
-
-export function getLatestPosts(posts: PostSummary[], offset = 0, limit = 6): PostSummary[] {
-  return posts.slice(offset, offset + limit);
+export async function getRelatedBlogPosts(
+  post: BlogPostSummary,
+  limit = 3,
+): Promise<BlogPostSummary[]> {
+  const posts = await getBlogPosts();
+  return posts
+    .filter((candidate) => candidate.slug !== post.slug)
+    .filter((candidate) =>
+      post.category ? candidate.category?.slug === post.category.slug : candidate.tags.some((tag) => post.tags.includes(tag)),
+    )
+    .slice(0, limit);
 }
 
 export function getPlaceholderImage(): ContentfulImage {
@@ -353,3 +444,38 @@ export function buildAbsoluteUrl(path: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.groundedliving.org";
   return new URL(path, baseUrl).toString();
 }
+
+export function revalidateContentfulTags(...tags: (keyof typeof contentfulTags)[]) {
+  tags.forEach((tag) => revalidateTag(contentfulTags[tag]));
+}
+
+export function selectFeaturedPosts(posts: BlogPostSummary[], count = 3): BlogPostSummary[] {
+  return posts.slice(0, count);
+}
+
+export function paginatePosts(
+  posts: BlogPostSummary[],
+  page: number,
+  pageSize: number,
+): { entries: BlogPostSummary[]; totalPages: number } {
+  const totalPages = Math.max(1, Math.ceil(posts.length / pageSize));
+  const current = Math.min(Math.max(page, 1), totalPages);
+  const start = (current - 1) * pageSize;
+  return {
+    entries: posts.slice(start, start + pageSize),
+    totalPages,
+  };
+}
+
+export function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function getSeoDescription(post: BlogPost | BlogPostSummary): string {
+  return post.seoDescription ?? post.excerpt ?? "";
+}
+

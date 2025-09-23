@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "prismjs/themes/prism-tomorrow.css";
+
 :root {
   color-scheme: light;
   --glow-color: rgba(108, 159, 136, 0.25);
@@ -32,7 +34,7 @@ main {
 }
 
 .prose {
-  @apply prose-lg max-w-none text-[#4c544c] prose-headings:font-heading prose-headings:text-[#2f332f] prose-h2:mt-12 prose-h3:mt-10 prose-h4:mt-8 prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl prose-a:text-sage-500 prose-a:no-underline prose-strong:text-[#2f332f] prose-img:rounded-3xl prose-img:shadow-2xl prose-img:border prose-img:border-cream-200;
+  @apply prose-lg max-w-none text-[#4c544c] prose-headings:font-heading prose-headings:text-[#2f332f] prose-h2:mt-12 prose-h3:mt-10 prose-h4:mt-8 prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl prose-a:text-sage-500 prose-a:no-underline prose-strong:text-[#2f332f] prose-img:rounded-3xl prose-img:shadow-2xl prose-img:border prose-img:border-cream-200 prose-blockquote:border-l-4 prose-blockquote:border-rose-200 prose-blockquote:bg-rose-100/40 prose-blockquote:italic;
 }
 
 .prose a {
@@ -48,10 +50,6 @@ main {
 
 .prose a:hover::after {
   transform: scaleX(1);
-}
-
-.prose blockquote {
-  @apply border-l-4 border-rose-200 bg-cream-100/80 py-6 pl-6 italic text-taupe-400;
 }
 
 .prose ul,
@@ -81,6 +79,50 @@ main {
 
 .surface-card {
   @apply rounded-[28px] border border-cream-200 bg-white/80 backdrop-blur shadow-[0_20px_60px_rgba(108,159,136,0.15)] transition-all duration-500 ease-out hover:shadow-[0_30px_80px_rgba(108,159,136,0.22)] hover:-translate-y-1;
+}
+
+.article-prose .prose > p:first-of-type::first-letter {
+  @apply float-left mr-3 text-6xl font-heading text-sage-500;
+  line-height: 0.85;
+}
+
+.article-prose pre {
+  @apply overflow-x-auto rounded-3xl border border-sage-200 bg-[#1e1e1e] p-6 text-sm text-sage-100 shadow-inner;
+}
+
+.article-prose code {
+  @apply rounded bg-sage-100/70 px-1 py-0.5 text-sm text-[#3b443b];
+}
+
+.article-prose pre code {
+  @apply bg-transparent p-0 text-sage-100;
+}
+
+.article-prose figure {
+  @apply my-8 space-y-3;
+}
+
+.article-prose figcaption {
+  @apply text-center text-xs uppercase tracking-[0.3em] text-sage-400;
+}
+
+.share-bar {
+  background: linear-gradient(135deg, rgba(241, 245, 242, 0.95) 0%, rgba(249, 236, 236, 0.9) 100%);
+  @apply rounded-[28px] border border-cream-200;
+}
+
+.newsletter-card {
+  background: linear-gradient(135deg, rgba(253, 250, 245, 0.95) 0%, rgba(249, 236, 236, 0.88) 100%);
+}
+
+.article-prose ul,
+.article-prose ol {
+  @apply space-y-2;
+}
+
+.article-prose li > ul,
+.article-prose li > ol {
+  @apply mt-2;
 }
 
 .tag-pill {

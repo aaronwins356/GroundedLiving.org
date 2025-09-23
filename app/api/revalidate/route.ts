@@ -1,6 +1,8 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
+import { contentfulTags } from "@/lib/contentful";
+
 const SECRET = process.env.CONTENTFUL_REVALIDATE_SECRET;
 
 type RevalidatePayload = {
@@ -19,10 +21,19 @@ function validateSecret(candidate?: string | null) {
   return candidate === SECRET;
 }
 
+const tagLookup = new Map<string, string>(
+  Object.entries(contentfulTags).map(([key, value]) => [key, value]),
+);
+
+function resolveTag(tag: string) {
+  return tagLookup.get(tag) ?? tag;
+}
+
 function triggerTags(tags: string[] = []) {
   tags.forEach((tag) => {
-    if (tag) {
-      revalidateTag(tag);
+    const resolved = resolveTag(tag);
+    if (resolved) {
+      revalidateTag(resolved);
     }
   });
 }
@@ -60,9 +71,9 @@ function inferPathsFromPayload(payload: RevalidatePayload): string[] {
   }
   if (payload.slug) {
     if (payload.type === "post") {
-      paths.add(`/posts/${payload.slug}`);
+      paths.add(`/blog/${payload.slug}`);
       paths.add("/");
-      paths.add("/journal");
+      paths.add("/blog");
     }
     if (payload.type === "page") {
       paths.add(`/pages/${payload.slug}`);

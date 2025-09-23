@@ -32,8 +32,20 @@ function renderNode(node: RichTextNode, assets: Record<string, ContentfulImage> 
   switch (node.nodeType) {
     case BLOCKS.DOCUMENT:
       return <>{renderChildren(node.content, assets, key)}</>;
-    case BLOCKS.PARAGRAPH:
+    case BLOCKS.PARAGRAPH: {
+      const isCodeBlock = node.content?.every((child) =>
+        child.nodeType === "text" && child.marks?.some((mark) => mark.type === MARKS.CODE),
+      );
+      if (isCodeBlock) {
+        const codeValue = node.content?.map((child) => child.value ?? "").join("") ?? "";
+        return (
+          <pre key={key}>
+            <code className="language-ts">{codeValue}</code>
+          </pre>
+        );
+      }
       return <p key={key}>{renderChildren(node.content, assets, key)}</p>;
+    }
     case BLOCKS.HEADING_1:
       return <h1 key={key}>{renderChildren(node.content, assets, key)}</h1>;
     case BLOCKS.HEADING_2:

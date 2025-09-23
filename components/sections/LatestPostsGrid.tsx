@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { PostSummary } from "@/lib/contentful";
+import type { BlogPostSummary } from "@/lib/contentful";
 import { getPlaceholderImage } from "@/lib/contentful";
 
 function formatDate(value: string) {
@@ -12,7 +12,7 @@ function formatDate(value: string) {
 }
 
 type Props = {
-  posts: PostSummary[];
+  posts: BlogPostSummary[];
 };
 
 export function LatestPostsGrid({ posts }: Props) {
@@ -48,14 +48,14 @@ export function LatestPostsGrid({ posts }: Props) {
                 <div className="flex items-center gap-3 text-xs uppercase tracking-[0.35em] text-sage-500">
                   <span>{post.category?.name ?? "Journal"}</span>
                   <span className="h-px flex-1 bg-cream-200" />
-                  <span>{formatDate(post.date)}</span>
+                  <span>{formatDate(post.datePublished)}</span>
                 </div>
                 <h3 className="font-heading text-2xl text-[#3b443b]">
-                  <Link href={`/posts/${post.slug}`}>{post.title}</Link>
+                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                 </h3>
                 {post.excerpt ? <p className="text-sm text-[#4c544c]">{post.excerpt}</p> : null}
                 <Link
-                  href={`/posts/${post.slug}`}
+                  href={`/blog/${post.slug}`}
                   className="inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.4em] text-sage-500 transition hover:text-sage-600"
                 >
                   Continue reading

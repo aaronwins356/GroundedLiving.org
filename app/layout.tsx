@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Playfair_Display, Lato } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { DefaultSeo } from "next-seo";
 import "./globals.css";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
+import { GoogleAnalytics } from "../components/analytics/GoogleAnalytics";
+import seoConfig from "../next-seo.config";
 
 const headingFont = Playfair_Display({
   subsets: ["latin"],
@@ -54,6 +57,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <main className="flex-1 pt-24 lg:pt-28">{children}</main>
           <Footer />
         </div>
+        <DefaultSeo {...seoConfig} />
+        <GoogleAnalytics trackingId={process.env.NEXT_PUBLIC_GA_TRACKING_ID} />
         <SpeedInsights />
       </body>
     </html>
