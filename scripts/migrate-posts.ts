@@ -14,6 +14,8 @@ import { readFile, readdir, stat } from "fs/promises";
 import path from "path";
 import matter from "gray-matter";
 
+import type { RichTextDocument, RichTextNode } from "../types/contentful";
+
 const DEFAULT_LOCALE = "en-US";
 const MARKDOWN_DIRECTORY = path.join(process.cwd(), "content", "posts");
 const LEGACY_BLOG_DIRECTORIES = [
@@ -40,6 +42,7 @@ interface LocalPost {
   excerpt: string;
   datePublished: string;
   sourcePath: string;
+  seoDescription?: string;
 }
 
 interface ContentfulEntryLike {
@@ -84,7 +87,7 @@ function deriveExcerpt(body: string): string {
   const normalized = body
     .trim()
     .replace(/\s+/g, " ")
-    .slice(0, 280);
+    .slice(0, 200);
   return normalized;
 }
 
@@ -98,32 +101,127 @@ function normalizeDate(input: string | undefined, fallbackIso: string): string {
   return fallbackIso;
 }
 
-function buildRichTextFromMarkdown(markdown: string) {
-  // We translate Markdown paragraphs into a minimal Rich Text tree so the
-  // resulting entry is editable in Contentful's Rich Text editor. Editors can
-  // later enhance formatting directly in the studio UI.
-  const paragraphs = markdown
+function sanitizeInlineFormatting(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/_(.+?)_/g, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/\[(.+?)\]\((.*?)\)/g, "$1");
+}
+
+function createTextNode(value: string): RichTextNode {
+  return {
+    nodeType: "text",
+    value,
+    marks: [],
+    data: {},
+  };
+}
+
+function wrapInParagraph(text: string): RichTextNode {
+  return {
+    nodeType: "paragraph",
+    data: {},
+    content: [createTextNode(text)],
+  };
+}
+
+function buildRichTextFromMarkdown(markdown: string): RichTextDocument {
+  const blocks = markdown
     .trim()
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean);
 
+  const content: RichTextNode[] = [];
+
+  for (const block of blocks) {
+    if (/^```/.test(block)) {
+      const code = block.replace(/^```[a-zA-Z0-9-]*\n?/, "").replace(/```$/, "");
+      content.push({
+        nodeType: "paragraph",
+        data: {},
+        content: [
+          {
+            nodeType: "text",
+            value: code,
+            marks: [{ type: "code" }],
+            data: {},
+          },
+        ],
+      });
+      continue;
+    }
+
+    const headingMatch = block.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const text = sanitizeInlineFormatting(headingMatch[2]);
+      content.push({
+        nodeType: `heading-${Math.min(level, 6)}` as RichTextNode["nodeType"],
+        data: {},
+        content: [createTextNode(text)],
+      });
+      continue;
+    }
+
+    if (/^(?:- |\* |\+ ).+/m.test(block)) {
+      const items = block
+        .split(/\n/)
+        .map((line) => line.replace(/^(?:- |\* |\+ )/, "").trim())
+        .filter(Boolean);
+      content.push({
+        nodeType: "unordered-list",
+        data: {},
+        content: items.map((item) => ({
+          nodeType: "list-item",
+          data: {},
+          content: [wrapInParagraph(sanitizeInlineFormatting(item))],
+        })),
+      });
+      continue;
+    }
+
+    if (/^(?:\d+\. ).+/m.test(block)) {
+      const items = block
+        .split(/\n/)
+        .map((line) => line.replace(/^\d+\.\s*/, "").trim())
+        .filter(Boolean);
+      content.push({
+        nodeType: "ordered-list",
+        data: {},
+        content: items.map((item) => ({
+          nodeType: "list-item",
+          data: {},
+          content: [wrapInParagraph(sanitizeInlineFormatting(item))],
+        })),
+      });
+      continue;
+    }
+
+    if (/^>\s?/.test(block)) {
+      const quoteText = block
+        .split(/\n/)
+        .map((line) => line.replace(/^>\s?/, ""))
+        .join(" ");
+      content.push({
+        nodeType: "blockquote",
+        data: {},
+        content: [wrapInParagraph(sanitizeInlineFormatting(quoteText))],
+      });
+      continue;
+    }
+
+    const sanitized = sanitizeInlineFormatting(block.replace(/\n/g, " "));
+    content.push(wrapInParagraph(sanitized));
+  }
+
   return {
     nodeType: "document",
     data: {},
-    content: paragraphs.map((paragraph) => ({
-      nodeType: "paragraph",
-      data: {},
-      content: [
-        {
-          nodeType: "text",
-          value: paragraph.replace(/\n/g, " "),
-          marks: [],
-          data: {},
-        },
-      ],
-    })),
-  };
+    content,
+  } satisfies RichTextDocument;
 }
 
 async function parseMarkdownPosts(): Promise<LocalPost[]> {
@@ -162,6 +260,7 @@ async function parseMarkdownPosts(): Promise<LocalPost[]> {
       excerpt,
       datePublished,
       sourcePath: filePath,
+      seoDescription: excerpt,
     });
   }
 
@@ -223,6 +322,7 @@ async function parseLegacyJsxPosts(): Promise<LocalPost[]> {
         excerpt,
         datePublished: stats.mtime.toISOString(),
         sourcePath: filePath,
+        seoDescription: excerpt,
       });
     }
   }
@@ -254,17 +354,22 @@ async function createOrUpdatePost(
     return;
   }
 
-  const entry = await env.createEntry("blogPost", {
-    fields: {
-      title: { [DEFAULT_LOCALE]: post.title },
-      slug: { [DEFAULT_LOCALE]: post.slug },
-      excerpt: { [DEFAULT_LOCALE]: post.excerpt },
-      content: { [DEFAULT_LOCALE]: buildRichTextFromMarkdown(post.content) },
-      datePublished: { [DEFAULT_LOCALE]: post.datePublished },
-    },
-  });
+  const fields: Record<string, Record<string, unknown>> = {
+    title: { [DEFAULT_LOCALE]: post.title },
+    slug: { [DEFAULT_LOCALE]: post.slug },
+    excerpt: { [DEFAULT_LOCALE]: post.excerpt },
+    content: { [DEFAULT_LOCALE]: buildRichTextFromMarkdown(post.content) },
+    datePublished: { [DEFAULT_LOCALE]: post.datePublished },
+  };
+
+  if (post.seoDescription) {
+    fields.seoDescription = { [DEFAULT_LOCALE]: post.seoDescription };
+  }
+
+  const entry = await env.createEntry("blogPost", { fields });
 
   await entry.publish();
+  existingSlugs.add(post.slug);
   console.info(`Published Contentful blogPost → slug: ${post.slug}`);
 }
 

@@ -66,6 +66,7 @@ export interface ContentfulPage {
   content: RichTextDocument | null;
   navigationLabel?: string | null;
   navigationPriority?: number | null;
+  heroImage?: ContentfulImageAsset | null;
 }
 
 export interface ContentfulBlogPost {

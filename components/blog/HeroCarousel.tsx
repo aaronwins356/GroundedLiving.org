@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 import type { ContentfulBlogPost } from "../../types/contentful";
@@ -39,6 +40,12 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
       <div className={styles.slides}>
         {items.map((item, index) => {
           const isActive = index === activeIndex;
+          const heroImage = item.coverImage?.url
+            ? {
+                src: `${item.coverImage.url}?w=1200&h=900&fit=fill`,
+                alt: item.coverImage.description ?? item.coverImage.title ?? item.title,
+              }
+            : null;
           return (
             <article
               key={item.id}
@@ -56,12 +63,15 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
                     Read story
                   </Link>
                 </div>
-                {item.coverImage?.url ? (
+                {heroImage ? (
                   <div className={styles.media}>
-                    <img
-                      src={`${item.coverImage.url}?w=1200&h=900&fit=fill`}
-                      alt={item.coverImage.description ?? item.coverImage.title ?? item.title}
-                      loading={index === 0 ? "eager" : "lazy"}
+                    <Image
+                      src={heroImage.src}
+                      alt={heroImage.alt}
+                      fill
+                      sizes="(min-width: 900px) 50vw, 100vw"
+                      priority={index === 0}
+                      className={styles.mediaImage}
                     />
                   </div>
                 ) : null}
