@@ -2,10 +2,11 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { RichTextRenderer } from "../../components/content/RichTextRenderer";
-import { NewsletterSignup } from "../../components/marketing/NewsletterSignup";
-import { getPageBySlug, getPages } from "../../lib/contentful";
-import seoConfig from "../../next-seo.config";
+import { RichTextRenderer } from "@components/content/RichTextRenderer";
+import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { getPageBySlug, getPages } from "@lib/contentful";
+import seoConfig from "../../../next-seo.config";
+import type { ContentfulPage } from "@project-types/contentful";
 
 export const revalidate = 300;
 
@@ -17,7 +18,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? seoConfig.siteUrl;
 
 export async function generateStaticParams() {
   const pages = await getPages();
-  return pages.map((page) => ({ slug: page.slug }));
+  return pages.map((page: ContentfulPage) => ({ slug: page.slug }));
 }
 
 export async function generateMetadata({ params }: GenericPageProps): Promise<Metadata> {

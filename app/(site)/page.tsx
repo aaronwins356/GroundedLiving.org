@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-import { CategoryChips } from "../components/blog/CategoryChips";
-import { HeroCarousel } from "../components/blog/HeroCarousel";
-import { PostCard } from "../components/blog/PostCard";
-import { NewsletterSignup } from "../components/marketing/NewsletterSignup";
-import { getBlogPosts, getCategories, getPages } from "../lib/contentful";
-import type { RichTextNode } from "../types/contentful";
+import { CategoryChips } from "@components/blog/CategoryChips";
+import { HeroCarousel } from "@components/blog/HeroCarousel";
+import { PostCard } from "@components/blog/PostCard";
+import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { getBlogPosts, getCategories, getPages } from "@lib/contentful";
+import type { ContentfulBlogPost, ContentfulPage, RichTextNode } from "@project-types/contentful";
 
 export const revalidate = 300;
 
@@ -13,7 +13,7 @@ export default async function HomePage() {
   const [posts, categories, pages] = await Promise.all([getBlogPosts(), getCategories(), getPages()]);
   const featured = posts.slice(0, 3);
   const latest = posts.slice(0, 6);
-  const aboutPage = pages.find((page) => page.slug === "about");
+  const aboutPage = pages.find((page: ContentfulPage) => page.slug === "about");
 
   return (
     <div className="stack-xl">
@@ -61,7 +61,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid-posts">
-          {latest.map((post) => (
+          {latest.map((post: ContentfulBlogPost) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
@@ -97,7 +97,7 @@ function RichTextPreview({ content }: RichTextPreviewProps) {
   const paragraph = content.find((node) => node.nodeType === "paragraph");
   const text =
     paragraph?.content
-      ?.map((child) => (typeof child.value === "string" ? child.value : ""))
+      ?.map((child: RichTextNode) => (typeof child.value === "string" ? child.value : ""))
       .filter(Boolean)
       .join(" ") ??
     // Provide an inviting default so the hero still feels intentional before the

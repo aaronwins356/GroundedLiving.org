@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { CategoryChips } from "../../../components/blog/CategoryChips";
-import { PostCard } from "../../../components/blog/PostCard";
-import { NewsletterSignup } from "../../../components/marketing/NewsletterSignup";
-import { getCategories, getPostsByCategory } from "../../../lib/contentful";
+import { CategoryChips } from "@components/blog/CategoryChips";
+import { PostCard } from "@components/blog/PostCard";
+import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { getCategories, getPostsByCategory } from "@lib/contentful";
+import type { ContentfulCategory } from "@project-types/contentful";
 
 export const revalidate = 300;
 
@@ -14,7 +15,7 @@ interface CategoryPageProps {
 
 export async function generateStaticParams() {
   const categories = await getCategories();
-  return categories.map((category) => ({ slug: category.slug }));
+  return categories.map((category: ContentfulCategory) => ({ slug: category.slug }));
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
