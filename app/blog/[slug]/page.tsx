@@ -1,173 +1,173 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { SocialShareButtons } from "../../../components/blog/SocialShareButtons";
-import { PortableTextRenderer } from "../../../components/rich-text/PortableTextRenderer";
-import { getPageBySlug, getPostBySlug, getPosts } from "../../../lib/sanity.queries";
-import { hasSanityImageAsset, urlForImage } from "../../../lib/sanity.image";
-import styles from "./page.module.css";
+import { AffiliateDisclosure } from "../../../components/blog/AffiliateDisclosure";
+import { PostCard } from "../../../components/blog/PostCard";
+import { NewsletterSignup } from "../../../components/marketing/NewsletterSignup";
+import { RichTextRenderer } from "../../../components/content/RichTextRenderer";
+import { getBlogPostBySlug, getBlogPosts } from "../../../lib/contentful";
+import type { ContentfulBlogPost } from "../../../types/contentful";
 
-type BlogRouteParams = Record<string, string | string[] | undefined>;
+export const revalidate = 300;
 
-type BlogPageProps = {
-  /**
-   * Next.js 15 passes route params as a promise to support streaming.
-   * Awaiting the value maintains compatibility with synchronous callers at runtime.
-   */
-  params: Promise<BlogRouteParams>;
-};
+interface BlogPostPageProps {
+  params: Promise<{ slug: string }>;
+}
 
-export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
-  const posts = await getPosts();
+export async function generateStaticParams() {
+  const posts = await getBlogPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
 
-export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const slugParam = resolvedParams.slug;
-  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
-  if (!slug) {
-    return { title: "Post not found" };
-  }
-
-  const post = await getPostBySlug(slug);
-
+async function resolvePost(slug: string) {
+  const post = await getBlogPostBySlug(slug);
   if (!post) {
-    return {
-      title: "Post not found",
-    };
+    notFound();
+  }
+  return post;
+}
+
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getBlogPostBySlug(slug);
+  if (!post) {
+    return {};
   }
 
-  const coverImageUrl = post.coverImage && hasSanityImageAsset(post.coverImage)
-    ? urlForImage(post.coverImage).width(1600).height(900).fit("crop").auto("format").url()
-    : undefined;
-  const metaTitle = post.seo?.metaTitle || post.title;
-  const metaDescription = post.seo?.metaDescription || post.excerpt || undefined;
+  const description = post.seoDescription ?? post.excerpt ?? undefined;
+  const imageUrl = post.coverImage?.url ? `${post.coverImage.url}?w=1200&h=630&fit=fill` : "/og-image.svg";
 
   return {
-    title: metaTitle,
-    description: metaDescription,
+    title: post.title,
+    description,
     openGraph: {
-      title: metaTitle,
-      description: metaDescription,
       type: "article",
-      publishedTime: post.publishedAt,
-      images: coverImageUrl ? [coverImageUrl] : undefined,
+      title: post.title,
+      description,
+      publishedTime: post.datePublished ?? undefined,
+      tags: post.tags,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.coverImage?.description ?? post.coverImage?.title ?? post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description,
+      images: [imageUrl],
+    },
+  } satisfies Metadata;
+}
+
+function buildJsonLd(post: ContentfulBlogPost) {
+  const datePublished = post.datePublished ?? new Date().toISOString();
+  // Encode core metadata so Google understands the editorial context of each post.
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.seoDescription ?? post.excerpt ?? undefined,
+    datePublished,
+    dateModified: datePublished,
+    image: post.coverImage?.url ?? undefined,
+    author: post.author
+      ? {
+          "@type": "Person",
+          name: post.author.name,
+          description: post.author.bio ?? undefined,
+        }
+      : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "Grounded Living",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.groundedliving.org/og-image.svg",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://www.groundedliving.org/blog/${post.slug}`,
     },
   };
 }
 
-export default async function BlogPostPage({ params }: BlogPageProps) {
-  const resolvedParams = await params;
-  const slugParam = resolvedParams.slug;
-  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+function findRelatedPosts(posts: ContentfulBlogPost[], current: ContentfulBlogPost) {
+  return posts
+    .filter((post) => post.slug !== current.slug)
+    .filter((post) => post.category?.slug === current.category?.slug)
+    .slice(0, 3);
+}
 
-  if (!slug) {
-    notFound();
-  }
-
-  const [post, aboutPage] = await Promise.all([getPostBySlug(slug), getPageBySlug("about")]);
-
-  if (!post) {
-    notFound();
-  }
-
-  const coverImageUrl = post.coverImage && hasSanityImageAsset(post.coverImage)
-    ? urlForImage(post.coverImage).width(2000).height(1200).fit("crop").auto("format").url()
-    : null;
-  const formattedDate = new Date(post.publishedAt).toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  const aboutSnippet = aboutPage?.content?.slice(0, 2) ?? [];
-  const envSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  // Default to production domain so share URLs remain valid during local previews or misconfigured envs.
-  const siteUrl = envSiteUrl && envSiteUrl.startsWith("http") ? envSiteUrl : "https://www.groundedliving.org";
-  const postUrl = new URL(`/blog/${post.slug}`, siteUrl).toString();
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params;
+  const post = await resolvePost(slug);
+  const posts = await getBlogPosts();
+  const related = findRelatedPosts(posts, post);
+  const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
 
   return (
-    <article className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroImage}>
-          {coverImageUrl ? (
-            <Image
-              src={coverImageUrl}
-              alt={post.coverImage?.alt ?? post.title}
-              fill
-              sizes="(min-width: 1024px) 1000px, 100vw"
-              priority
+    <article className="post-layout">
+      <script type="application/ld+json" suppressHydrationWarning>
+        {JSON.stringify(buildJsonLd(post))}
+      </script>
+      <header className="post-hero">
+        <div className="post-meta">
+          {post.category ? <span className="post-category">{post.category.name}</span> : null}
+          {post.sponsored ? <span className="post-sponsored">{post.sponsoredLabel ?? "Sponsored"}</span> : null}
+          {publishedDate ? <time dateTime={publishedDate.toISOString()}>{publishedDate.toLocaleDateString()}</time> : null}
+        </div>
+        <h1>{post.title}</h1>
+        {post.excerpt ? <p className="post-excerpt">{post.excerpt}</p> : null}
+        {post.coverImage?.url ? (
+          <figure className="post-cover">
+            <img
+              src={`${post.coverImage.url}?w=1600&fit=fill`}
+              alt={post.coverImage.description ?? post.coverImage.title ?? post.title}
             />
-          ) : null}
-        </div>
-        <div className={styles.heroOverlay} aria-hidden />
-        <div className={styles.heroContent}>
-          <div className={styles.heroMeta}>
-            {post.category ? (
-              <Link href={`/blog?category=${encodeURIComponent(post.category.slug)}`} className={styles.category}>
-                {post.category.title}
-              </Link>
-            ) : (
-              <span className={styles.category}>Mindful Living</span>
-            )}
-            <span>•</span>
-            <time dateTime={post.publishedAt}>{formattedDate}</time>
+            {post.coverImage.description ? <figcaption>{post.coverImage.description}</figcaption> : null}
+          </figure>
+        ) : null}
+      </header>
+      <div className="post-body">
+        <RichTextRenderer document={post.content} />
+        {post.affiliate ? (
+          <AffiliateDisclosure ctaText={post.affiliateCtaText} ctaUrl={post.affiliateCtaUrl ?? undefined} />
+        ) : null}
+        <section className="post-author">
+          <h3>About the author</h3>
+          <div className="post-author-card">
+            {post.author?.avatarImage?.url ? (
+              <img src={`${post.author.avatarImage.url}?w=160&h=160&fit=fill`} alt={post.author.name} />
+            ) : null}
+            <div>
+              <h4>{post.author?.name ?? "Grounded Living"}</h4>
+              {post.author?.bio ? <p>{post.author.bio}</p> : null}
+            </div>
           </div>
-          <h1 className={styles.title}>{post.title}</h1>
-        </div>
-      </section>
-
-      <SocialShareButtons title={post.title} url={postUrl} />
-
-      <div className={styles.layout}>
-        <div className={styles.article}>
-          <PortableTextRenderer value={post.content} />
-        </div>
-        <aside className={styles.sidebar}>
-          <div className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>About the author</span>
-            {aboutSnippet.length ? (
-              <PortableTextRenderer value={aboutSnippet} />
-            ) : (
-              <p>
-                Add an About page in Sanity to automatically introduce yourself beside each story.
-              </p>
-            )}
-            <Link href="/about" className={styles.sidebarLink}>
-              Read the full story →
-            </Link>
-          </div>
-          <div className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Mindful ad spot</span>
-            <p>
-              Reserve this space for aligned sponsors or affiliate partnerships. It keeps monetization present without disrupting the reading experience.
-            </p>
-          </div>
-          <div className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Categories</span>
-            <Link href="/blog?category=lifestyle" className={styles.sidebarLink}>
-              Lifestyle inspiration
-            </Link>
-            <Link href="/blog?category=movement" className={styles.sidebarLink}>
-              Gentle movement
-            </Link>
-            <Link href="/blog?category=nutrition" className={styles.sidebarLink}>
-              Nourishing recipes
-            </Link>
-          </div>
-        </aside>
+        </section>
+        <section className="post-tags">
+          {post.tags.map((tag) => (
+            <span key={tag}>#{tag}</span>
+          ))}
+        </section>
       </div>
-
-      <div className={styles.footerNav}>
-        <Link href="/blog" className={styles.footerBack}>
-          ← Back to all posts
-        </Link>
-        <time dateTime={post.publishedAt} className={styles.footerDate}>
-          {formattedDate}
-        </time>
-      </div>
+      <NewsletterSignup title="Never miss a grounding ritual" />
+      {related.length > 0 ? (
+        <section className="related-posts">
+          <h2>Related posts</h2>
+          <div className="related-grid">
+            {related.map((item) => (
+              <PostCard key={item.id} post={item} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </article>
   );
 }

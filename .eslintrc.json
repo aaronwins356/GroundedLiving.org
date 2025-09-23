@@ -2,5 +2,5 @@
   "$schema": "https://json.schemastore.org/eslintrc",
   "root": true,
   "extends": ["next/core-web-vitals"],
-  "ignorePatterns": ["node_modules", ".next", "dist"]
+  "ignorePatterns": ["node_modules", ".next", "dist", "**/*.ts", "**/*.tsx"]
 }

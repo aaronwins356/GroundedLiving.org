@@ -1,0 +1,43 @@
+.wrapper {
+  margin: 2.5rem 0;
+  padding: 1.75rem;
+  border-radius: 28px;
+  background: rgba(241, 228, 220, 0.6);
+  border: 1px solid rgba(211, 193, 169, 0.4);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.content h4 {
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.content p {
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+}
+
+.cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  border-radius: 999px;
+  background: rgba(168, 193, 173, 0.2);
+  color: var(--color-moss);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.cta:hover {
+  background: rgba(168, 193, 173, 0.32);
+}
