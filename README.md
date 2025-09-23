@@ -55,6 +55,20 @@ Contentful CMS, modern SEO automation, and monetization-ready UI primitives so n
 
 > Always run `npm run lint && npm run build` before committing to mirror CI.
 
+### GitHub Actions secrets
+
+Populate the following repository secrets under **Settings → Secrets and variables → Actions** so automated workflows can authenticate safely:
+
+| Secret | Purpose |
+| --- | --- |
+| `CONTENTFUL_SPACE_ID` | Identifies the Contentful space for GraphQL queries and migrations. |
+| `CONTENTFUL_ENVIRONMENT` (optional) | Overrides the target environment; defaults to `master` when omitted. |
+| `CONTENTFUL_DELIVERY_TOKEN` | Required by the Next.js app at build/runtime to read published entries. |
+| `CONTENTFUL_PREVIEW_TOKEN` | Enables preview mode if you wire up draft previews later. |
+| `CONTENTFUL_MANAGEMENT_TOKEN` | Grants the migration script permission to create and publish entries. |
+
+Keep the same values in Vercel’s project settings so production builds have identical access.
+
 ## 2. Content migration
 
 Run the migration script once to seed Contentful with the Markdown posts under `content/posts`. The tool also inspects the
@@ -107,6 +121,7 @@ Create the following models in Contentful with the specified fields:
 - `content` (Rich Text)
 - `navigationLabel` (Short text, optional)
 - `navigationPriority` (Number, optional)
+- `heroImage` (Asset, optional)
 
 ### Author
 - `name`
@@ -149,7 +164,13 @@ Seed your first post with:
 3. Contentful editors can optionally call `/api/revalidate` manually with a `tag` payload to refresh individual cache tags when
    testing draft workflows.
 
-## 6. Monetization & growth hooks
+## 6. Migration tooling
+
+- **Local script:** `npm run migrate:posts` reads `/content/posts/*.md(x)` and `/pages/blog/*.tsx` files, converts them into Contentful Rich Text, and publishes `blogPost` entries while skipping slugs that already exist.
+- **GitHub workflow:** `Migrate legacy posts to Contentful` (see Actions tab) performs the same migration in CI. Trigger it manually after uploading new Markdown files to the repo.
+- The script respects `CONTENTFUL_ENVIRONMENT` (defaults to `master`) and populates `title`, `slug`, `excerpt`, `content`, `datePublished`, and `seoDescription` fields so editors can immediately fine-tune entries inside Contentful.
+
+## 7. Monetization & growth hooks
 
 - **Newsletter:** The ConvertKit/Mailchimp form posts to `NEXT_PUBLIC_NEWSLETTER_ACTION` and renders inline + footer modules.
 - **Affiliate disclosure:** Toggle the `affiliate` boolean on any post to surface an FTC-compliant notice with configurable CTA.
@@ -157,18 +178,24 @@ Seed your first post with:
 - **Digital products:** `/shop` includes a placeholder Stripe checkout button wired to `NEXT_PUBLIC_STRIPE_CHECKOUT_URL`.
 - **Analytics:** GA4 loads automatically when `NEXT_PUBLIC_GA_TRACKING_ID` is present.
 
-## 7. Deployment
+## 8. Deployment
 
 1. Push to GitHub; Vercel detects the project automatically.
 2. Set the environment variables above in the Vercel dashboard (Project Settings → Environment Variables).
 3. Add a Contentful webhook pointing to the `/api/revalidate` endpoint so publishes trigger cache busting.
 4. Configure a Vercel Deploy Hook if you prefer to trigger full builds after editorial pushes.
 
-## 8. Additional notes
+## 9. Continuous integration & automation
+
+- **CI pipeline (`.github/workflows/ci.yml`):** runs on every push and pull request with `npm run lint`, `npm run typecheck`, and `npm run build` to mirror production deployments.
+- **Migration pipeline (`.github/workflows/migrate.yml`):** can be dispatched manually or on pushes that touch local markdown files to sync Contentful. All secrets are read from GitHub Actions secrets, never from plaintext files.
+- Successful builds can deploy automatically through Vercel once its project tokens are configured in the Vercel dashboard.
+
+## 10. Additional notes
 
 - Rich Text rendering is handled by a bespoke renderer that mimics Tailwind Typography so Contentful editors see polished output.
 - Hero carousel, category chips, and newsletter modules reuse the same Contentful data so marketing pages stay in sync.
-- Image domains are limited to `images.ctfassets.net`; add more in `next.config.js` if you host elsewhere.
+- Image domains are limited to Contentful hosts (`images.ctfassets.net`, `assets.ctfassets.net`, `downloads.ctfassets.net`); add more in `next.config.js` if you host elsewhere.
 
 With this foundation you can deliver high-quality, SEO-friendly content, monetize through affiliates or Stripe products, and
 ship updates without touching code.

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import type { ContentfulBlogPost } from "../../types/contentful";
@@ -10,16 +11,23 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
+  const coverImage = post.coverImage?.url
+    ? {
+        src: `${post.coverImage.url}?w=800&h=600&fit=fill`,
+        alt: post.coverImage.description ?? post.coverImage.title ?? post.title,
+      }
+    : null;
 
   return (
     <article className={styles.card}>
       <Link href={`/blog/${post.slug}`} className={styles.coverLink}>
-        {post.coverImage?.url ? (
-          <img
-            src={`${post.coverImage.url}?w=800&h=600&fit=fill`}
-            alt={post.coverImage.description ?? post.coverImage.title ?? post.title}
+        {coverImage ? (
+          <Image
+            src={coverImage.src}
+            alt={coverImage.alt}
+            fill
+            sizes="(min-width: 768px) 50vw, 100vw"
             className={styles.coverImage}
-            loading="lazy"
           />
         ) : (
           <div className={styles.coverPlaceholder} aria-hidden>

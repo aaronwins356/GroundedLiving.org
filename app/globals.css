@@ -443,10 +443,12 @@ blockquote {
   gap: 0.5rem;
 }
 
-.post-cover img {
+.post-cover-image {
   width: 100%;
+  height: auto;
   border-radius: 36px;
   box-shadow: var(--shadow-soft);
+  display: block;
 }
 
 .post-cover figcaption {
@@ -527,6 +529,27 @@ blockquote {
 .page-hero {
   display: grid;
   gap: 0.75rem;
+}
+
+.page-hero-media {
+  position: relative;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  background: rgba(203, 216, 206, 0.35);
+}
+
+.page-hero-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.page-hero-media figcaption {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  text-align: center;
 }
 
 .visually-hidden {

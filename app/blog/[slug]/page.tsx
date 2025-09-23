@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -7,12 +8,15 @@ import { NewsletterSignup } from "../../../components/marketing/NewsletterSignup
 import { RichTextRenderer } from "../../../components/content/RichTextRenderer";
 import { getBlogPostBySlug, getBlogPosts } from "../../../lib/contentful";
 import type { ContentfulBlogPost } from "../../../types/contentful";
+import seoConfig from "../../../next-seo.config";
 
 export const revalidate = 300;
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? seoConfig.siteUrl;
 
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
@@ -36,16 +40,21 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   const description = post.seoDescription ?? post.excerpt ?? undefined;
   const imageUrl = post.coverImage?.url ? `${post.coverImage.url}?w=1200&h=630&fit=fill` : "/og-image.svg";
+  const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
 
   return {
     title: post.title,
     description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       type: "article",
       title: post.title,
       description,
       publishedTime: post.datePublished ?? undefined,
       tags: post.tags,
+      url: canonicalUrl,
       images: [
         {
           url: imageUrl,
@@ -64,7 +73,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   } satisfies Metadata;
 }
 
-function buildJsonLd(post: ContentfulBlogPost) {
+function buildJsonLd(post: ContentfulBlogPost, canonicalUrl: string) {
   const datePublished = post.datePublished ?? new Date().toISOString();
   // Encode core metadata so Google understands the editorial context of each post.
   return {
@@ -92,7 +101,7 @@ function buildJsonLd(post: ContentfulBlogPost) {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://www.groundedliving.org/blog/${post.slug}`,
+      "@id": canonicalUrl,
     },
   };
 }
@@ -110,11 +119,20 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const posts = await getBlogPosts();
   const related = findRelatedPosts(posts, post);
   const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
+  const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
+  const coverImage = post.coverImage?.url
+    ? {
+        src: `${post.coverImage.url}?w=1600&fit=fill`,
+        alt: post.coverImage.description ?? post.coverImage.title ?? post.title,
+        width: post.coverImage.width ?? 1600,
+        height: post.coverImage.height ?? 900,
+      }
+    : null;
 
   return (
     <article className="post-layout">
       <script type="application/ld+json" suppressHydrationWarning>
-        {JSON.stringify(buildJsonLd(post))}
+        {JSON.stringify(buildJsonLd(post, canonicalUrl))}
       </script>
       <header className="post-hero">
         <div className="post-meta">
@@ -124,13 +142,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
         <h1>{post.title}</h1>
         {post.excerpt ? <p className="post-excerpt">{post.excerpt}</p> : null}
-        {post.coverImage?.url ? (
+        {coverImage ? (
           <figure className="post-cover">
-            <img
-              src={`${post.coverImage.url}?w=1600&fit=fill`}
-              alt={post.coverImage.description ?? post.coverImage.title ?? post.title}
+            <Image
+              src={coverImage.src}
+              alt={coverImage.alt}
+              width={coverImage.width}
+              height={coverImage.height}
+              sizes="(min-width: 1024px) 960px, 100vw"
+              priority
+              className="post-cover-image"
             />
-            {post.coverImage.description ? <figcaption>{post.coverImage.description}</figcaption> : null}
+            {post.coverImage?.description ? <figcaption>{post.coverImage.description}</figcaption> : null}
           </figure>
         ) : null}
       </header>

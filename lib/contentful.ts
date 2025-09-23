@@ -85,6 +85,7 @@ interface PageGraphQL {
   slug?: string | null;
   navigationLabel?: string | null;
   navigationPriority?: number | null;
+  heroImage?: AssetGraphQL | null;
   content?: {
     json?: RichTextDocument | null;
     links?: {
@@ -192,6 +193,7 @@ function mapPage(page: PageGraphQL): ContentfulPage | null {
     content: enrichRichText(page.content?.json ?? null, page.content?.links?.assets?.block ?? []),
     navigationLabel: page.navigationLabel ?? null,
     navigationPriority: page.navigationPriority ?? null,
+    heroImage: mapAsset(page.heroImage ?? null),
   } satisfies ContentfulPage;
 }
 
@@ -395,6 +397,7 @@ export const getPages = cache(async (): Promise<ContentfulPage[]> => {
           slug
           navigationLabel
           navigationPriority
+          heroImage { url title description width height }
           content {
             json
             links {
@@ -433,6 +436,7 @@ export const getPageBySlug = cache(async (slug: string): Promise<ContentfulPage 
           slug
           navigationLabel
           navigationPriority
+          heroImage { url title description width height }
           content {
             json
             links {
