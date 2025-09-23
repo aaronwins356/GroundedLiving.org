@@ -1,0 +1,32 @@
+name: Migrate Blog Posts to Contentful
+
+on:
+  workflow_dispatch: # you can trigger this manually from GitHub Actions tab
+  push:
+    branches:
+      - main   # or whichever branch holds your blog content
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install -D ts-node typescript @types/node
+
+      - name: Run migration script
+        env:
+          CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
+          CONTENTFUL_ENVIRONMENT: master
+          CONTENTFUL_MANAGEMENT_TOKEN: ${{ secrets.CONTENTFUL_MANAGEMENT_TOKEN }}
+        run: npx ts-node scripts/migrate-posts.ts
