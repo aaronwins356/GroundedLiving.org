@@ -1,63 +1,59 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Playfair_Display, Lato } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-import { Footer } from "../components/layout/Footer";
 import { Navbar } from "../components/layout/Navbar";
-import styles from "./layout.module.css";
+import { Footer } from "../components/layout/Footer";
+
+const headingFont = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-heading",
+});
+
+const bodyFont = Lato({
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+  display: "swap",
+  variable: "--font-body",
+});
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.groundedliving.org";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.groundedliving.org"),
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "Grounded Living – Soulful Wellness & Lifestyle",
+    default: "Grounded Living | Soulful Wellness for Everyday Rituals",
     template: "%s | Grounded Living",
   },
   description:
-    "Soulful wellness rituals, nourishing recipes, and mindful lifestyle guidance to help you feel grounded every day.",
+    "Grounded Living is a sanctuary for gentle rituals, nourishing recipes, and soul-led reflections that help you bloom with intention.",
   openGraph: {
     type: "website",
-    title: "Grounded Living – Soulful Wellness & Lifestyle",
+    url: siteUrl,
+    title: "Grounded Living | Soulful Wellness for Everyday Rituals",
     description:
-      "Soulful wellness rituals, nourishing recipes, and mindful lifestyle guidance to help you feel grounded every day.",
-    url: "https://www.groundedliving.org",
+      "Explore mindful practices, heartfelt stories, and plant-forward nourishment crafted to help you feel grounded and luminous.",
     siteName: "Grounded Living",
-    images: [
-      {
-        url: "/og-image.svg",
-        width: 1200,
-        height: 630,
-        alt: "Grounded Living – Soulful Wellness & Lifestyle",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Grounded Living – Soulful Wellness & Lifestyle",
+    title: "Grounded Living",
     description:
-      "Soulful wellness rituals, nourishing recipes, and mindful lifestyle guidance to help you feel grounded every day.",
-    images: ["/og-image.svg"],
+      "Explore mindful practices, heartfelt stories, and plant-forward nourishment crafted to help you feel grounded and luminous.",
   },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
-        />
-      </head>
-      <body className={styles.body}>
-        <div className={styles.radiance} aria-hidden />
-        <Navbar />
-        <main className={styles.main}>
-          <div className={styles.inner}>{children}</div>
-        </main>
-        <Footer />
+    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
+      <body>
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1 pt-24 lg:pt-28">{children}</main>
+          <Footer />
+        </div>
         <SpeedInsights />
       </body>
     </html>

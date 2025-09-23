@@ -1,413 +1,355 @@
 import "server-only";
 
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import type { Asset, EntryCollection } from "contentful";
+import { createClient } from "contentful";
+import type { RichTextDocument, RichTextNode } from "@/lib/rich-text";
+import { BLOCKS } from "@/lib/rich-text";
 
-const CONTENTFUL_SPACE_ID = process.env.CONTENTFUL_SPACE_ID;
-const CONTENTFUL_ENVIRONMENT = process.env.CONTENTFUL_ENVIRONMENT || "master";
-const CONTENTFUL_DELIVERY_TOKEN = process.env.CONTENTFUL_DELIVERY_TOKEN;
-const CONTENTFUL_BLOG_POST_CONTENT_TYPE =
-  process.env.CONTENTFUL_BLOG_POST_CONTENT_TYPE || "blogPost";
+const SPACE_ID = process.env.CONTENTFUL_SPACE_ID;
+const ENVIRONMENT = process.env.CONTENTFUL_ENVIRONMENT || "master";
+const DELIVERY_TOKEN = process.env.CONTENTFUL_DELIVERY_TOKEN;
+const PREVIEW_TOKEN = process.env.CONTENTFUL_PREVIEW_TOKEN;
 
-type ContentfulSys = {
-  id: string;
-  type: string;
-  createdAt: string;
-  updatedAt: string;
-  revision?: number;
-  locale?: string;
-  contentType?: {
-    sys: {
-      id: string;
-      linkType: string;
-      type: string;
-    };
-  };
-};
-
-type ContentfulMetadata = {
-  tags: Array<{
-    sys: {
-      id: string;
-      type: string;
-      linkType: string;
-    };
-  }>;
-};
-
-type ContentfulLink = {
-  sys: {
-    type: "Link";
-    linkType: string;
-    id: string;
-  };
-};
-
-type ContentfulAssetFile = {
-  url?: string;
-  fileName?: string;
-  contentType?: string;
-  details?: {
-    size?: number;
-    image?: {
-      width?: number;
-      height?: number;
-    };
-  };
-};
-
-type ContentfulAsset = {
-  sys: ContentfulSys;
-  fields: {
-    title?: string;
-    description?: string;
-    file?: ContentfulAssetFile;
-  };
-  metadata: ContentfulMetadata;
-};
-
-type ContentfulRichTextMark = {
-  type: string;
-};
-
-export type ContentfulRichTextNode = {
-  nodeType: string;
-  value?: string;
-  marks?: ContentfulRichTextMark[];
-  data?: Record<string, unknown>;
-  content?: ContentfulRichTextNode[];
-};
-
-export type ContentfulRichTextDocument = {
-  nodeType: "document";
-  data: Record<string, unknown>;
-  content: ContentfulRichTextNode[];
-};
-
-type BlogPostFields = {
-  title?: string;
-  slug?: string;
-  excerpt?: string;
-  description?: string;
-  summary?: string;
-  publishedDate?: string;
-  publishDate?: string;
-  coverImage?: ContentfulLink;
-  heroImage?: ContentfulLink;
-  categoryName?: string;
-  categorySlug?: string;
-  categoryColor?: string;
-  body?: ContentfulRichTextDocument;
-  content?: ContentfulRichTextDocument;
-  richText?: ContentfulRichTextDocument;
-  tags?: string[];
-};
-
-type ContentfulEntry<TFields> = {
-  sys: ContentfulSys & {
-    contentType: {
-      sys: {
-        id: string;
-        type: string;
-        linkType: string;
-      };
-    };
-  };
-  fields: TFields;
-  metadata: ContentfulMetadata;
-};
-
-type ContentfulCollection<TFields> = {
-  items: Array<ContentfulEntry<TFields>>;
-  includes?: {
-    Asset?: ContentfulAsset[];
-    Entry?: Array<ContentfulEntry<Record<string, unknown>>>;
-  };
-};
+const FALLBACK_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P4//8/AwAI/AL+q0P+WAAAAABJRU5ErkJggg==";
 
 export type ContentfulImage = {
   url: string;
-  alt?: string | null;
   width?: number;
   height?: number;
+  alt?: string | null;
 };
 
-export type BlogCategory = {
+export type CategorySummary = {
+  id: string;
   name: string;
   slug: string;
-  color?: string | null;
 };
 
-export type BlogPostListItem = {
+export type PostSummary = {
   id: string;
   slug: string;
   title: string;
-  publishedAt: string;
-  excerpt?: string | null;
-  description?: string | null;
-  category?: BlogCategory | null;
-  coverImage?: ContentfulImage | null;
-  tags: string[];
+  excerpt: string | null;
+  date: string;
+  category: CategorySummary | null;
+  coverImage: ContentfulImage | null;
 };
 
-export type BlogPost = BlogPostListItem & {
-  content: ContentfulRichTextDocument | null;
-  linkedAssets: Record<string, ContentfulImage>;
+export type Post = PostSummary & {
+  body: RichTextDocument | null;
+  seoDescription: string | null;
+  imageGallery: ContentfulImage[];
+  assets: Record<string, ContentfulImage>;
 };
 
-type ContentfulQueryParams = Record<string, string | number | undefined>;
-
-type ContentfulConfig = {
-  spaceId: string;
-  environment: string;
-  accessToken: string;
+export type Page = {
+  id: string;
+  title: string;
+  slug: string;
+  content: RichTextDocument | null;
 };
 
-function getContentfulConfig(): ContentfulConfig | null {
-  if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_DELIVERY_TOKEN) {
+export type PageSummary = Pick<Page, "id" | "title" | "slug"> & { href?: string };
+
+type PostFields = {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  body?: RichTextDocument;
+  coverImage?: Asset;
+  category?: BasicEntry<CategoryFields>;
+  date?: string;
+};
+
+type CategoryFields = {
+  name?: string;
+  slug?: string;
+};
+
+type PageFields = {
+  title?: string;
+  slug?: string;
+  content?: RichTextDocument;
+};
+
+type SysFields = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type BasicEntry<TFields> = {
+  sys: SysFields;
+  fields: TFields;
+};
+
+function getBaseClient(preview = false) {
+  if (!SPACE_ID || !DELIVERY_TOKEN) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Contentful credentials are not configured. Returning empty collections.");
+    }
     return null;
   }
 
-  return {
-    spaceId: CONTENTFUL_SPACE_ID,
-    environment: CONTENTFUL_ENVIRONMENT,
-    accessToken: CONTENTFUL_DELIVERY_TOKEN,
-  };
-}
-
-function buildContentfulUrl(params: ContentfulQueryParams, config: ContentfulConfig): URL {
-  const url = new URL(
-    `/spaces/${config.spaceId}/environments/${config.environment}/entries`,
-    "https://cdn.contentful.com",
-  );
-  const searchParams = url.searchParams;
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined) {
-      continue;
-    }
-    searchParams.set(key, String(value));
+  if (preview && !PREVIEW_TOKEN) {
+    console.warn("CONTENTFUL_PREVIEW_TOKEN is missing. Falling back to delivery API.");
   }
-  return url;
-}
 
-async function fetchContentfulEntries<TFields>(params: ContentfulQueryParams) {
-  const config = getContentfulConfig();
-  if (!config) {
-    return { items: [] } as ContentfulCollection<TFields>;
-  }
-  const url = buildContentfulUrl(params, config);
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${config.accessToken}`,
-    },
-    next: {
-      revalidate: 60,
-      tags: ["contentful", "blog"],
-    },
+  return createClient({
+    space: SPACE_ID,
+    environment: ENVIRONMENT,
+    accessToken: preview && PREVIEW_TOKEN ? PREVIEW_TOKEN : DELIVERY_TOKEN,
+    host: preview && PREVIEW_TOKEN ? "preview.contentful.com" : undefined,
   });
-
-  if (!response.ok) {
-    throw new Error(`Contentful request failed with status ${response.status}`);
-  }
-
-  return (await response.json()) as ContentfulCollection<TFields>;
 }
 
-function createAssetMap(assets: ContentfulAsset[] | undefined) {
-  const map = new Map<string, ContentfulAsset>();
-  if (!assets) {
-    return map;
+async function fetchEntries<TFields>(
+  params: Record<string, unknown>,
+  options?: { preview?: boolean; contentType: string },
+): Promise<EntryCollection<BasicEntry<TFields>>> {
+  const client = getBaseClient(options?.preview);
+  if (!client) {
+    return { items: [] } as EntryCollection<BasicEntry<TFields>>;
   }
 
-  assets.forEach((asset) => {
-    if (asset?.sys?.id) {
-      map.set(asset.sys.id, asset);
-    }
-  });
-
-  return map;
+  return client.getEntries<TFields>({
+    content_type: options?.contentType,
+    include: 3,
+    order: "-fields.date",
+    ...params,
+  }) as unknown as EntryCollection<BasicEntry<TFields>>;
 }
 
-function normalizeUrl(url: string | undefined): string | null {
+function normalizeAsset(asset?: Asset | null): ContentfulImage | null {
+  if (!asset || !asset.fields || !asset.fields.file) {
+    return null;
+  }
+
+  const file = asset.fields.file as { url?: string; details?: { image?: { width?: number; height?: number } } };
+  const url = file.url ? (file.url.startsWith("http") ? file.url : `https:${file.url}`) : null;
+
   if (!url) {
     return null;
   }
-  if (url.startsWith("//")) {
-    return `https:${url}`;
-  }
-  return url;
-}
 
-function mapAsset(asset: ContentfulAsset | undefined): ContentfulImage | null {
-  if (!asset) {
-    return null;
-  }
-
-  const file = asset.fields.file;
-  const normalizedUrl = normalizeUrl(file?.url);
-  if (!normalizedUrl) {
-    return null;
-  }
-
-  const dimensions = file?.details?.image;
+  const alt = asset.fields.description || asset.fields.title || null;
 
   return {
-    url: normalizedUrl,
-    alt: asset.fields.description ?? asset.fields.title ?? null,
-    width: dimensions?.width,
-    height: dimensions?.height,
+    url,
+    width: file.details?.image?.width,
+    height: file.details?.image?.height,
+    alt,
   };
 }
 
-function resolveLinkedAsset(link: ContentfulLink | undefined, assets: Map<string, ContentfulAsset>) {
-  if (!link?.sys?.id) {
+function normalizeCategory(entry?: BasicEntry<CategoryFields> | null): CategorySummary | null {
+  const name = entry?.fields?.name?.trim();
+  const slug = entry?.fields?.slug?.trim();
+
+  if (!entry || !name || !slug) {
     return null;
   }
-  return mapAsset(assets.get(link.sys.id));
-}
-
-function extractTags(entry: ContentfulEntry<BlogPostFields>): string[] {
-  const tags = new Set<string>();
-
-  entry.metadata?.tags?.forEach((tag) => {
-    if (tag?.sys?.id) {
-      tags.add(tag.sys.id);
-    }
-  });
-
-  const fieldTags = entry.fields.tags;
-  if (Array.isArray(fieldTags)) {
-    fieldTags.forEach((tag) => {
-      if (typeof tag === "string" && tag.trim()) {
-        tags.add(tag.trim());
-      }
-    });
-  }
-
-  return Array.from(tags);
-}
-
-function mapCategory(fields: BlogPostFields): BlogCategory | null {
-  const name = fields.categoryName?.trim();
-  if (!name) {
-    return null;
-  }
-
-  const explicitSlug = fields.categorySlug?.trim();
-  const normalizedSlug = explicitSlug?.toLowerCase() || name.toLowerCase().replace(/\s+/g, "-");
 
   return {
+    id: entry.sys.id,
     name,
-    slug: normalizedSlug,
-    color: fields.categoryColor ?? null,
+    slug,
   };
 }
 
-function mapBlogPost(
-  entry: ContentfulEntry<BlogPostFields>,
-  assets: Map<string, ContentfulAsset>,
-): BlogPost | null {
-  const slug = entry.fields.slug?.trim();
-  if (!slug) {
-    return null;
-  }
+function mapPost(entry: BasicEntry<PostFields>): Post {
+  const slug = entry.fields.slug?.trim() ?? entry.sys.id;
+  const category = normalizeCategory(entry.fields.category);
+  const coverImage = normalizeAsset(entry.fields.coverImage) ?? null;
 
-  const contentField = entry.fields.body || entry.fields.content || entry.fields.richText || null;
-  const coverImage = resolveLinkedAsset(entry.fields.coverImage || entry.fields.heroImage, assets);
-  const linkedAssets: Record<string, ContentfulImage> = {};
+  const allAssets = (entry.fields.body as RichTextDocument | undefined)?.content
+    ?.flatMap((node) => extractAssetFromNode(node))
+    .filter(Boolean) as Asset[] | undefined;
 
-  assets.forEach((asset, id) => {
-    const mapped = mapAsset(asset);
-    if (mapped) {
-      linkedAssets[id] = mapped;
+  const gallery = allAssets?.map((asset) => normalizeAsset(asset)).filter(Boolean) as ContentfulImage[] | undefined;
+  const assetMap: Record<string, ContentfulImage> = {};
+
+  allAssets?.forEach((asset) => {
+    const normalized = normalizeAsset(asset);
+    if (asset?.sys?.id && normalized) {
+      assetMap[asset.sys.id] = normalized;
     }
   });
 
   return {
     id: entry.sys.id,
     slug,
-    title: entry.fields.title?.trim() || "Untitled post",
-    publishedAt:
-      entry.fields.publishedDate ||
-      entry.fields.publishDate ||
-      entry.sys.updatedAt ||
-      entry.sys.createdAt,
-    excerpt: entry.fields.excerpt?.trim() || entry.fields.summary?.trim() || null,
-    description: entry.fields.description?.trim() || null,
-    category: mapCategory(entry.fields),
-    coverImage,
-    content: contentField,
-    tags: extractTags(entry),
-    linkedAssets,
+    title: entry.fields.title?.trim() ?? "Untitled Post",
+    excerpt: entry.fields.excerpt?.trim() ?? null,
+    date: entry.fields.date ?? entry.sys.updatedAt ?? entry.sys.createdAt,
+    category,
+    coverImage: coverImage ?? (gallery?.[0] ?? null),
+    body: entry.fields.body ?? null,
+    seoDescription: entry.fields.excerpt?.trim() ?? null,
+    imageGallery: gallery ?? [],
+    assets: assetMap,
   };
 }
 
-function mapBlogPostListItem(entry: ContentfulEntry<BlogPostFields>, assets: Map<string, ContentfulAsset>) {
-  const mapped = mapBlogPost(entry, assets);
-  if (!mapped) {
-    return null;
+function extractAssetFromNode(node: RichTextNode): (Asset | null)[] {
+  const collected: (Asset | null)[] = [];
+  if (node.nodeType === BLOCKS.EMBEDDED_ASSET) {
+    const target = (node.data as { target?: Asset } | undefined)?.target ?? null;
+    collected.push(target ?? null);
   }
-
-  const { content: _content, linkedAssets: _linkedAssets, ...listItem } = mapped;
-  return listItem;
+  if (node.content) {
+    node.content.forEach((child) => {
+      collected.push(...extractAssetFromNode(child));
+    });
+  }
+  return collected;
 }
 
-function sortByPublishedDate(posts: BlogPostListItem[]): BlogPostListItem[] {
-  return [...posts].sort((a, b) => {
-    const aTime = new Date(a.publishedAt).getTime();
-    const bTime = new Date(b.publishedAt).getTime();
-    return Number.isFinite(bTime) && Number.isFinite(aTime) ? bTime - aTime : 0;
-  });
-}
-
-async function fetchBlogPostEntries(query: ContentfulQueryParams) {
-  const params: ContentfulQueryParams = {
-    content_type: CONTENTFUL_BLOG_POST_CONTENT_TYPE,
-    include: 4,
-    limit: 1000,
-    order: "-fields.publishedDate",
-    ...query,
+function mapPostSummary(entry: BasicEntry<PostFields>): PostSummary {
+  const post = mapPost(entry);
+  return {
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    date: post.date,
+    category: post.category,
+    coverImage: post.coverImage,
   };
-
-  return fetchContentfulEntries<BlogPostFields>(params);
 }
 
-export const getBlogPosts = cache(async (): Promise<BlogPostListItem[]> => {
-  const collection = await fetchBlogPostEntries({});
-  const assets = createAssetMap(collection.includes?.Asset);
-  const posts = collection.items
-    .map((entry) => mapBlogPostListItem(entry, assets))
-    .filter((post): post is BlogPostListItem => Boolean(post));
+function mapPage(entry: BasicEntry<PageFields>): Page {
+  const slug = entry.fields.slug?.trim() ?? entry.sys.id;
+  return {
+    id: entry.sys.id,
+    title: entry.fields.title?.trim() ?? "Untitled Page",
+    slug,
+    content: entry.fields.content ?? null,
+  };
+}
 
-  return sortByPublishedDate(posts);
-});
+function sortByDate<T extends { date: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
 
-export const getBlogPostBySlug = cache(async (slug: string): Promise<BlogPost | null> => {
+const getPostsCached = unstable_cache(
+  async (preview = false) => {
+    const { items } = await fetchEntries<PostFields>({ order: "-fields.date" }, { contentType: "post", preview });
+    return items.map(mapPostSummary).filter((post) => Boolean(post.slug));
+  },
+  ["contentful-posts"],
+  { tags: ["posts"] },
+);
+
+export async function getPosts(options?: { preview?: boolean }): Promise<PostSummary[]> {
+  const posts = await getPostsCached(options?.preview ?? false);
+  return sortByDate(posts);
+}
+
+const getPostBySlugCached = unstable_cache(
+  async (slug: string, preview = false) => {
+    if (!slug) {
+      return null;
+    }
+
+    const { items } = await fetchEntries<PostFields>({
+      limit: 1,
+      "fields.slug": slug,
+    }, { contentType: "post", preview });
+
+    const entry = items[0];
+    return entry ? mapPost(entry) : null;
+  },
+  ["contentful-post-by-slug"],
+  { tags: ["posts"] },
+);
+
+export async function getPostBySlug(slug: string, options?: { preview?: boolean }): Promise<Post | null> {
+  return getPostBySlugCached(slug, options?.preview ?? false);
+}
+
+const getCategoriesCached = unstable_cache(
+  async () => {
+    const { items } = await fetchEntries<CategoryFields>({ order: "fields.name" }, { contentType: "category" });
+    return items
+      .map((entry) => ({
+        id: entry.sys.id,
+        name: entry.fields.name?.trim() ?? "Untitled",
+        slug: entry.fields.slug?.trim() ?? entry.sys.id,
+      }))
+      .filter((category) => Boolean(category.slug));
+  },
+  ["contentful-categories"],
+  { tags: ["categories"] },
+);
+
+export async function getCategories(): Promise<CategorySummary[]> {
+  const categories = await getCategoriesCached();
+  return categories.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const getCategoryPostsCached = unstable_cache(
+  async (slug: string) => {
+    if (!slug) {
+      return [];
+    }
+
+    const { items } = await fetchEntries<PostFields>({
+      "fields.category.fields.slug": slug,
+    }, { contentType: "post" });
+
+    return items.map(mapPostSummary);
+  },
+  ["contentful-category-posts"],
+  { tags: ["posts", "categories"] },
+);
+
+export async function getPostsByCategory(slug: string): Promise<PostSummary[]> {
+  const posts = await getCategoryPostsCached(slug);
+  return sortByDate(posts);
+}
+
+const getPagesCached = unstable_cache(
+  async () => {
+    const { items } = await fetchEntries<PageFields>({ order: "fields.title" }, { contentType: "page" });
+    return items.map(mapPage);
+  },
+  ["contentful-pages"],
+  { tags: ["pages"] },
+);
+
+export async function getPages(): Promise<Page[]> {
+  return getPagesCached();
+}
+
+export async function getPageSummaries(): Promise<PageSummary[]> {
+  const pages = await getPagesCached();
+  return pages.map(({ id, slug, title }) => ({ id, slug, title }));
+}
+
+export async function getPageBySlug(slug: string): Promise<Page | null> {
   if (!slug) {
     return null;
   }
 
-  const collection = await fetchBlogPostEntries({
-    limit: 1,
-    "fields.slug": slug,
-  });
+  const pages = (await getPagesCached()).filter((page) => page.slug === slug);
+  return pages[0] ?? null;
+}
 
-  const [entry] = collection.items;
-  if (!entry) {
-    return null;
-  }
+export function getFeaturedPosts(posts: PostSummary[], count = 3): PostSummary[] {
+  return posts.slice(0, count);
+}
 
-  const assets = createAssetMap(collection.includes?.Asset);
-  return mapBlogPost(entry, assets);
-});
+export function getLatestPosts(posts: PostSummary[], offset = 0, limit = 6): PostSummary[] {
+  return posts.slice(offset, offset + limit);
+}
 
-export function getCategoryFilters(posts: BlogPostListItem[]): BlogCategory[] {
-  const map = new Map<string, BlogCategory>();
+export function getPlaceholderImage(): ContentfulImage {
+  return { url: FALLBACK_IMAGE, alt: "" };
+}
 
-  posts.forEach((post) => {
-    if (post.category) {
-      map.set(post.category.slug, post.category);
-    }
-  });
-
-  return Array.from(map.values());
+export function buildAbsoluteUrl(path: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.groundedliving.org";
+  return new URL(path, baseUrl).toString();
 }
