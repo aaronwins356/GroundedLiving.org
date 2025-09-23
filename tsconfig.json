@@ -17,6 +17,10 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "baseUrl": ".",
+    "typeRoots": [
+      "./stubs/@types",
+      "./node_modules/@types"
+    ],
     "paths": {
       "@content/*": [
         "./content/*"

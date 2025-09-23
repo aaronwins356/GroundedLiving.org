@@ -8,15 +8,17 @@
   },
   "scripts": {
     "// dev": "Starts the Next.js development server with hot reloading for local work.",
-    "dev": "next dev",
+    "dev": "NODE_PATH=./stubs next dev",
     "// build": "Generates an optimized production build.",
-    "build": "NEXT_DISABLE_ESLINT=1 next build",
+    "build": "NODE_PATH=./stubs NEXT_DISABLE_ESLINT=1 next build",
     "// start": "Runs the pre-built production bundle on the configured port.",
     "start": "next start",
     "// lint": "Validates the codebase with ESLint using Next.js defaults.",
     "lint": "NODE_PATH=./stubs ESLINT_USE_FLAT_CONFIG=false eslint .",
     "// typecheck": "Optional script to verify TypeScript types without emitting output.",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "NODE_PATH=./stubs tsc --noEmit",
+    "// migrate:posts": "One-off migration of Markdown or legacy JSX posts into Contentful.",
+    "migrate:posts": "ts-node --esm scripts/migrate-posts.ts",
     "// clean-reinstall": "Run `rm -rf node_modules package-lock.json && npm install` to refresh dependencies."
   },
   "dependencies": {
@@ -38,6 +40,7 @@
     "eslint": "^9.12.0",
     "eslint-config-next": "^15.5.0",
     "postcss": "^8.4.47",
+    "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
   }
 }

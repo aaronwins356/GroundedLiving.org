@@ -2,11 +2,10 @@
 
 import Script from "next/script";
 import { memo } from "react";
-import type { ComponentProps } from "react";
 
 const SPEED_INSIGHTS_SCRIPT_SRC = "https://speed-insights.vercel.app/script.js";
 
-type ScriptProps = ComponentProps<typeof Script>;
+type ScriptProps = Record<string, unknown>;
 
 export type SpeedInsightsProps = Omit<ScriptProps, "id" | "src"> & {
   /**

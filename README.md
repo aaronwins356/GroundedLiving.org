@@ -23,16 +23,16 @@ Contentful CMS, modern SEO automation, and monetization-ready UI primitives so n
    ```
 3. **Fill in the variables**
    ```dotenv
-   CONTENTFUL_SPACE_ID=3xlrzd32ll73
+   CONTENTFUL_SPACE_ID=xxx
    CONTENTFUL_ENVIRONMENT=master
-   CONTENTFUL_DELIVERY_TOKEN=-wvyXNxFPwtx3haCVkdFrCUcyG41-4MqXYw0Xo4pgas
-   CONTENTFUL_PREVIEW_TOKEN=lukdbkF9dZ-eJzyYISC8DomoEKL27ldgWF3T6ffgJa4
-   CONTENTFUL_MANAGEMENT_TOKEN=imported-from-contentful-ui
-   CONTENTFUL_REVALIDATE_SECRET=choose-a-random-string
-   NEXT_PUBLIC_SITE_URL=https://www.groundedliving.org
-   NEXT_PUBLIC_GA_TRACKING_ID=G-XXXXXXX
+   CONTENTFUL_DELIVERY_TOKEN=xxx
+   CONTENTFUL_PREVIEW_TOKEN=xxx
+   CONTENTFUL_MANAGEMENT_TOKEN=xxx
+   CONTENTFUL_REVALIDATE_SECRET=choose-a-strong-secret
+   NEXT_PUBLIC_SITE_URL=https://your-vercel-domain.vercel.app
+   NEXT_PUBLIC_GA_TRACKING_ID=G-XXXXXXXXXX
    NEXT_PUBLIC_NEWSLETTER_ACTION=https://app.convertkit.com/forms/YOUR_FORM_ID/subscriptions
-   NEXT_PUBLIC_STRIPE_CHECKOUT_URL=https://buy.stripe.com/test_checkout_placeholder
+   NEXT_PUBLIC_STRIPE_CHECKOUT_URL=https://buy.stripe.com/YOUR_TEST_CHECKOUT
    ```
 
 4. **Run the development server**
@@ -51,7 +51,7 @@ Contentful CMS, modern SEO automation, and monetization-ready UI primitives so n
 | `npm run lint` | Run ESLint with `next/core-web-vitals`. |
 | `npm run build` | Create an optimized production build. |
 | `npm run typecheck` | Verify TypeScript types without emitting output. |
-| `npx tsx scripts/migrate-posts.ts` | One-off migration of Markdown/legacy JSX posts into Contentful. |
+| `npm run migrate:posts` | One-off migration of Markdown/legacy JSX posts into Contentful. |
 
 > Always run `npm run lint && npm run build` before committing to mirror CI.
 
@@ -66,7 +66,7 @@ Contentful, making it safe to rerun if something fails midway.
 npm install
 
 # migrate posts (uses CONTENTFUL_* variables from .env.local)
-npx tsx scripts/migrate-posts.ts
+npm run migrate:posts
 ```
 
 Each post is created as a `blogPost` entry with populated `title`, `slug`, `excerpt`, `content`, and `datePublished` fields.
@@ -126,7 +126,18 @@ Seed your first post with:
   Paste the full prompt body into the Rich Text editor so drop caps, blockquotes, and embedded media render through the custom
   renderer.
 
-## 4. Webhooks & revalidation
+## 4. Editorial workflow
+
+1. **Create or edit blog posts** using the **BlogPost** content model. Populate the SEO description, affiliate toggles, and
+   optional sponsored metadata so the layout renders disclosures automatically.
+2. **Build evergreen marketing pages** such as About or Contact with the **Page** model. The App Router `[slug]` route renders
+   any slug you publish.
+3. **Maintain global taxonomy** by creating **Category** and **Author** entries. Blog posts reference these records for filters,
+   navigation, and author bios.
+4. Content editors publish entries directly from Contentful’s web studio. The Next.js site consumes everything from the delivery
+   API, so no additional Git commits are needed for content updates.
+
+## 5. Webhooks & revalidation
 
 1. In Contentful go to **Settings → Webhooks** and create a webhook that POSTs to your Vercel deploy hook URL. Trigger it on
    `publish` and `unpublish` events for BlogPost and Page so a fresh deployment is queued whenever long-form content changes.
@@ -138,7 +149,7 @@ Seed your first post with:
 3. Contentful editors can optionally call `/api/revalidate` manually with a `tag` payload to refresh individual cache tags when
    testing draft workflows.
 
-## 5. Monetization & growth hooks
+## 6. Monetization & growth hooks
 
 - **Newsletter:** The ConvertKit/Mailchimp form posts to `NEXT_PUBLIC_NEWSLETTER_ACTION` and renders inline + footer modules.
 - **Affiliate disclosure:** Toggle the `affiliate` boolean on any post to surface an FTC-compliant notice with configurable CTA.
@@ -146,14 +157,14 @@ Seed your first post with:
 - **Digital products:** `/shop` includes a placeholder Stripe checkout button wired to `NEXT_PUBLIC_STRIPE_CHECKOUT_URL`.
 - **Analytics:** GA4 loads automatically when `NEXT_PUBLIC_GA_TRACKING_ID` is present.
 
-## 6. Deployment
+## 7. Deployment
 
 1. Push to GitHub; Vercel detects the project automatically.
 2. Set the environment variables above in the Vercel dashboard (Project Settings → Environment Variables).
 3. Add a Contentful webhook pointing to the `/api/revalidate` endpoint so publishes trigger cache busting.
 4. Configure a Vercel Deploy Hook if you prefer to trigger full builds after editorial pushes.
 
-## 7. Additional notes
+## 8. Additional notes
 
 - Rich Text rendering is handled by a bespoke renderer that mimics Tailwind Typography so Contentful editors see polished output.
 - Hero carousel, category chips, and newsletter modules reuse the same Contentful data so marketing pages stay in sync.
