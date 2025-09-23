@@ -1,8 +1,0 @@
-.shell {
-  min-height: 70vh;
-  border-radius: 36px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(203, 216, 206, 0.55);
-  box-shadow: 0 20px 48px rgba(112, 124, 111, 0.18);
-}

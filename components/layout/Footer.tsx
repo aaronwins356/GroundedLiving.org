@@ -65,7 +65,12 @@ export function Footer() {
         </div>
         <div className={styles.newsletter}>
           <span className={styles.newsletterTitle}>Receive seasonal notes &amp; soulful journal prompts.</span>
-          <form className={styles.newsletterForm}>
+          <form
+            className={styles.newsletterForm}
+            method="post"
+            action={process.env.NEXT_PUBLIC_NEWSLETTER_ACTION ?? "https://app.convertkit.com/forms/123456/subscriptions"}
+            target="_blank"
+          >
             <label htmlFor="footer-email" className="visually-hidden">
               Email address
             </label>
@@ -77,7 +82,7 @@ export function Footer() {
               className={styles.newsletterInput}
               autoComplete="email"
             />
-            <button type="button" className={styles.submitButton}>
+            <button type="submit" className={styles.submitButton}>
               Subscribe
             </button>
           </form>

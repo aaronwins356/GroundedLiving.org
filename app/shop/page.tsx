@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -9,17 +7,20 @@ export const metadata: Metadata = {
 };
 
 export default function ShopPage() {
+  const checkoutUrl = process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_URL ?? "https://buy.stripe.com/test_checkout_placeholder";
+
   return (
     <section className={styles.page}>
       <span className={styles.eyebrow}>Shop</span>
-      <h1 className={styles.title}>Coming soon</h1>
+      <h1 className={styles.title}>Grounded Living digital library</h1>
       <p className={styles.description}>
-        We’re curating mindful tools, plant-powered recipes, and cozy rituals to support your grounded lifestyle. Check back
-        soon or explore the latest stories in the meantime.
+        Reserve your spot for our upcoming digital bundle featuring restorative rituals, nourishing recipes, and printable
+        trackers. The checkout link below routes to a placeholder Stripe session so you can wire up the real SKU whenever
+        you&rsquo;re ready.
       </p>
-      <Link href="/blog" className={styles.cta}>
-        Visit the blog
-      </Link>
+      <a href={checkoutUrl} className={styles.cta} target="_blank" rel="noopener noreferrer">
+        Preview checkout
+      </a>
     </section>
   );
 }

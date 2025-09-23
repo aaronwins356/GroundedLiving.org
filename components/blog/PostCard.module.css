@@ -1,98 +1,84 @@
 .card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  background: linear-gradient(160deg, rgba(248, 244, 239, 0.96), rgba(203, 216, 206, 0.75));
   border-radius: 28px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(199, 203, 192, 0.5);
-  box-shadow: 0 16px 40px rgba(120, 130, 120, 0.16);
-  transition: transform var(--transition-slow), box-shadow var(--transition-slow);
-  min-height: 100%;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(111, 140, 123, 0.12);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 22px 46px rgba(120, 130, 120, 0.22);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-floating);
 }
 
-.media {
+.coverLink {
+  display: block;
   position: relative;
-  width: 100%;
-  height: 220px;
   overflow: hidden;
-  background: rgba(203, 216, 206, 0.5);
+  aspect-ratio: 4 / 3;
 }
 
-.media img {
+.coverImage {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform var(--transition-slow);
 }
 
-.media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(32, 38, 36, 0.35), transparent 60%);
-  opacity: 0;
-  transition: opacity var(--transition-slow);
-}
-
-.card:hover .media img {
+.coverLink:hover .coverImage {
   transform: scale(1.05);
 }
 
-.card:hover .media::after {
-  opacity: 1;
-}
-
-.badgeRow {
-  position: absolute;
-  inset: auto 1.2rem 1.2rem;
+.coverPlaceholder {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.72rem;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
+  justify-content: center;
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  font-weight: 500;
+  color: var(--color-white);
+  background: linear-gradient(135deg, #d3c1a9, #cbd8ce);
+  height: 100%;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
-  font-weight: 600;
+.coverPlaceholder span {
+  transform: translateY(-4px);
 }
 
-.body {
+.content {
+  padding: 1.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
-  padding: clamp(1.6rem, 3vw, 2.2rem);
-  color: var(--color-ink);
-  flex: 1;
+  gap: 0.75rem;
 }
 
 .meta {
   display: flex;
+  gap: 0.75rem;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  letter-spacing: 0.28em;
+  font-size: 0.85rem;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--color-muted);
 }
 
+.category {
+  background: rgba(111, 140, 123, 0.15);
+  color: var(--color-moss);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
 .title {
-  font-size: clamp(1.35rem, 2.2vw, 1.6rem);
-  line-height: 1.35;
+  font-size: clamp(1.4rem, 2vw, 1.75rem);
+  line-height: 1.2;
 }
 
 .title a {
   color: inherit;
-  transition: color var(--transition-base);
 }
 
 .title a:hover {
@@ -100,24 +86,32 @@
 }
 
 .excerpt {
-  font-size: 0.95rem;
   color: var(--color-ink-soft);
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
-.footer {
-  margin-top: auto;
-}
-
-.readMore {
-  display: inline-flex;
-  align-items: center;
+.tags {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  font-weight: 600;
-  color: var(--color-moss);
-  transition: color var(--transition-base), transform var(--transition-base);
+  margin-top: 0.5rem;
 }
 
-.readMore:hover {
+.tag {
+  font-size: 0.8rem;
+  background: rgba(211, 193, 169, 0.4);
   color: var(--color-ink);
-  transform: translateX(4px);
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+}
+
+@media (min-width: 768px) {
+  .card {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+
+  .coverLink {
+    aspect-ratio: 3 / 4;
+  }
 }
