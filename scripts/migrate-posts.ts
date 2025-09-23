@@ -16,7 +16,13 @@ import matter from "gray-matter";
 
 const DEFAULT_LOCALE = "en-US";
 const MARKDOWN_DIRECTORY = path.join(process.cwd(), "content", "posts");
-const LEGACY_BLOG_DIRECTORY = path.join(process.cwd(), "pages", "blog");
+const LEGACY_BLOG_DIRECTORIES = [
+  path.join(process.cwd(), "pages", "blog"),
+  // App Router projects occasionally stored legacy static posts directly in the
+  // route folder before the Contentful migration. We inspect this directory as
+  // well so nothing slips through when teams upgrade.
+  path.join(process.cwd(), "app", "blog"),
+];
 
 interface Frontmatter extends Record<string, unknown> {
   title?: string;
@@ -163,43 +169,62 @@ async function parseMarkdownPosts(): Promise<LocalPost[]> {
 }
 
 async function parseLegacyJsxPosts(): Promise<LocalPost[]> {
-  if (!(await directoryExists(LEGACY_BLOG_DIRECTORY))) {
+  const directories = [];
+  for (const directory of LEGACY_BLOG_DIRECTORIES) {
+    if (await directoryExists(directory)) {
+      directories.push(directory);
+    }
+  }
+
+  if (directories.length === 0) {
     return [];
   }
 
-  const entries = await readdir(LEGACY_BLOG_DIRECTORY);
-  const pageFiles = entries.filter((file) => file.endsWith(".tsx") || file.endsWith(".jsx"));
-
   const posts: LocalPost[] = [];
 
-  for (const filename of pageFiles) {
-    const filePath = path.join(LEGACY_BLOG_DIRECTORY, filename);
-    const raw = await readFile(filePath, "utf8");
+  for (const directory of directories) {
+    const entries = await readdir(directory);
+    const pageFiles = entries.filter((file) => file.endsWith(".tsx") || file.endsWith(".jsx"));
 
-    const titleMatch = raw.match(/<h1[^>]*>(.*?)<\/h1>/s);
-    const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, "").trim() : path.parse(filename).name;
-    const slug = toSlug(path.parse(filename).name);
+    for (const filename of pageFiles) {
+      if (/^(index|page|layout)\.(t|j)sx$/.test(filename)) {
+        // Skip framework scaffolding files so we don't accidentally migrate the
+        // new Contentful-powered templates.
+        continue;
+      }
 
-    const paragraphMatches = Array.from(raw.matchAll(/<p[^>]*>(.*?)<\/p>/gms));
-    const bodyBlocks = paragraphMatches.map((match) => match[1].replace(/<[^>]+>/g, "").trim());
-    const body = bodyBlocks.join("\n\n");
+      const filePath = path.join(directory, filename);
+      const stats = await stat(filePath);
+      if (!stats.isFile()) {
+        continue;
+      }
 
-    if (!body) {
-      console.warn(`Skipping ${filename} because no <p> blocks were detected.`);
-      continue;
+      const raw = await readFile(filePath, "utf8");
+
+      const titleMatch = raw.match(/<h1[^>]*>(.*?)<\/h1>/s);
+      const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, "").trim() : path.parse(filename).name;
+      const slug = toSlug(path.parse(filename).name);
+
+      const paragraphMatches = Array.from(raw.matchAll(/<p[^>]*>(.*?)<\/p>/gms));
+      const bodyBlocks = paragraphMatches.map((match) => match[1].replace(/<[^>]+>/g, "").trim());
+      const body = bodyBlocks.join("\n\n");
+
+      if (!body) {
+        console.warn(`Skipping ${filename} because no <p> blocks were detected.`);
+        continue;
+      }
+
+      const excerpt = deriveExcerpt(body);
+
+      posts.push({
+        title,
+        slug,
+        content: body,
+        excerpt,
+        datePublished: stats.mtime.toISOString(),
+        sourcePath: filePath,
+      });
     }
-
-    const excerpt = deriveExcerpt(body);
-    const stats = await stat(filePath);
-
-    posts.push({
-      title,
-      slug,
-      content: body,
-      excerpt,
-      datePublished: stats.mtime.toISOString(),
-      sourcePath: filePath,
-    });
   }
 
   return posts;
