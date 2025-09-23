@@ -22,17 +22,32 @@
       "./node_modules/@types"
     ],
     "paths": {
+      "@/*": [
+        "./*"
+      ],
       "@content/*": [
         "./content/*"
       ],
       "@components/*": [
         "./components/*"
       ],
+      "@/components/*": [
+        "./components/*"
+      ],
       "@lib/*": [
+        "./lib/*"
+      ],
+      "@/lib/*": [
         "./lib/*"
       ],
       "@project-types/*": [
         "./types/*"
+      ],
+      "framer-motion": [
+        "./stubs/framer-motion"
+      ],
+      "lucide-react": [
+        "./stubs/lucide-react"
       ],
       "@vercel/speed-insights/*": [
         "./stubs/@vercel/speed-insights/*"

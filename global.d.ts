@@ -20,17 +20,22 @@ declare module "gray-matter" {
 
 declare module "contentful-management" {
   interface ContentfulEntry {
-    sys: { id: string };
+    sys: { id: string; updatedAt?: string; publishedVersion?: number };
     fields: Record<string, Record<string, unknown>>;
     publish(): Promise<ContentfulEntry>;
+    update(): Promise<ContentfulEntry>;
+    unpublish(): Promise<ContentfulEntry>;
+    delete(): Promise<void>;
   }
 
   interface ContentfulEnvironment {
     getEntries(query: Record<string, unknown>): Promise<{ items: ContentfulEntry[] }>;
+    getEntry(entryId: string): Promise<ContentfulEntry>;
     createEntry(
       contentTypeId: string,
       data: { fields: Record<string, Record<string, unknown>> },
     ): Promise<ContentfulEntry>;
+    getAssets(query: Record<string, unknown>): Promise<{ items: ContentfulAsset[] }>;
   }
 
   interface ContentfulSpace {
@@ -40,6 +45,13 @@ declare module "contentful-management" {
   interface ContentfulClient {
     getSpace(spaceId: string): Promise<ContentfulSpace>;
   }
+
+  interface ContentfulAsset {
+    sys: { id: string; updatedAt?: string };
+    fields: Record<string, Record<string, unknown>>;
+  }
+
+  export type Environment = ContentfulEnvironment;
 
   export function createClient(config: { accessToken: string }): ContentfulClient;
 }
