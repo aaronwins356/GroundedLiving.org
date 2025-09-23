@@ -7,27 +7,23 @@
     "node": "^20.11.0"
   },
   "scripts": {
-    "// dev": "Starts the Next.js development server with hot reloading for local work.",
     "dev": "next dev",
-    "// build": "Generates an optimized production build.",
     "build": "next build",
-    "// start": "Runs the pre-built production bundle on the configured port.",
     "start": "next start",
-    "// lint": "Validates the codebase with ESLint using Next.js defaults.",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
-    "// typecheck": "Optional script to verify TypeScript types without emitting output.",
-    "typecheck": "tsc --noEmit",
-    "// clean-reinstall": "Run `rm -rf node_modules package-lock.json && npm install` to refresh dependencies."
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
+    "clsx": "^2.1.1",
+    "contentful": "^10.14.5",
+    "contentful-management": "^11.45.2",
+    "lucide-react": "^0.469.0",
     "next": "^15.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^3.4.14",
-    "turndown": "^7.2.0",
-    "xml2js": "^0.6.2"
+    "tailwindcss": "^3.4.14"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
