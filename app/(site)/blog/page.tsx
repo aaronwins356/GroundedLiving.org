@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { CategoryChips } from "../../components/blog/CategoryChips";
-import { HeroCarousel } from "../../components/blog/HeroCarousel";
-import { PostCard } from "../../components/blog/PostCard";
-import { NewsletterSignup } from "../../components/marketing/NewsletterSignup";
-import { getBlogPosts, getCategories } from "../../lib/contentful";
-import type { ContentfulBlogPost } from "../../types/contentful";
+import { CategoryChips } from "@components/blog/CategoryChips";
+import { HeroCarousel } from "@components/blog/HeroCarousel";
+import { PostCard } from "@components/blog/PostCard";
+import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { getBlogPosts, getCategories } from "@lib/contentful";
+import type { ContentfulBlogPost } from "@project-types/contentful";
 
 export const revalidate = 300;
 

@@ -2,13 +2,13 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { AffiliateDisclosure } from "../../../components/blog/AffiliateDisclosure";
-import { PostCard } from "../../../components/blog/PostCard";
-import { NewsletterSignup } from "../../../components/marketing/NewsletterSignup";
-import { RichTextRenderer } from "../../../components/content/RichTextRenderer";
-import { getBlogPostBySlug, getBlogPosts } from "../../../lib/contentful";
-import type { ContentfulBlogPost } from "../../../types/contentful";
-import seoConfig from "../../../next-seo.config";
+import { AffiliateDisclosure } from "@components/blog/AffiliateDisclosure";
+import { PostCard } from "@components/blog/PostCard";
+import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { RichTextRenderer } from "@components/content/RichTextRenderer";
+import { getBlogPostBySlug, getBlogPosts } from "@lib/contentful";
+import type { ContentfulBlogPost } from "@project-types/contentful";
+import seoConfig from "../../../../next-seo.config";
 
 export const revalidate = 300;
 
@@ -20,7 +20,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? seoConfig.siteUrl;
 
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
-  return posts.map((post) => ({ slug: post.slug }));
+  return posts.map((post: ContentfulBlogPost) => ({ slug: post.slug }));
 }
 
 async function resolvePost(slug: string) {
@@ -175,7 +175,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         </section>
         <section className="post-tags">
-          {post.tags.map((tag) => (
+          {post.tags.map((tag: string) => (
             <span key={tag}>#{tag}</span>
           ))}
         </section>

@@ -25,6 +25,15 @@
       "@content/*": [
         "./content/*"
       ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@lib/*": [
+        "./lib/*"
+      ],
+      "@project-types/*": [
+        "./types/*"
+      ],
       "@vercel/speed-insights/*": [
         "./stubs/@vercel/speed-insights/*"
       ]
