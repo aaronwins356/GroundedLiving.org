@@ -3,8 +3,8 @@ import { CategoryChips } from "@components/blog/CategoryChips";
 import { HeroCarousel } from "@components/blog/HeroCarousel";
 import { PostCard } from "@components/blog/PostCard";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
-import { getBlogPosts, getCategories } from "@lib/contentful";
-import type { ContentfulBlogPost } from "@project-types/contentful";
+import { getAllBlogPosts, getCategories } from "@lib/contentful";
+import type { BlogPostSummary } from "@project-types/contentful";
 
 export const revalidate = 300;
 
@@ -14,9 +14,9 @@ export const metadata: Metadata = {
     "Explore our latest rituals, remedies, and reflections for grounded living. Mindful wellness stories updated weekly.",
 };
 
-function splitFeatured(posts: ContentfulBlogPost[]): {
-  featured: ContentfulBlogPost[];
-  rest: ContentfulBlogPost[];
+function splitFeatured(posts: BlogPostSummary[]): {
+  featured: BlogPostSummary[];
+  rest: BlogPostSummary[];
 } {
   // Highlight the most recent three posts in the hero carousel.
   const featured = posts.slice(0, 3);
@@ -25,7 +25,7 @@ function splitFeatured(posts: ContentfulBlogPost[]): {
 }
 
 export default async function BlogIndexPage() {
-  const [posts, categories] = await Promise.all([getBlogPosts(), getCategories()]);
+  const [posts, categories] = await Promise.all([getAllBlogPosts(), getCategories()]);
   const { featured, rest } = splitFeatured(posts);
 
   return (

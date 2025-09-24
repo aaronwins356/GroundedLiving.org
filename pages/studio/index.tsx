@@ -3,7 +3,7 @@ import React from "react";
 import type { GetServerSideProps } from "next";
 
 import { Dashboard } from "@/components/studio/Dashboard";
-import "@/components/studio/styles.css";
+import { STUDIO_COOKIE_NAME } from "@/lib/studio/constants";
 
 const parseCookieValue = (cookieHeader: string | undefined, key: string) => {
   if (!cookieHeader) {
@@ -20,7 +20,7 @@ const parseCookieValue = (cookieHeader: string | undefined, key: string) => {
 const StudioPage = () => <Dashboard />;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const sessionCookie = parseCookieValue(context.req.headers.cookie, "studio_session");
+  const sessionCookie = parseCookieValue(context.req.headers.cookie, STUDIO_COOKIE_NAME);
 
   if (sessionCookie !== "authenticated") {
     return {

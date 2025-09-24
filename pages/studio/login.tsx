@@ -4,7 +4,11 @@ import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-import "@/components/studio/styles.css";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { STUDIO_COOKIE_NAME } from "@/lib/studio/constants";
 
 const parseCookieValue = (cookieHeader: string | undefined, key: string) => {
   if (!cookieHeader) {
@@ -59,45 +63,52 @@ const StudioLoginPage = () => {
       <Head>
         <title>Studio access · Grounded Living</title>
       </Head>
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-6 py-10 text-slate-100">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-6 py-16 text-slate-100">
         <div
-          className="w-full rounded-3xl border border-slate-800/60 bg-slate-900/70 p-6 shadow-2xl backdrop-blur-xl"
-          style={{ maxWidth: "28rem" }}
-        >
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Grounded Studio</p>
-          <h1 className="mt-3 text-3xl font-semibold text-slate-100">Enter the content studio</h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Provide the administrator key to access the editorial dashboard.
-          </p>
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <label className="flex flex-col gap-2">
-              <span className="text-sm font-semibold text-slate-200">Studio password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40"
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
-            </label>
-            {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-emerald-950 shadow-lg transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? "Signing you in..." : "Access studio"}
-            </button>
-          </form>
-        </div>
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.22),transparent_55%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.18),transparent_45%)]"
+        />
+        <Card className="w-full max-w-md border-white/10 !bg-white/[0.04] text-slate-100 shadow-2xl shadow-emerald-500/20 backdrop-blur-xl">
+          <CardHeader className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Grounded Studio</p>
+            <CardTitle className="text-3xl text-white">Enter the content studio</CardTitle>
+            <CardDescription className="text-sm text-slate-300">
+              Provide the administrator key to access the editorial dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="studio-password" className="text-slate-200">
+                  Studio password
+                </Label>
+                <Input
+                  id="studio-password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                  wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                  className="text-slate-100 placeholder:text-slate-400"
+                  disabled={isSubmitting}
+                />
+              </div>
+              {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+              <Button type="submit" className="w-full justify-center rounded-2xl" loading={isSubmitting}>
+                Access studio
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </>
   );
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const sessionCookie = parseCookieValue(context.req.headers.cookie, "studio_session");
+  const sessionCookie = parseCookieValue(context.req.headers.cookie, STUDIO_COOKIE_NAME);
 
   if (sessionCookie === "authenticated") {
     return {

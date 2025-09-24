@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import type { ContentfulBlogPost } from "../../types/contentful";
+import type { BlogPostSummary } from "../../types/contentful";
 
 import styles from "./HeroCarousel.module.css";
 
 interface HeroCarouselProps {
-  posts: ContentfulBlogPost[];
+  posts: BlogPostSummary[];
   intervalMs?: number;
 }
 
@@ -54,7 +54,6 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
             >
               <div className={styles.slideInner}>
                 <div className={styles.copy}>
-                  {item.category ? <span className={styles.category}>{item.category.name}</span> : null}
                   <h2>
                     <Link href={`/blog/${item.slug}`}>{item.title}</Link>
                   </h2>
