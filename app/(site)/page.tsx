@@ -4,13 +4,13 @@ import { CategoryChips } from "@components/blog/CategoryChips";
 import { HeroCarousel } from "@components/blog/HeroCarousel";
 import { PostCard } from "@components/blog/PostCard";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
-import { getBlogPosts, getCategories, getPages } from "@lib/contentful";
-import type { ContentfulBlogPost, ContentfulPage, RichTextNode } from "@project-types/contentful";
+import { getAllBlogPosts, getCategories, getPages } from "@lib/contentful";
+import type { BlogPostSummary, ContentfulPage, RichTextNode } from "@project-types/contentful";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const [posts, categories, pages] = await Promise.all([getBlogPosts(), getCategories(), getPages()]);
+  const [posts, categories, pages] = await Promise.all([getAllBlogPosts(), getCategories(), getPages()]);
   const featured = posts.slice(0, 3);
   const latest = posts.slice(0, 6);
   const aboutPage = pages.find((page: ContentfulPage) => page.slug === "about");
@@ -61,7 +61,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="grid-posts">
-          {latest.map((post: ContentfulBlogPost) => (
+          {latest.map((post: BlogPostSummary) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>

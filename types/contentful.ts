@@ -47,12 +47,6 @@ export interface ContentfulImageAsset {
   height?: number;
 }
 
-export interface ContentfulAuthor {
-  name: string;
-  bio?: string;
-  avatarImage?: ContentfulImageAsset | null;
-}
-
 export interface ContentfulCategory {
   name: string;
   slug: string;
@@ -69,24 +63,31 @@ export interface ContentfulPage {
   heroImage?: ContentfulImageAsset | null;
 }
 
-export interface ContentfulBlogPost {
+export interface BlogPostAuthor {
+  name: string;
+  bio?: string | null;
+  avatarImage?: ContentfulImageAsset | null;
+}
+
+export interface BlogPostSummary {
   id: string;
   title: string;
   slug: string;
   excerpt?: string | null;
-  content: RichTextDocument | null;
   coverImage?: ContentfulImageAsset | null;
-  author?: ContentfulAuthor | null;
-  category?: ContentfulCategory | null;
-  tags: string[];
   datePublished?: string | null;
-  seoDescription?: string | null;
-  affiliate?: boolean | null;
-  sponsored?: boolean | null;
-  sponsoredLabel?: string | null;
-  affiliateCtaText?: string | null;
-  affiliateCtaUrl?: string | null;
 }
+
+export interface BlogPost extends BlogPostSummary {
+  content: RichTextDocument | null;
+  author?: BlogPostAuthor | null;
+  seoDescription?: string | null;
+}
+
+/**
+ * Backwards compatible alias for legacy imports.
+ */
+export type ContentfulBlogPost = BlogPost;
 
 export interface ContentfulCollection<T> {
   items: T[];

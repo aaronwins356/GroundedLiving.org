@@ -150,14 +150,13 @@ export interface EntrySummary {
 export interface BlogPostSummary extends EntrySummary {
   excerpt?: string | null;
   datePublished?: string | null;
-  tags: string[];
+  coverImage?: StudioAsset | null;
+  seoDescription?: string | null;
 }
 
 export interface BlogPostDetail extends BlogPostSummary {
   content: RichTextDocument | null;
   authorId?: string | null;
-  heroImage?: StudioAsset | null;
-  seo: StudioSEO;
 }
 
 export interface PageSummary extends EntrySummary {
@@ -218,8 +217,8 @@ function mapBlogPostSummary(entry: ManagementEntry): BlogPostSummary {
     title: getLocalizedField<string>(entry.fields, "title") ?? "Untitled post",
     slug: getLocalizedField<string>(entry.fields, "slug"),
     excerpt: getLocalizedField<string>(entry.fields, "excerpt"),
-    datePublished: getLocalizedField<string>(entry.fields, "datePublished"),
-    tags: (getLocalizedField<string[]>(entry.fields, "tags") ?? []).filter(Boolean),
+    datePublished: getLocalizedField<string>(entry.fields, "date-published"),
+    seoDescription: getLocalizedField<string>(entry.fields, "seo-description"),
     createdAt: entry.sys.createdAt ?? new Date().toISOString(),
     updatedAt: entry.sys.updatedAt ?? new Date().toISOString(),
     status: mapEntryStatus(entry),
@@ -229,20 +228,13 @@ function mapBlogPostSummary(entry: ManagementEntry): BlogPostSummary {
 
 async function mapBlogPostDetail(environment: ManagementEnvironment, entry: ManagementEntry): Promise<BlogPostDetail> {
   const summary = mapBlogPostSummary(entry);
-  const heroImage = await mapAsset(environment, getLocalizedField(entry.fields, "coverImage"));
-  const ogImage = await mapAsset(environment, getLocalizedField(entry.fields, "seoImage"));
+  const coverImage = await mapAsset(environment, getLocalizedField(entry.fields, "coverImage"));
 
   return {
     ...summary,
     content: getLocalizedField<RichTextDocument>(entry.fields, "content"),
     authorId: getLocalizedField<any>(entry.fields, "author")?.sys?.id ?? null,
-    heroImage,
-    seo: {
-      title: getLocalizedField<string>(entry.fields, "seoTitle") ?? summary.title,
-      description: getLocalizedField<string>(entry.fields, "seoDescription") ?? summary.excerpt,
-      canonicalUrl: getLocalizedField<string>(entry.fields, "seoCanonicalUrl"),
-      ogImage,
-    },
+    coverImage,
   } satisfies BlogPostDetail;
 }
 
@@ -298,16 +290,9 @@ function applyBlogPostFields(entry: ManagementEntry, data: Partial<BlogPostDetai
   if (data.slug !== undefined) setLocalizedField(entry, "slug", data.slug ?? null);
   if (data.excerpt !== undefined) setLocalizedField(entry, "excerpt", data.excerpt ?? null);
   if (data.content !== undefined) setLocalizedField(entry, "content", data.content ?? null);
-  if (data.tags !== undefined) setLocalizedField(entry, "tags", data.tags ?? []);
-  if (data.datePublished !== undefined) setLocalizedField(entry, "datePublished", data.datePublished ?? null);
-  if (data.seo?.title !== undefined) setLocalizedField(entry, "seoTitle", data.seo?.title ?? null);
-  if (data.seo?.description !== undefined)
-    setLocalizedField(entry, "seoDescription", data.seo?.description ?? null);
-  if (data.seo?.canonicalUrl !== undefined)
-    setLocalizedField(entry, "seoCanonicalUrl", data.seo?.canonicalUrl ?? null);
-  if (data.seo?.ogImage !== undefined)
-    setLocalizedField(entry, "seoImage", createAssetLink(data.seo?.ogImage?.id));
-  if (data.heroImage !== undefined) setLocalizedField(entry, "coverImage", createAssetLink(data.heroImage?.id));
+  if (data.datePublished !== undefined) setLocalizedField(entry, "date-published", data.datePublished ?? null);
+  if (data.seoDescription !== undefined) setLocalizedField(entry, "seo-description", data.seoDescription ?? null);
+  if (data.coverImage !== undefined) setLocalizedField(entry, "coverImage", createAssetLink(data.coverImage?.id));
   if (data.authorId !== undefined) setLocalizedField(entry, "author", createEntryLink(data.authorId));
 }
 

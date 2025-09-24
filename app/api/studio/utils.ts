@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { getExpectedHash } from "../../studio/security";
-import { STUDIO_COOKIE_NAME } from "../../studio/constants";
+import { getExpectedHash } from "../../../lib/studio/security";
+import { STUDIO_COOKIE_NAME } from "../../../lib/studio/constants";
 
 export async function guardRequest(): Promise<NextResponse | null> {
   const expectedHash = getExpectedHash();

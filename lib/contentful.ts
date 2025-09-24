@@ -3,8 +3,9 @@ import "server-only";
 import { cache } from "react";
 
 import type {
-  ContentfulAuthor,
-  ContentfulBlogPost,
+  BlogPost,
+  BlogPostAuthor,
+  BlogPostSummary,
   ContentfulCategory,
   ContentfulCollection,
   ContentfulImageAsset,
@@ -50,11 +51,6 @@ interface BlogPostGraphQL {
   title?: string | null;
   slug?: string | null;
   excerpt?: string | null;
-  affiliate?: boolean | null;
-  sponsored?: boolean | null;
-  sponsoredLabel?: string | null;
-  affiliateCtaText?: string | null;
-  affiliateCtaUrl?: string | null;
   content?: {
     json?: RichTextDocument | null;
     links?: {
@@ -69,12 +65,6 @@ interface BlogPostGraphQL {
     bio?: string | null;
     avatarImage?: AssetGraphQL | null;
   } | null;
-  category?: {
-    name?: string | null;
-    slug?: string | null;
-    description?: string | null;
-  } | null;
-  tags?: (string | null)[] | null;
   datePublished?: string | null;
   seoDescription?: string | null;
 }
@@ -157,19 +147,19 @@ function mapAsset(asset: AssetGraphQL | null | undefined): ContentfulImageAsset 
   } satisfies ContentfulImageAsset;
 }
 
-function mapAuthor(author: BlogPostGraphQL["author"]): ContentfulAuthor | null {
+function mapAuthor(author: BlogPostGraphQL["author"]): BlogPostAuthor | null {
   if (!author || !author.name) {
     return null;
   }
 
   return {
     name: author.name,
-    bio: author.bio ?? undefined,
+    bio: author.bio ?? null,
     avatarImage: mapAsset(author.avatarImage),
-  } satisfies ContentfulAuthor;
+  } satisfies BlogPostAuthor;
 }
 
-function mapCategory(category: BlogPostGraphQL["category"]): ContentfulCategory | null {
+function mapCategory(category: CategoryGraphQL | null | undefined): ContentfulCategory | null {
   if (!category || !category.name || !category.slug) {
     return null;
   }
@@ -197,7 +187,7 @@ function mapPage(page: PageGraphQL): ContentfulPage | null {
   } satisfies ContentfulPage;
 }
 
-function mapBlogPost(post: BlogPostGraphQL): ContentfulBlogPost | null {
+function mapBlogPostSummary(post: BlogPostGraphQL): BlogPostSummary | null {
   if (!post || !post.slug || !post.title) {
     return null;
   }
@@ -207,19 +197,23 @@ function mapBlogPost(post: BlogPostGraphQL): ContentfulBlogPost | null {
     title: post.title,
     slug: post.slug,
     excerpt: post.excerpt ?? null,
-    content: enrichRichText(post.content?.json ?? null, post.content?.links?.assets?.block ?? []),
     coverImage: mapAsset(post.coverImage ?? null),
-    author: mapAuthor(post.author ?? null),
-    category: mapCategory(post.category ?? null),
-    tags: (post.tags ?? []).filter((tag): tag is string => Boolean(tag)),
     datePublished: post.datePublished ?? null,
+  } satisfies BlogPostSummary;
+}
+
+function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
+  const summary = mapBlogPostSummary(post);
+  if (!summary) {
+    return null;
+  }
+
+  return {
+    ...summary,
+    content: enrichRichText(post.content?.json ?? null, post.content?.links?.assets?.block ?? []),
+    author: mapAuthor(post.author ?? null),
     seoDescription: post.seoDescription ?? null,
-    affiliate: post.affiliate ?? null,
-    sponsored: post.sponsored ?? null,
-    sponsoredLabel: post.sponsoredLabel ?? null,
-    affiliateCtaText: post.affiliateCtaText ?? null,
-    affiliateCtaUrl: post.affiliateCtaUrl ?? null,
-  } satisfies ContentfulBlogPost;
+  } satisfies BlogPost;
 }
 
 function enrichRichText(
@@ -272,7 +266,7 @@ function enrichRichText(
   return clone;
 }
 
-const getBlogPostsInternal = cache(async (): Promise<ContentfulBlogPost[]> => {
+const getAllBlogPostsInternal = cache(async (): Promise<BlogPostSummary[]> => {
   const query = `
     query BlogPosts {
       blogPostCollection(order: datePublished_DESC, preview: false) {
@@ -281,40 +275,9 @@ const getBlogPostsInternal = cache(async (): Promise<ContentfulBlogPost[]> => {
           title
           slug
           excerpt
-          affiliate
-          sponsored
-          sponsoredLabel
-          affiliateCtaText
-          affiliateCtaUrl
-          tags
           datePublished
           seoDescription
-          content {
-            json
-            links {
-              assets {
-                block {
-                  sys { id }
-                  url
-                  title
-                  description
-                  width
-                  height
-                }
-              }
-            }
-          }
           coverImage { url title description width height }
-          author {
-            name
-            bio
-            avatarImage { url title }
-          }
-          category {
-            name
-            slug
-            description
-          }
         }
       }
     }
@@ -325,12 +288,12 @@ const getBlogPostsInternal = cache(async (): Promise<ContentfulBlogPost[]> => {
   });
 
   const items = data?.blogPostCollection?.items ?? [];
-  return items.map(mapBlogPost).filter((post): post is ContentfulBlogPost => post !== null);
+  return items.map(mapBlogPostSummary).filter((post): post is BlogPostSummary => post !== null);
 });
 
-export const getBlogPosts = async (): Promise<ContentfulBlogPost[]> => getBlogPostsInternal();
+export const getAllBlogPosts = async (): Promise<BlogPostSummary[]> => getAllBlogPostsInternal();
 
-export const getBlogPostBySlug = cache(async (slug: string): Promise<ContentfulBlogPost | null> => {
+export const getBlogPostBySlug = cache(async (slug: string): Promise<BlogPost | null> => {
   const query = `
     query BlogPostBySlug($slug: String!, $preview: Boolean!) {
       blogPostCollection(where: { slug: $slug }, limit: 1, preview: $preview) {
@@ -339,14 +302,9 @@ export const getBlogPostBySlug = cache(async (slug: string): Promise<ContentfulB
           title
           slug
           excerpt
-          affiliate
-          sponsored
-          sponsoredLabel
-          affiliateCtaText
-          affiliateCtaUrl
-          tags
           datePublished
           seoDescription
+          coverImage { url title description width height }
           content {
             json
             links {
@@ -362,16 +320,10 @@ export const getBlogPostBySlug = cache(async (slug: string): Promise<ContentfulB
               }
             }
           }
-          coverImage { url title description width height }
           author {
             name
             bio
-            avatarImage { url title }
-          }
-          category {
-            name
-            slug
-            description
+            avatarImage { url title description width height }
           }
         }
       }
@@ -487,45 +439,9 @@ export const getCategories = cache(async (): Promise<ContentfulCategory[]> => {
   return items.map(mapCategory).filter((category): category is ContentfulCategory => category !== null);
 });
 
-export const getPostsByCategory = cache(async (slug: string): Promise<ContentfulBlogPost[]> => {
-  const query = `
-    query PostsByCategory($slug: String!) {
-      blogPostCollection(where: { category: { slug: $slug } }, preview: false, order: datePublished_DESC) {
-        items {
-          sys { id }
-          title
-          slug
-          excerpt
-          affiliate
-          sponsored
-          sponsoredLabel
-          affiliateCtaText
-          affiliateCtaUrl
-          tags
-          datePublished
-          seoDescription
-          content { json }
-          coverImage { url title description width height }
-          author {
-            name
-            bio
-            avatarImage { url title }
-          }
-          category {
-            name
-            slug
-            description
-          }
-        }
-      }
-    }
-  `;
-
-  const data = await fetchContentfulGraphQL<{ blogPostCollection?: ContentfulCollection<BlogPostGraphQL> }>(query, {
-    variables: { slug },
-    tags: [BLOG_POST_TAG, `contentful:category:${slug}`],
-  });
-
-  const items = data?.blogPostCollection?.items ?? [];
-  return items.map(mapBlogPost).filter((post): post is ContentfulBlogPost => post !== null);
+export const getPostsByCategory = cache(async (_slug: string): Promise<BlogPostSummary[]> => {
+  console.warn(
+    "Category filtering is not supported by the current Contentful blogPost model. Returning an empty result set.",
+  );
+  return [];
 });

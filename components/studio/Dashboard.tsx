@@ -1,620 +1,657 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+"use client";
 
-import { Filter, Loader2, Plus, Search } from "lucide-react";
+import type { ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FileText, Loader2, Plus, Search, X } from "lucide-react";
 
-import { AuthorForm, AuthorFormState } from "./AuthorForm";
-import { PostForm, PostFormState } from "./PostForm";
-import { SidebarNav } from "./SidebarNav";
-import { SlideOver } from "./SlideOver";
-import { ToastProvider, useToast } from "./ToastContext";
-import type { StudioAsset, StudioAuthor, StudioPost } from "./types";
+import { Badge } from "@components/ui/badge";
+import { Button } from "@components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card";
+import { Input } from "@components/ui/input";
+import { Label } from "@components/ui/label";
+import { Select } from "@components/ui/select";
+import { Textarea } from "@components/ui/textarea";
+import { cn } from "@lib/utils/cn";
+import type { RichTextDocument, RichTextNode } from "@project-types/contentful";
 
-import "./styles.css";
+import type { StudioPostDetail, StudioPostSummary } from "./types";
 
-const DEFAULT_THEME: "light" | "dark" = "dark";
+interface EditorState {
+  id?: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  datePublished: string;
+  seoDescription: string;
+  coverImageId: string;
+  authorId: string;
+  status: "draft" | "published";
+}
 
-const useTheme = () => {
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") {
-      return DEFAULT_THEME;
-    }
+interface ApiResponse<T> {
+  items?: T[];
+  data?: T;
+}
 
-    return (window.localStorage.getItem("studio-theme") as "light" | "dark") ?? DEFAULT_THEME;
-  });
-
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    root.classList.toggle("light", theme === "light");
-    window.localStorage.setItem("studio-theme", theme);
-  }, [theme]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
-  }, []);
-
-  return { theme, toggleTheme };
+const emptyEditorState: EditorState = {
+  title: "",
+  slug: "",
+  excerpt: "",
+  content: "",
+  datePublished: "",
+  seoDescription: "",
+  coverImageId: "",
+  authorId: "",
+  status: "draft",
 };
 
-const DashboardInner = () => {
-  const [activeSection, setActiveSection] = useState<"overview" | "posts" | "authors" | "assets">("overview");
-  const [posts, setPosts] = useState<StudioPost[]>([]);
-  const [authors, setAuthors] = useState<StudioAuthor[]>([]);
-  const [assets, setAssets] = useState<StudioAsset[]>([]);
-  const [loading, setLoading] = useState({ posts: true, authors: true, assets: true });
-  const [postQuery, setPostQuery] = useState("");
-  const [authorQuery, setAuthorQuery] = useState("");
-  const [postPanelOpen, setPostPanelOpen] = useState(false);
-  const [authorPanelOpen, setAuthorPanelOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<StudioPost | null>(null);
-  const [editingAuthor, setEditingAuthor] = useState<StudioAuthor | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { notify } = useToast();
+function richTextToPlain(document: RichTextDocument | null): string {
+  if (!document?.content?.length) {
+    return "";
+  }
+
+  const paragraphs: string[] = [];
+
+  const visit = (nodes: RichTextNode[]) => {
+    nodes.forEach((node) => {
+      if (node.nodeType === "paragraph") {
+        const text = (node.content ?? [])
+          .map((child) => (typeof child.value === "string" ? child.value : ""))
+          .join("");
+        paragraphs.push(text.trim());
+      }
+      if (node.content) {
+        visit(node.content);
+      }
+    });
+  };
+
+  visit(document.content);
+  return paragraphs.filter(Boolean).join("\n\n");
+}
+
+function plainToRichText(value: string): RichTextDocument {
+  const blocks = value
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => ({
+      nodeType: "paragraph" as const,
+      content: [
+        {
+          nodeType: "text" as const,
+          value: paragraph,
+          marks: [],
+        },
+      ],
+    } satisfies RichTextNode));
+
+  return {
+    nodeType: "document",
+    content: blocks.length ? blocks : [
+      {
+        nodeType: "paragraph",
+        content: [
+          {
+            nodeType: "text",
+            value: "",
+            marks: [],
+          },
+        ],
+      },
+    ],
+  } satisfies RichTextDocument;
+}
+
+function toDateTimeLocal(value?: string | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const pad = (num: number) => num.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
+    date.getMinutes(),
+  )}`;
+}
+
+function fromDateTimeLocal(value: string): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+  return date.toISOString();
+}
+
+export function Dashboard() {
+  const [posts, setPosts] = useState<StudioPostSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorLoading, setEditorLoading] = useState(false);
+  const [editorState, setEditorState] = useState<EditorState>(emptyEditorState);
+  const [banner, setBanner] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
-    setLoading((state) => ({ ...state, posts: true }));
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch("/api/contentful/blog");
+      const response = await fetch("/api/studio/blog-posts");
       if (!response.ok) {
         throw new Error(await response.text());
       }
-      const data = (await response.json()) as { posts?: StudioPost[] };
-      setPosts(data.posts ?? []);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to fetch posts";
-      notify({ title: "Failed to load posts", description: message, variant: "error" });
-    } finally {
-      setLoading((state) => ({ ...state, posts: false }));
-    }
-  }, [notify]);
 
-  const fetchAuthors = useCallback(async () => {
-    setLoading((state) => ({ ...state, authors: true }));
-    try {
-      const response = await fetch("/api/contentful/author");
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      const data = (await response.json()) as { authors?: StudioAuthor[] };
-      setAuthors(data.authors ?? []);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to fetch authors";
-      notify({ title: "Failed to load authors", description: message, variant: "error" });
+      const payload = (await response.json()) as ApiResponse<StudioPostSummary> & {
+        total?: number;
+      };
+      setPosts(payload.items ?? []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to load posts";
+      setError(message);
     } finally {
-      setLoading((state) => ({ ...state, authors: false }));
+      setLoading(false);
     }
-  }, [notify]);
-
-  const fetchAssets = useCallback(async () => {
-    setLoading((state) => ({ ...state, assets: true }));
-    try {
-      const response = await fetch("/api/contentful/asset");
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      const data = (await response.json()) as { assets?: StudioAsset[] };
-      setAssets(data.assets ?? []);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to fetch assets";
-      notify({ title: "Failed to load assets", description: message, variant: "error" });
-    } finally {
-      setLoading((state) => ({ ...state, assets: false }));
-    }
-  }, [notify]);
+  }, []);
 
   useEffect(() => {
     void fetchPosts();
-    void fetchAuthors();
-    void fetchAssets();
-  }, [fetchPosts, fetchAuthors, fetchAssets]);
+  }, [fetchPosts]);
 
   const filteredPosts = useMemo(() => {
-    if (!postQuery.trim()) {
-      return posts;
+    const text = search.trim().toLowerCase();
+
+    return posts.filter((post) => {
+      const matchesStatus = statusFilter === "all" || post.status === statusFilter;
+      if (!matchesStatus) {
+        return false;
+      }
+      if (!text) {
+        return true;
+      }
+      const haystack = [post.title, post.slug ?? "", post.excerpt ?? "", post.seoDescription ?? ""].join(" ");
+      return haystack.toLowerCase().includes(text);
+    });
+  }, [posts, search, statusFilter]);
+
+  const openEditorForNew = () => {
+    setEditorState(emptyEditorState);
+    setEditorOpen(true);
+    setBanner(null);
+  };
+
+  const openEditorForExisting = async (id: string) => {
+    setEditorOpen(true);
+    setEditorLoading(true);
+    setBanner(null);
+    try {
+      const response = await fetch(`/api/studio/blog-posts/${id}`);
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      const payload = (await response.json()) as StudioPostDetail;
+      setEditorState({
+        id: payload.id,
+        title: payload.title,
+        slug: payload.slug ?? "",
+        excerpt: payload.excerpt ?? "",
+        content: richTextToPlain(payload.content),
+        datePublished: toDateTimeLocal(payload.datePublished ?? payload.publishedAt ?? ""),
+        seoDescription: payload.seoDescription ?? "",
+        coverImageId: payload.coverImage?.id ?? "",
+        authorId: payload.authorId ?? "",
+        status: payload.status,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to load the post";
+      setBanner(message);
+    } finally {
+      setEditorLoading(false);
     }
+  };
 
-    const normalizedQuery = postQuery.toLowerCase();
+  const closeEditor = () => {
+    setEditorOpen(false);
+    setEditorState(emptyEditorState);
+    setEditorLoading(false);
+    setBanner(null);
+  };
 
-    return posts.filter((post) =>
-      [post.title, post.slug, post.authorName]
-        .filter((value): value is string => typeof value === "string" && value.length > 0)
-        .some((value) => value.toLowerCase().includes(normalizedQuery))
+  const handleFieldChange = (field: keyof EditorState) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      setEditorState((state) => ({ ...state, [field]: event.target.value }));
+    };
+
+  const handleSubmit = async () => {
+    try {
+      setEditorLoading(true);
+      setBanner(null);
+
+      const payload = {
+        title: editorState.title,
+        slug: editorState.slug || undefined,
+        excerpt: editorState.excerpt || undefined,
+        content: plainToRichText(editorState.content),
+        datePublished: fromDateTimeLocal(editorState.datePublished),
+        seoDescription: editorState.seoDescription || undefined,
+        coverImage: editorState.coverImageId ? { id: editorState.coverImageId } : null,
+        authorId: editorState.authorId || null,
+        status: editorState.status,
+      } satisfies Partial<StudioPostDetail> & { title: string; status: "draft" | "published" };
+
+      const method = editorState.id ? "PUT" : "POST";
+      const endpoint = editorState.id ? `/api/studio/blog-posts/${editorState.id}` : "/api/studio/blog-posts";
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error((errorPayload as { error?: string }).error ?? "Unable to save the post");
+      }
+
+      await fetchPosts();
+      closeEditor();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setBanner(message);
+    } finally {
+      setEditorLoading(false);
+    }
+  };
+
+  const statusCounts = useMemo(() => {
+    return posts.reduce(
+      (acc, post) => {
+        acc[post.status] += 1;
+        return acc;
+      },
+      { draft: 0, published: 0 } as { draft: number; published: number },
     );
-  }, [postQuery, posts]);
+  }, [posts]);
 
-  const filteredAuthors = useMemo(() => {
-    if (!authorQuery.trim()) {
-      return authors;
-    }
-
-    const normalizedQuery = authorQuery.toLowerCase();
-
-    return authors.filter((author) =>
-      [author.name, author.bio]
-        .filter((value): value is string => typeof value === "string" && value.length > 0)
-        .some((value) => value.toLowerCase().includes(normalizedQuery))
-    );
-  }, [authorQuery, authors]);
-
-  const openCreatePost = () => {
-    setEditingPost(null);
-    setPostPanelOpen(true);
-  };
-
-  const openCreateAuthor = () => {
-    setEditingAuthor(null);
-    setAuthorPanelOpen(true);
-  };
-
-  const handlePostSubmit = async (payload: PostFormState) => {
+  const formatDate = (value?: string | null) => {
+    if (!value) return "—";
     try {
-      setIsSubmitting(true);
-      const response = await fetch("/api/contentful/blog", {
-        method: editingPost ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, id: editingPost?.id }),
+      return new Date(value).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error ?? "Failed to save post");
-      }
-
-      notify({
-        title: editingPost ? "Post updated" : "Post created",
-        description: "Your changes were saved to Contentful.",
-        variant: "success",
-      });
-      setPostPanelOpen(false);
-      await fetchPosts();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save post";
-      notify({ title: "Failed to save post", description: message, variant: "error" });
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      return value;
     }
   };
 
-  const handleAuthorSubmit = async (payload: AuthorFormState) => {
-    try {
-      setIsSubmitting(true);
-      const response = await fetch("/api/contentful/author", {
-        method: editingAuthor ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, id: editingAuthor?.id }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error ?? "Failed to save author");
-      }
-
-      notify({
-        title: editingAuthor ? "Author updated" : "Author created",
-        description: "The author profile is live.",
-        variant: "success",
-      });
-      setAuthorPanelOpen(false);
-      await fetchAuthors();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save author";
-      notify({ title: "Failed to save author", description: message, variant: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeletePost = async (post: StudioPost) => {
-    if (typeof window !== "undefined" && !window.confirm(`Delete “${post.title}”? This cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const response = await fetch("/api/contentful/blog", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: post.id }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error ?? "Failed to delete post");
-      }
-
-      notify({ title: "Post removed", description: "The entry was archived in Contentful.", variant: "success" });
-      await fetchPosts();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete post";
-      notify({ title: "Deletion failed", description: message, variant: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteAuthor = async (author: StudioAuthor) => {
-    if (typeof window !== "undefined" && !window.confirm(`Delete ${author.name}? This cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const response = await fetch("/api/contentful/author", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: author.id }),
-      });
-
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        throw new Error(errorPayload.error ?? "Failed to delete author");
-      }
-
-      notify({ title: "Author removed", description: "The profile was removed from Contentful.", variant: "success" });
-      await fetchAuthors();
-      await fetchPosts();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to delete author";
-      notify({ title: "Deletion failed", description: message, variant: "error" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const { theme, toggleTheme } = useTheme();
-
-  const handleLogout = async () => {
-    await fetch("/api/studio/session", { method: "DELETE" });
-    window.location.href = "/studio/login";
-  };
-
-  const handleSectionChange = (section: "overview" | "posts" | "authors" | "assets") => {
-    setActiveSection(section);
-
-    if (typeof window !== "undefined") {
-      const anchor = document.getElementById(`studio-${section}`);
-      if (anchor) {
-        anchor.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  };
+  const navItems: Array<{ label: string; value: "all" | "published" | "draft"; count: number }> = [
+    { label: "All entries", value: "all", count: posts.length },
+    { label: "Published", value: "published", count: statusCounts.published },
+    { label: "Drafts", value: "draft", count: statusCounts.draft },
+  ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <SidebarNav
-        active={activeSection}
-        onChange={handleSectionChange}
-        onLogout={handleLogout}
-        theme={theme}
-        onThemeToggle={toggleTheme}
+    <div className="relative min-h-screen bg-slate-950 text-slate-100">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.22),transparent_55%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.18),transparent_45%)]"
       />
-      <div className="flex-1 overflow-hidden">
-        <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 px-6 py-4 backdrop-blur-md md:hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Grounded Studio</p>
-              <h1 className="mt-2 text-xl font-semibold text-slate-100">Contentful Control</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200"
-              >
-                Theme
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center justify-center rounded-full border border-rose-400/70 bg-rose-500/20 px-3 py-2 text-xs font-semibold text-rose-200"
-              >
-                Sign out
-              </button>
-            </div>
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 px-6 py-12 lg:grid lg:grid-cols-[300px,1fr] lg:gap-12 lg:px-12">
+        <aside className="flex flex-col gap-10 rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-2xl shadow-emerald-500/20 backdrop-blur">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Grounded Studio</p>
+            <h1 className="text-2xl font-semibold text-white">Editorial command center</h1>
+            <p className="text-sm text-slate-300/90">Manage every ritual, draft, and launch from a single calm workspace.</p>
           </div>
-        </header>
-        <main className="flex flex-col gap-8 px-6 py-10">
-          <section id="studio-overview" className="grid gap-4 md:grid-cols-3">
-            <article className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-xl">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Active posts</p>
-              <h2 className="mt-3 text-3xl font-semibold text-slate-100">{posts.length}</h2>
-              <p className="mt-2 text-sm text-slate-400">Entries synced with Contentful.</p>
-            </article>
-            <article className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-xl">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Authors</p>
-              <h2 className="mt-3 text-3xl font-semibold text-slate-100">{authors.length}</h2>
-              <p className="mt-2 text-sm text-slate-400">Voices shaping the narrative.</p>
-            </article>
-            <article className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-xl">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Assets</p>
-              <h2 className="mt-3 text-3xl font-semibold text-slate-100">{assets.length}</h2>
-              <p className="mt-2 text-sm text-slate-400">Ready-to-use visuals.</p>
-            </article>
-          </section>
-
-          <section id="studio-posts" className="space-y-5">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-slate-100">Blog posts</h2>
-                <p className="text-sm text-slate-400">Manage published stories, drafts, and editorial workflow.</p>
-              </div>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <div className="relative flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2">
-                  <Search size={16} className="text-slate-500" />
-                  <input
-                    className="w-full bg-transparent text-sm text-slate-200 outline-none"
-                    placeholder="Filter posts"
-                    value={postQuery}
-                    onChange={(event) => setPostQuery(event.target.value)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={openCreatePost}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-950 shadow-lg transition hover:bg-emerald-400"
-                >
-                  <Plus size={16} />
-                  New post
-                </button>
-              </div>
-            </div>
-            <div className="overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/50 shadow-xl">
-              <table className="w-full min-w-[640px]">
-                <thead className="bg-slate-900/60 text-left text-xs uppercase tracking-[0.2em] text-slate-500">
-                  <tr>
-                    <th className="px-6 py-4">Title</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Author</th>
-                    <th className="px-6 py-4">Updated</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading.posts ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-6">
-                        <div className="flex items-center gap-3 text-sm text-slate-400">
-                          <Loader2 className="animate-spin" size={16} /> Loading posts...
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredPosts.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-6 text-sm text-slate-400">
-                        Nothing matches your filter yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredPosts.map((post) => (
-                      <tr key={post.id} className="border-t border-slate-800/50 text-sm text-slate-200">
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-slate-100">{post.title}</span>
-                            <span className="text-xs text-slate-500">/{post.slug}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                              post.status === "published"
-                                ? "bg-emerald-500/20 text-emerald-200"
-                                : "bg-slate-800 text-slate-300"
-                            }`}
-                          >
-                            {post.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-300">{post.authorName ?? "—"}</td>
-                        <td className="px-6 py-4 text-sm text-slate-400">
-                          {new Date(post.updatedAt).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingPost(post);
-                                setPostPanelOpen(true);
-                              }}
-                              className="inline-flex items-center justify-center rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-200"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePost(post)}
-                              className="inline-flex items-center justify-center rounded-full border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-300 transition hover:border-rose-400/80 hover:text-rose-200"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section id="studio-authors" className="space-y-5">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-slate-100">Authors</h2>
-                <p className="text-sm text-slate-400">Curate consistent voices for every publication.</p>
-              </div>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <div className="relative flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2">
-                  <Filter size={16} className="text-slate-500" />
-                  <input
-                    className="w-full bg-transparent text-sm text-slate-200 outline-none"
-                    placeholder="Filter authors"
-                    value={authorQuery}
-                    onChange={(event) => setAuthorQuery(event.target.value)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={openCreateAuthor}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-950 shadow-lg transition hover:bg-emerald-400"
-                >
-                  <Plus size={16} />
-                  New author
-                </button>
-              </div>
-            </div>
-            <div className="overflow-hidden rounded-3xl border border-slate-800/60 bg-slate-950/50 shadow-xl">
-              <table className="w-full min-w-[520px]">
-                <thead className="bg-slate-900/60 text-left text-xs uppercase tracking-[0.2em] text-slate-500">
-                  <tr>
-                    <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">Bio</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading.authors ? (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-6">
-                        <div className="flex items-center gap-3 text-sm text-slate-400">
-                          <Loader2 className="animate-spin" size={16} /> Loading authors...
-                        </div>
-                      </td>
-                    </tr>
-                  ) : filteredAuthors.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-6 text-sm text-slate-400">
-                        No author profiles match the current filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredAuthors.map((author) => (
-                      <tr key={author.id} className="border-t border-slate-800/50 text-sm text-slate-200">
-                        <td className="px-6 py-4">
-                          <span className="font-semibold text-slate-100">{author.name}</span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-400">
-                          {author.bio || "No biography yet."}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingAuthor(author);
-                                setAuthorPanelOpen(true);
-                              }}
-                              className="inline-flex items-center justify-center rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-200"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteAuthor(author)}
-                              className="inline-flex items-center justify-center rounded-full border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-300 transition hover:border-rose-400/80 hover:text-rose-200"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section id="studio-assets" className="space-y-4">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-slate-100">Assets</h2>
-                <p className="text-sm text-slate-400">Upload photography, illustrations, and brand visuals.</p>
-              </div>
+          <nav className="space-y-3">
+            {navItems.map((item) => (
               <button
+                key={item.value}
                 type="button"
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-200"
+                onClick={() => setStatusFilter(item.value)}
+                aria-pressed={statusFilter === item.value}
+                className={cn(
+                  "group flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition",
+                  statusFilter === item.value
+                    ? "border-emerald-400/70 bg-emerald-500/15 text-white shadow-xl shadow-emerald-500/30"
+                    : "border-white/10 bg-white/[0.02] text-slate-300 hover:border-emerald-400/60 hover:bg-emerald-500/10 hover:text-white",
+                )}
               >
-                <Plus size={16} />
-                Upload asset
+                <span>{item.label}</span>
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide",
+                    statusFilter === item.value
+                      ? "bg-emerald-500/20 text-emerald-100"
+                      : "bg-white/[0.06] text-slate-300",
+                  )}
+                >
+                  {item.count}
+                </span>
               </button>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {loading.assets ? (
-                Array.from({ length: 3 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-40 rounded-3xl border border-slate-800/60 bg-slate-900/40"
-                  />
-                ))
-              ) : assets.length === 0 ? (
-                <div className="col-span-full rounded-3xl border border-dashed border-slate-700 bg-slate-900/40 p-8 text-center text-sm text-slate-400">
-                  Asset uploads will land here. Integrate the Contentful upload flow when ready.
+            ))}
+          </nav>
+        </aside>
+        <main className="flex flex-col gap-8">
+          <Card className="border-white/10 !bg-white/[0.03] text-slate-100 backdrop-blur-xl">
+            <CardHeader className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <CardTitle className="text-3xl text-white">Editorial calendar</CardTitle>
+                <CardDescription className="text-sm text-slate-300">
+                  Track every post from rough outline to published ritual without leaving the studio.
+                </CardDescription>
+              </div>
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                <Input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search by title, slug, or excerpt"
+                  leadingIcon={<Search className="h-4 w-4" />}
+                  wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                  className="text-slate-100 placeholder:text-slate-400"
+                />
+                <Button type="button" className="whitespace-nowrap" size="lg" onClick={openEditorForNew}>
+                  <Plus className="h-4 w-4" />
+                  New post
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="px-0">
+              {loading ? (
+                <div className="flex h-64 flex-col items-center justify-center gap-3 text-sm text-slate-300">
+                  <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+                  Loading entries…
+                </div>
+              ) : error ? (
+                <div className="flex h-64 flex-col items-center justify-center gap-4 px-8 text-center text-sm text-rose-200">
+                  <p>{error}</p>
+                  <Button type="button" variant="secondary" onClick={() => void fetchPosts()}>
+                    Retry
+                  </Button>
+                </div>
+              ) : filteredPosts.length === 0 ? (
+                <div className="flex h-64 flex-col items-center justify-center gap-3 px-8 text-center text-sm text-slate-300">
+                  <p>No posts match this filter yet. Create something beautiful.</p>
                 </div>
               ) : (
-                assets.map((asset) => (
-                  <article
-                    key={asset.id}
-                    className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-5 shadow-lg"
-                  >
-                    <p className="text-sm font-semibold text-slate-100">{asset.title}</p>
-                    <p className="mt-2 text-xs text-slate-500">Updated {new Date(asset.updatedAt).toLocaleDateString()}</p>
-                    <a
-                      href={asset.file || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-200 hover:text-emerald-100"
-                    >
-                      View asset
-                    </a>
-                  </article>
-                ))
+                <div className="overflow-hidden">
+                  <div className="-mx-6 overflow-x-auto px-6">
+                    <table className="w-full min-w-[720px] text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-left text-xs uppercase tracking-[0.2em] text-slate-400">
+                          <th className="py-3 pr-6">Title</th>
+                          <th className="py-3 pr-6">Status</th>
+                          <th className="py-3 pr-6">Slug</th>
+                          <th className="py-3 pr-6">Updated</th>
+                          <th className="py-3">Published</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredPosts.map((post) => (
+                          <tr
+                            key={post.id}
+                            onClick={() => void openEditorForExisting(post.id)}
+                            className="group cursor-pointer border-b border-white/[0.05] transition hover:bg-white/[0.05]"
+                          >
+                            <td className="py-4 pr-6 align-top">
+                              <div className="font-medium text-white">{post.title}</div>
+                              {post.excerpt ? (
+                                <p className="mt-1 text-xs text-slate-400">{post.excerpt}</p>
+                              ) : null}
+                            </td>
+                            <td className="py-4 pr-6 align-top">
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide",
+                                  post.status === "published"
+                                    ? "!border-emerald-500/50 !bg-emerald-500/15 !text-emerald-100"
+                                    : "!border-amber-400/50 !bg-amber-500/10 !text-amber-200",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "h-2 w-2 rounded-full",
+                                    post.status === "published" ? "bg-emerald-400" : "bg-amber-400",
+                                  )}
+                                />
+                                {post.status === "published" ? "Published" : "Draft"}
+                              </Badge>
+                            </td>
+                            <td className="py-4 pr-6 align-top text-slate-300">{post.slug ?? "—"}</td>
+                            <td className="py-4 pr-6 align-top text-slate-300">{formatDate(post.updatedAt)}</td>
+                            <td className="py-4 align-top text-slate-300">
+                              {formatDate(post.datePublished ?? post.publishedAt)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
+            </CardContent>
+          </Card>
+
+          {editorOpen ? (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-10 backdrop-blur"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-emerald-500/20 backdrop-blur-xl">
+                <div className="flex items-start justify-between border-b border-white/10 px-8 py-6">
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-semibold text-white">
+                      {editorState.id ? "Edit blog post" : "Create blog post"}
+                    </h3>
+                    <p className="text-sm text-slate-300/90">
+                      Craft your story, connect assets, and publish directly to Contentful.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-2xl border border-white/10 text-slate-300 hover:border-white/40 hover:text-white"
+                    onClick={closeEditor}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                {editorLoading ? (
+                  <div className="flex h-72 flex-col items-center justify-center gap-3 text-sm text-slate-300">
+                    <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+                    Preparing form…
+                  </div>
+                ) : (
+                  <form
+                    className="grid gap-6 px-8 pb-8"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleSubmit();
+                    }}
+                  >
+                    {banner ? (
+                      <div
+                        role="alert"
+                        className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+                      >
+                        {banner}
+                      </div>
+                    ) : null}
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="post-title" className="text-slate-200">
+                          Title
+                        </Label>
+                        <Input
+                          id="post-title"
+                          value={editorState.title}
+                          onChange={handleFieldChange("title")}
+                          placeholder="Grounding breathwork ritual"
+                          required
+                          disabled={editorLoading}
+                          wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                          className="text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="post-slug" className="text-slate-200">
+                          Slug
+                        </Label>
+                        <Input
+                          id="post-slug"
+                          value={editorState.slug}
+                          onChange={handleFieldChange("slug")}
+                          placeholder="grounding-breathwork-ritual"
+                          disabled={editorLoading}
+                          wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                          className="text-slate-100 placeholder:text-slate-400"
+                        />
+                        <p className="text-xs text-slate-400">
+                          Leave blank to have Contentful generate one automatically.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="post-excerpt" className="text-slate-200">
+                          Excerpt
+                        </Label>
+                        <Textarea
+                          id="post-excerpt"
+                          value={editorState.excerpt}
+                          onChange={handleFieldChange("excerpt")}
+                          placeholder="A soothing practice to return to the body in under five minutes."
+                          disabled={editorLoading}
+                          className="border-white/10 bg-white/[0.05] text-sm text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="post-seo" className="text-slate-200">
+                          SEO description
+                        </Label>
+                        <Textarea
+                          id="post-seo"
+                          value={editorState.seoDescription}
+                          onChange={handleFieldChange("seoDescription")}
+                          placeholder="One sentence that invites readers from Google or social feeds."
+                          disabled={editorLoading}
+                          className="border-white/10 bg-white/[0.05] text-sm text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="post-content" className="text-slate-200">
+                        Article body
+                      </Label>
+                      <Textarea
+                        id="post-content"
+                        value={editorState.content}
+                        onChange={handleFieldChange("content")}
+                        placeholder="Write in plain text. Paragraphs are separated with an empty line."
+                        required
+                        disabled={editorLoading}
+                        className="min-h-[200px] border-white/10 bg-white/[0.05] text-sm text-slate-100 placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="post-date" className="text-slate-200">
+                          Date published
+                        </Label>
+                        <Input
+                          id="post-date"
+                          type="datetime-local"
+                          value={editorState.datePublished}
+                          onChange={handleFieldChange("datePublished")}
+                          disabled={editorLoading}
+                          wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                          className="text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="post-author" className="text-slate-200">
+                          Author entry ID
+                        </Label>
+                        <Input
+                          id="post-author"
+                          value={editorState.authorId}
+                          onChange={handleFieldChange("authorId")}
+                          placeholder="Optional — Contentful author entry ID"
+                          disabled={editorLoading}
+                          wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                          className="text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="post-cover" className="text-slate-200">
+                          Cover image asset ID
+                        </Label>
+                        <Input
+                          id="post-cover"
+                          value={editorState.coverImageId}
+                          onChange={handleFieldChange("coverImageId")}
+                          placeholder="Optional — Contentful asset ID"
+                          disabled={editorLoading}
+                          wrapperClassName="border-white/10 bg-white/[0.05] text-slate-100"
+                          className="text-slate-100 placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="post-status" className="text-slate-200">
+                          Workflow status
+                        </Label>
+                        <Select
+                          id="post-status"
+                          value={editorState.status}
+                          onChange={handleFieldChange("status")}
+                          disabled={editorLoading}
+                          className="rounded-2xl border-white/10 bg-white/[0.05] text-slate-100"
+                        >
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 pb-2 pt-1 sm:flex-row sm:justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="justify-center rounded-2xl border border-white/10 bg-white/[0.02] text-slate-300 hover:border-white/40 hover:bg-white/[0.08] hover:text-white"
+                        onClick={closeEditor}
+                        disabled={editorLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="justify-center rounded-2xl"
+                        loading={editorLoading}
+                      >
+                        {!editorLoading ? <FileText className="h-4 w-4" /> : null}
+                        {editorState.id ? "Update post" : "Save post"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </div>
-          </section>
+          ) : null}
         </main>
       </div>
-
-      <SlideOver
-        title={editingPost ? "Edit post" : "Create a new post"}
-        description="Synced directly with Contentful entries. Rich text, SEO metadata, and scheduled publishing hook in from here."
-        isOpen={postPanelOpen}
-        onClose={() => setPostPanelOpen(false)}
-      >
-        <PostForm
-          authors={authors}
-          initialPost={editingPost ?? undefined}
-          onSubmit={handlePostSubmit}
-          onCancel={() => setPostPanelOpen(false)}
-          isSubmitting={isSubmitting}
-        />
-      </SlideOver>
-
-      <SlideOver
-        title={editingAuthor ? "Edit author" : "Create a new author"}
-        description="Author profiles power attribution, author pages, and future newsletter personalization."
-        isOpen={authorPanelOpen}
-        onClose={() => setAuthorPanelOpen(false)}
-      >
-        <AuthorForm
-          initialAuthor={editingAuthor ?? undefined}
-          onSubmit={handleAuthorSubmit}
-          onCancel={() => setAuthorPanelOpen(false)}
-          isSubmitting={isSubmitting}
-        />
-      </SlideOver>
     </div>
   );
-};
-
-export const Dashboard = () => (
-  <ToastProvider>
-    <DashboardInner />
-  </ToastProvider>
-);
-
-export default Dashboard;
+}

@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const AUTH_COOKIE_NAME = "studio_session";
+import { STUDIO_COOKIE_NAME } from "./studio/constants";
+
+const AUTH_COOKIE_NAME = STUDIO_COOKIE_NAME;
 const AUTH_COOKIE_VALUE = "authenticated";
 
 const parseCookieHeader = (cookieHeader: string | undefined): Record<string, string> => {

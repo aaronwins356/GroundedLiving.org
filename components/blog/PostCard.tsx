@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import type { ContentfulBlogPost } from "../../types/contentful";
+import type { BlogPostSummary } from "../../types/contentful";
 
 import styles from "./PostCard.module.css";
 
 interface PostCardProps {
-  post: ContentfulBlogPost;
+  post: BlogPostSummary;
 }
 
 export function PostCard({ post }: PostCardProps) {
@@ -36,23 +36,15 @@ export function PostCard({ post }: PostCardProps) {
         )}
       </Link>
       <div className={styles.content}>
-        <div className={styles.meta}>
-          {post.category ? <span className={styles.category}>{post.category.name}</span> : null}
-          {publishedDate ? <time dateTime={publishedDate.toISOString()}>{publishedDate.toLocaleDateString()}</time> : null}
-        </div>
+        {publishedDate ? (
+          <div className={styles.meta}>
+            <time dateTime={publishedDate.toISOString()}>{publishedDate.toLocaleDateString()}</time>
+          </div>
+        ) : null}
         <h3 className={styles.title}>
           <Link href={`/blog/${post.slug}`}>{post.title}</Link>
         </h3>
         {post.excerpt ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
-        {post.tags.length ? (
-          <div className={styles.tags}>
-            {post.tags.map((tag) => (
-              <span key={tag} className={styles.tag}>
-                #{tag}
-              </span>
-            ))}
-          </div>
-        ) : null}
       </div>
     </article>
   );

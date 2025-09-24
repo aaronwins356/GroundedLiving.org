@@ -19,6 +19,8 @@
     "typecheck": "NODE_PATH=./stubs tsc --noEmit",
     "// migrate:posts": "One-off migration of Markdown or legacy JSX posts into Contentful.",
     "migrate:posts": "ts-node --esm scripts/migrate-posts.ts",
+    "// test:migration": "Creates a sample blogPost entry to verify Contentful credentials end-to-end.",
+    "test:migration": "NODE_PATH=./stubs ts-node --esm scripts/create-sample-blog-post.ts",
     "// clean-reinstall": "Run `rm -rf node_modules package-lock.json && npm install` to refresh dependencies."
   },
   "dependencies": {

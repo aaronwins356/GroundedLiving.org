@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 
-import { getBlogPosts, getCategories, getPages } from "../lib/contentful";
+import { getAllBlogPosts, getCategories, getPages } from "../lib/contentful";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.groundedliving.org";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, pages, categories] = await Promise.all([getBlogPosts(), getPages(), getCategories()]);
+  const [posts, pages, categories] = await Promise.all([getAllBlogPosts(), getPages(), getCategories()]);
 
   const postEntries: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
