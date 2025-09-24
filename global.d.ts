@@ -26,16 +26,18 @@ declare module "contentful-management" {
     update(): Promise<ContentfulEntry>;
     unpublish(): Promise<ContentfulEntry>;
     delete(): Promise<void>;
+    isPublished(): boolean;
   }
 
   interface ContentfulEnvironment {
-    getEntries(query: Record<string, unknown>): Promise<{ items: ContentfulEntry[] }>;
+    getEntries(query?: Record<string, unknown>): Promise<{ items: ContentfulEntry[] }>;
     getEntry(entryId: string): Promise<ContentfulEntry>;
     createEntry(
       contentTypeId: string,
       data: { fields: Record<string, Record<string, unknown>> },
     ): Promise<ContentfulEntry>;
-    getAssets(query: Record<string, unknown>): Promise<{ items: ContentfulAsset[] }>;
+    getAssets(query?: Record<string, unknown>): Promise<{ items: ContentfulAsset[] }>;
+    getContentTypes(query?: Record<string, unknown>): Promise<{ items: ContentfulContentType[] }>;
   }
 
   interface ContentfulSpace {
@@ -49,6 +51,18 @@ declare module "contentful-management" {
   interface ContentfulAsset {
     sys: { id: string; updatedAt?: string };
     fields: Record<string, Record<string, unknown>>;
+    isPublished(): boolean;
+    publish(): Promise<ContentfulAsset>;
+    unpublish(): Promise<ContentfulAsset>;
+    delete(): Promise<void>;
+  }
+
+  interface ContentfulContentType {
+    sys: { id: string; updatedAt?: string };
+    isPublished(): boolean;
+    publish(): Promise<ContentfulContentType>;
+    unpublish(): Promise<ContentfulContentType>;
+    delete(): Promise<void>;
   }
 
   export type Environment = ContentfulEnvironment;
