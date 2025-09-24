@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -23,6 +24,7 @@ import { useToast } from "../../components/ui/toaster";
 import { logout } from "./actions";
 import { PAGE_SIZE } from "./constants";
 import { RichTextEditor } from "./rich-text-editor";
+import { useStudioTheme } from "./theme-provider";
 import { useUnsavedChanges } from "./use-unsaved-changes";
 
 interface StudioAppProps {
@@ -162,9 +164,53 @@ function statusBadge(status: "draft" | "published") {
   return status === "published" ? <Badge variant="success">Published</Badge> : <Badge variant="outline">Draft</Badge>;
 }
 
+const relativeTimeFormatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+function formatRelativeTime(value?: string | null) {
+  if (!value) {
+    return "Not yet scheduled";
+  }
+
+  const timestamp = new Date(value).getTime();
+  if (Number.isNaN(timestamp)) {
+    return "Unknown timing";
+  }
+
+  const diff = timestamp - Date.now();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (Math.abs(diff) < hour) {
+    return relativeTimeFormatter.format(Math.round(diff / minute), "minute");
+  }
+  if (Math.abs(diff) < day) {
+    return relativeTimeFormatter.format(Math.round(diff / hour), "hour");
+  }
+  return relativeTimeFormatter.format(Math.round(diff / day), "day");
+}
+
+function getInitials(label: string) {
+  return label
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "GL";
+}
+
+interface ActivityItem {
+  id: string;
+  label: string;
+  type: "Post" | "Page" | "Author";
+  status: "draft" | "published";
+  updatedAt: string;
+}
+
 export function StudioApp({ initialPosts, initialPages, initialAuthors }: StudioAppProps) {
   const { pushToast } = useToast();
+  const { theme, toggleTheme } = useStudioTheme();
   const [activeTab, setActiveTab] = useState<StudioTab>("posts");
+  const [focusMode, setFocusMode] = useState(false);
 
   const [posts, setPosts] = useState(initialPosts);
   const [postPage, setPostPage] = useState(1);
@@ -200,6 +246,98 @@ export function StudioApp({ initialPosts, initialPages, initialAuthors }: Studio
     isSaving: false,
     hasChanges: false,
   });
+
+  const publishedPostCount = useMemo(() => posts.items.filter((item) => item.status === "published").length, [posts.items]);
+  const draftPostCount = useMemo(() => posts.items.filter((item) => item.status === "draft").length, [posts.items]);
+  const publishedPageCount = useMemo(() => pages.items.filter((item) => item.status === "published").length, [pages.items]);
+  const draftPageCount = useMemo(() => pages.items.filter((item) => item.status === "draft").length, [pages.items]);
+  const publishedAuthorCount = useMemo(() => authors.items.filter((item) => item.status === "published").length, [authors.items]);
+  const draftAuthorCount = useMemo(() => authors.items.filter((item) => item.status === "draft").length, [authors.items]);
+
+  const upcomingPublish = useMemo(() => {
+    const scheduled = posts.items
+      .filter((post) => {
+        if (!post.datePublished) {
+          return false;
+        }
+        const timestamp = new Date(post.datePublished).getTime();
+        return !Number.isNaN(timestamp) && timestamp > Date.now();
+      })
+      .sort((a, b) => new Date(a.datePublished ?? "").getTime() - new Date(b.datePublished ?? "").getTime());
+
+    return scheduled[0] ?? null;
+  }, [posts.items]);
+
+  const publishingVelocity = useMemo(() => {
+    const twoWeeksAgo = Date.now() - 1000 * 60 * 60 * 24 * 14;
+    return posts.items.filter((post) => new Date(post.updatedAt).getTime() >= twoWeeksAgo).length;
+  }, [posts.items]);
+
+  const recentActivity = useMemo<ActivityItem[]>(() => {
+    const entries: ActivityItem[] = [
+      ...posts.items.map((item) => ({
+        id: `post-${item.id}`,
+        label: item.title || "Untitled post",
+        type: "Post" as const,
+        status: item.status,
+        updatedAt: item.updatedAt,
+      })),
+      ...pages.items.map((item) => ({
+        id: `page-${item.id}`,
+        label: item.title || "Untitled page",
+        type: "Page" as const,
+        status: item.status,
+        updatedAt: item.updatedAt,
+      })),
+      ...authors.items.map((item) => ({
+        id: `author-${item.id}`,
+        label: item.title || "Author profile",
+        type: "Author" as const,
+        status: item.status,
+        updatedAt: item.updatedAt,
+      })),
+    ];
+
+    return entries.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 8);
+  }, [authors.items, pages.items, posts.items]);
+
+  const latestUpdate = recentActivity[0] ?? null;
+  const totalEntries = posts.total + pages.total + authors.total;
+  const liveEntries = publishedPostCount + publishedPageCount + publishedAuthorCount;
+  const coverage = totalEntries > 0 ? Math.round((liveEntries / totalEntries) * 100) : 0;
+  const outstandingDrafts = draftPostCount + draftPageCount + draftAuthorCount;
+  const coveragePercent = Math.min(100, Math.max(0, coverage));
+
+  const insights = useMemo(
+    () => [
+      {
+        icon: "📈",
+        title: `${publishingVelocity} updates in the last 14 days`,
+        description:
+          publishingVelocity > 0
+            ? "Momentum looks healthy—keep the cadence steady."
+            : "No updates in the latest sprint. Queue a story to stay visible.",
+      },
+      {
+        icon: "🗓️",
+        title: upcomingPublish
+          ? `Next publish ${formatDate(upcomingPublish.datePublished)}`
+          : "No publish date scheduled",
+        description: upcomingPublish
+          ? `“${upcomingPublish.title || "Untitled post"}” goes live ${formatRelativeTime(upcomingPublish.datePublished)}.`
+          : "Schedule a post to keep the journal active.",
+      },
+      {
+        icon: "🧭",
+        title: `${coverage}% of entries are live`,
+        description:
+          outstandingDrafts > 0
+            ? `${outstandingDrafts} drafts are awaiting polish across posts, pages, and profiles.`
+            : "Everything in this view is live—excellent coverage.",
+      },
+    ],
+    [coverage, outstandingDrafts, publishingVelocity, upcomingPublish],
+  );
 
   useUnsavedChanges(postEditor.isOpen && postEditor.hasChanges);
   useUnsavedChanges(pageEditor.isOpen && pageEditor.hasChanges);
@@ -503,6 +641,129 @@ export function StudioApp({ initialPosts, initialPages, initialAuthors }: Studio
     }
   };
 
+  const renderOverview = () => (
+    <div className="space-y-6">
+      <div className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
+        <Card tinted className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent dark:from-emerald-500/10" />
+          <CardHeader className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-3">
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                Studio pulse
+              </span>
+              <CardTitle className="text-2xl text-slate-900 dark:text-slate-100">Editorial performance</CardTitle>
+              <CardDescription>
+                A live snapshot of production health, upcoming launches, and high-impact opportunities.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-white/70 px-4 py-3 shadow-sm dark:border-emerald-500/30 dark:bg-slate-900/60">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-lg font-semibold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
+                {coveragePercent}%
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">Content health</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  {liveEntries} live / {totalEntries || 0} total
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="relative z-10 space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatPill icon="📝" label="Published posts" value={`${publishedPostCount}`} helper={`${draftPostCount} drafts`} />
+              <StatPill icon="📄" label="Published pages" value={`${publishedPageCount}`} helper={`${draftPageCount} drafts`} />
+              <StatPill icon="👤" label="Published authors" value={`${publishedAuthorCount}`} helper={`${draftAuthorCount} in progress`} />
+              <StatPill icon="⚡" label="14-day velocity" value={`${publishingVelocity}`} helper="recent updates" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <span>Coverage</span>
+                <span>{coveragePercent}% live</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800/80">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600"
+                  style={{ width: `${Math.max(8, coveragePercent)}%` }}
+                />
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {insights.map((insight) => (
+                <InsightCard key={insight.title} icon={insight.icon} title={insight.title} description={insight.description} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid gap-6">
+          <Card tinted className="relative overflow-hidden">
+            <CardHeader>
+              <CardTitle>Next launch</CardTitle>
+              <CardDescription>Keep the publishing schedule tight and predictable.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {upcomingPublish ? (
+                <div className="space-y-3 rounded-2xl border border-emerald-500/20 bg-emerald-50/60 p-4 text-sm dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-200">Scheduled</p>
+                  <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{upcomingPublish.title || "Untitled post"}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    Publishing {formatDate(upcomingPublish.datePublished)} ({formatRelativeTime(upcomingPublish.datePublished)})
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Status: {upcomingPublish.status}</p>
+                </div>
+              ) : (
+                <CardEmptyState
+                  title="No scheduled posts"
+                  description="Set a publish date to keep the cadence consistent."
+                  icon={<span className="text-2xl">🗓️</span>}
+                />
+              )}
+              <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-4 text-sm dark:border-slate-800/60 dark:bg-slate-900/50">
+                <p className="font-semibold text-slate-900 dark:text-slate-100">Draft queue</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {outstandingDrafts} items across posts, pages, and author profiles are awaiting review.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card tinted>
+            <CardHeader>
+              <CardTitle>Quick actions</CardTitle>
+              <CardDescription>Spin up new experiences or update collaborators.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full" onClick={() => void openPostModal()}>
+                ➕ Craft a new post
+              </Button>
+              <Button className="w-full" variant="secondary" onClick={() => void openPageModal()}>
+                📄 Launch a new page
+              </Button>
+              <Button className="w-full" variant="ghost" onClick={() => void openAuthorModal()}>
+                👤 Add an author profile
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      <Card tinted>
+        <CardHeader>
+          <CardTitle>Latest activity</CardTitle>
+          <CardDescription>Track edits, launches, and team momentum in real time.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {recentActivity.length === 0 ? (
+            <CardEmptyState
+              title="No activity yet"
+              description="Once content is created you'll see the stream here."
+              icon={<span className="text-2xl">✨</span>}
+            />
+          ) : (
+            recentActivity.map((item) => <ActivityRow key={item.id} item={item} />)
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderPosts = () => (
     <Card tinted>
       <CardHeader className="flex flex-wrap items-center justify-between gap-4">
@@ -772,9 +1033,19 @@ export function StudioApp({ initialPosts, initialPages, initialAuthors }: Studio
     <div className="flex flex-1 gap-6 pb-10">
       <aside className="w-full max-w-xs rounded-3xl border border-slate-200/60 bg-white/80 p-6 shadow-xl shadow-emerald-200/30 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/70 lg:sticky lg:top-10 lg:h-[calc(100vh-80px)] lg:w-72">
         <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Studio</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Premium control center for Grounded Living.</p>
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-emerald-50 shadow-lg">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/20 blur-3xl" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100/80">Grounded Living</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">Design studio</h2>
+            <p className="mt-3 text-sm text-emerald-50/80">
+              A premium control center for launching editorial, marketing, and brand experiences.
+            </p>
+            <Link
+              href="/"
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white/25"
+            >
+              ↗ View live site
+            </Link>
           </div>
           <nav className="flex flex-col gap-2">
             {NAVIGATION.map((item) => (
@@ -796,20 +1067,91 @@ export function StudioApp({ initialPosts, initialPages, initialAuthors }: Studio
               </button>
             ))}
           </nav>
+          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 dark:border-slate-800/60 dark:bg-slate-900/60">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Operational highlights</p>
+            <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
+              <li>• {publishedPostCount} posts live, {draftPostCount} drafts</li>
+              <li>• {publishedPageCount} pages published</li>
+              <li>• {publishedAuthorCount} author profiles ready</li>
+              <li>• Next launch {upcomingPublish ? formatRelativeTime(upcomingPublish.datePublished) : "to be scheduled"}</li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-slate-200/60 bg-white/70 p-5 text-sm dark:border-slate-800/60 dark:bg-slate-900/60">
+            <p className="font-semibold text-slate-900 dark:text-slate-100">Need support?</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Book a strategy session or request updates from the design team.</p>
+            <Link
+              href="mailto:studio@groundedliving.org"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200/60 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700/60 dark:text-slate-300 dark:hover:border-emerald-500 dark:hover:text-emerald-300"
+            >
+              ✉️ studio@groundedliving.org
+            </Link>
+          </div>
         </div>
       </aside>
       <main className="flex-1 space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/60 bg-white/80 px-6 py-5 shadow-xl shadow-slate-200/30 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/70">
-          <div>
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2">
+              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                Professional workspace
+              </span>
+              <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Grounded Living</span>
+            </div>
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Grounded Living Studio</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Craft thoughtful stories with a wellness-focused editorial toolkit.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Craft thoughtful stories with a wellness-focused editorial toolkit.
+            </p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/5 px-2 py-1 dark:bg-slate-50/10">
+                Latest update: {latestUpdate ? formatRelativeTime(latestUpdate.updatedAt) : "Awaiting first edit"}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/5 px-2 py-1 dark:bg-slate-50/10">
+                {new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
-              {new Date().toLocaleString()}
-            </span>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200/60 bg-white/70 px-3 py-2 text-xs font-medium text-slate-500 dark:border-slate-800/60 dark:bg-slate-900/60">
+              <span>Focus mode</span>
+              <Switch
+                checked={focusMode}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setFocusMode(event.target.checked)}
+                aria-label="Toggle focus mode"
+              />
+            </div>
+            <Button variant="ghost" onClick={toggleTheme} className="text-sm">
+              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+            </Button>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700/60 dark:text-slate-200 dark:hover:border-emerald-500 dark:hover:text-emerald-300"
+            >
+              ↗ View site
+            </Link>
+            <div className="flex items-center gap-2 rounded-full border border-slate-200/60 bg-white/80 px-3 py-1.5 dark:border-slate-800/60 dark:bg-slate-900/60">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-sm font-semibold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
+                {getInitials("Studio Admin")}
+              </span>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Studio Admin</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Team lead</p>
+              </div>
+            </div>
           </div>
         </header>
+        {focusMode ? (
+          <Card tinted>
+            <CardHeader>
+              <CardTitle>Focus mode enabled</CardTitle>
+              <CardDescription>We’ve hidden the dashboard overview so you can concentrate on the current task.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+              <p>Switch focus mode off to reveal studio analytics, quick actions, and recent activity.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          renderOverview()
+        )}
         {activeTab === "posts" ? renderPosts() : null}
         {activeTab === "pages" ? renderPages() : null}
         {activeTab === "authors" ? renderAuthors() : null}
@@ -1091,6 +1433,57 @@ function EditorOverlay({ title, onClose, footer, children }: EditorOverlayProps)
         <div className="border-t border-slate-200/60 bg-white/80 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/80">
           {footer}
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface StatPillProps {
+  icon: string;
+  label: string;
+  value: string;
+  helper?: string;
+}
+
+function StatPill({ icon, label, value, helper }: StatPillProps) {
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl border border-slate-200/60 bg-white/70 p-4 dark:border-slate-800/60 dark:bg-slate-900/50">
+      <span className="text-xl">{icon}</span>
+      <span className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</span>
+      <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
+      {helper ? <span className="text-xs text-slate-400 dark:text-slate-500">{helper}</span> : null}
+    </div>
+  );
+}
+
+interface InsightCardProps {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+function InsightCard({ icon, title, description }: InsightCardProps) {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-slate-200/60 bg-white/70 p-4 text-sm dark:border-slate-800/60 dark:bg-slate-900/50">
+      <span className="text-lg">{icon}</span>
+      <p className="font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
+    </div>
+  );
+}
+
+function ActivityRow({ item }: { item: ActivityItem }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/60 bg-white/70 px-5 py-3 dark:border-slate-800/60 dark:bg-slate-900/50">
+      <div>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.label}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {item.type} • Updated {formatRelativeTime(item.updatedAt)}
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        {statusBadge(item.status)}
+        <span className="text-xs text-slate-400 dark:text-slate-500">{new Date(item.updatedAt).toLocaleString()}</span>
       </div>
     </div>
   );
