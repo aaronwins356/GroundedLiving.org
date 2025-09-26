@@ -1,42 +1,171 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils/cn";
+import { track } from "@/lib/analytics";
 
-export function NewsletterForm() {
+type NewsletterStatus = "idle" | "submitting" | "success" | "error";
+
+interface NewsletterFormProps {
+  tag?: string;
+  source?: string;
+  placeholder?: string;
+  submitLabel?: string;
+  hint?: string;
+  successRedirect?: string;
+  className?: string;
+  inputClassName?: string;
+  buttonClassName?: string;
+  hideLabel?: boolean;
+  variant?: "stacked" | "inline";
+}
+
+const DEFAULT_SUCCESS_REDIRECT = "/thank-you?lg=evening-ritual-checklist";
+
+export function NewsletterForm({
+  tag,
+  source,
+  placeholder = "you@example.com",
+  submitLabel = "Subscribe",
+  hint = "We’ll send occasional updates from the Grounded Living journal. Unsubscribe anytime.",
+  successRedirect = DEFAULT_SUCCESS_REDIRECT,
+  className,
+  inputClassName,
+  buttonClassName,
+  hideLabel = false,
+  variant = "stacked",
+}: NewsletterFormProps) {
+  const router = useRouter();
+  const inputId = useId();
   const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<NewsletterStatus>("idle");
+  const [message, setMessage] = useState<string>("");
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (status !== "success") {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      router.push(successRedirect);
+    }, 600);
+
+    return () => window.clearTimeout(timeout);
+  }, [router, status, successRedirect]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Newsletter signup placeholder", { email });
-    setEmail("");
+
+    if (!email) {
+      return;
+    }
+
+    setStatus("submitting");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, tag, source }),
+      });
+
+      const data = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+
+      if (!response.ok || !data?.ok) {
+        const errorMessage = data?.error ?? "We couldn’t save your email just yet. Please try again.";
+        setStatus("error");
+        setMessage(errorMessage);
+        return;
+      }
+
+      setStatus("success");
+      setMessage("Success! You’re on the list.");
+      track("newsletter_subscribed", { tag, source });
+      setEmail("");
+    } catch (error) {
+      console.error("Newsletter subscription failed", error);
+      setStatus("error");
+      setMessage("We couldn’t reach the newsletter service. Please try again.");
+    }
   };
 
-  return (
-    <form className="newsletter-form" onSubmit={handleSubmit}>
-      <div className="newsletter-form__fields">
-        <label className="newsletter-form__label" htmlFor="newsletter-email">
-          Email address
-        </label>
+  const renderInline = () => (
+    <form
+      className={cn("newsletter-form", "newsletter-form--inline", className)}
+      onSubmit={handleSubmit}
+      noValidate
+    >
+      <label htmlFor={inputId} className={cn("newsletter-form__label", hideLabel && "visually-hidden")}>
+        Email address
+      </label>
+      <div className="newsletter-form__inline-fields">
         <input
-          id="newsletter-email"
+          id={inputId}
           name="email"
           type="email"
           autoComplete="email"
           required
-          className="newsletter-form__input"
-          placeholder="you@example.com"
+          className={cn("newsletter-form__input", inputClassName)}
+          placeholder={placeholder}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          aria-describedby="newsletter-hint"
+          aria-describedby={`${inputId}-hint`}
+        />
+        <Button
+          type="submit"
+          className={cn(buttonClassName)}
+          loading={status === "submitting"}
+          disabled={status === "submitting"}
+        >
+          {submitLabel}
+        </Button>
+      </div>
+      <p id={`${inputId}-hint`} className="newsletter-form__hint">
+        {hint}
+      </p>
+      <p className="newsletter-form__status" aria-live="polite">
+        {message}
+      </p>
+    </form>
+  );
+
+  if (variant === "inline") {
+    return renderInline();
+  }
+
+  return (
+    <form className={cn("newsletter-form", className)} onSubmit={handleSubmit} noValidate>
+      <div className="newsletter-form__fields">
+        <label htmlFor={inputId} className={cn("newsletter-form__label", hideLabel && "visually-hidden")}>
+          Email address
+        </label>
+        <input
+          id={inputId}
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          className={cn("newsletter-form__input", inputClassName)}
+          placeholder={placeholder}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          aria-describedby={`${inputId}-hint`}
         />
       </div>
       <div className="newsletter-form__actions">
-        <Button type="submit">Subscribe</Button>
+        <Button type="submit" loading={status === "submitting"} disabled={status === "submitting"} className={buttonClassName}>
+          {submitLabel}
+        </Button>
       </div>
-      <p id="newsletter-hint" className="newsletter-form__hint">
-        We&apos;ll send occasional updates from the Grounded Living journal. Unsubscribe anytime.
+      <p id={`${inputId}-hint`} className="newsletter-form__hint">
+        {hint}
+      </p>
+      <p className="newsletter-form__status" aria-live="polite">
+        {message}
       </p>
     </form>
   );

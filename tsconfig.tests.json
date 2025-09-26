@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": ".tests-dist",
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@content/*": ["./content/*"],
+      "@components/*": ["./components/*"],
+      "@/components/*": ["./components/*"],
+      "@lib/*": ["./lib/*"],
+      "@/lib/*": ["./lib/*"],
+      "@project-types/*": ["./types/*"]
+    },
+    "types": ["node"]
+  },
+  "include": [
+    "scripts/run-tests.ts",
+    "__tests__/**/*.ts",
+    "app/api/newsletter/route.ts",
+    "app/api/revalidate/route.ts",
+    "components/consent/ConsentBanner.tsx",
+    "components/ui/Button.tsx",
+    "context/ConsentContext.tsx",
+    "lib/analytics.ts",
+    "lib/newsletter/rateLimit.ts",
+    "lib/revalidate/control.ts",
+    "lib/utils/cn.ts"
+  ]
+}
