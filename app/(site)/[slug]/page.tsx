@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ArticleShell } from "@/components/blog/ArticleShell";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { AuthorCard } from "@/components/site/AuthorCard";
 import { ContactForm } from "@/components/site/ContactForm";
 import { getAllPageSlugs, getAuthorBySlug, getPageBySlug } from "@/lib/cms";
-import { RichText, richTextToPlainText } from "@/lib/richtext";
+import { canonicalFor, metaFromRichTextExcerpt } from "@/lib/seo/meta";
+import { ogImageForTitle } from "@/lib/seo/og";
+import { webPageSchema } from "@/lib/seo/schema";
+import { RichText } from "@/lib/richtext";
 import seoConfig from "../../../next-seo.config";
 
 export const revalidate = 300;
@@ -14,22 +18,7 @@ interface GenericPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? seoConfig.siteUrl;
 const PRIMARY_AUTHOR_SLUG = "aaron-winstead";
-
-const truncate = (value: string, limit: number) => {
-  if (!value) {
-    return value;
-  }
-
-  if (value.length <= limit) {
-    return value;
-  }
-
-  const sliced = value.slice(0, limit);
-  const lastSpace = sliced.lastIndexOf(" ");
-  return `${sliced.slice(0, lastSpace > 80 ? lastSpace : limit).trimEnd()}…`;
-};
 
 export async function generateStaticParams() {
   const slugs = await getAllPageSlugs();
@@ -44,10 +33,14 @@ export async function generateMetadata({ params }: GenericPageProps): Promise<Me
     return {};
   }
 
-  const bodyText = richTextToPlainText(page.bodyRichText);
-  const description = page.seoDescription ?? truncate(bodyText, 160) ?? seoConfig.defaultDescription;
+  const path = page.slug === "home" ? "/" : `/${page.slug}`;
+  const excerpt = metaFromRichTextExcerpt(page.bodyRichText, 160);
+  const description =
+    page.seoDescription?.trim() ??
+    (excerpt || undefined) ??
+    seoConfig.defaultDescription;
   const metaTitle = page.seoTitle ?? page.title;
-  const canonicalUrl = `${siteUrl.replace(/\/$/, "")}/${page.slug}`;
+  const canonicalUrl = canonicalFor(path).toString();
   const ogImage = page.ogImage?.url
     ? {
         url: page.ogImage.url,
@@ -55,7 +48,8 @@ export async function generateMetadata({ params }: GenericPageProps): Promise<Me
         height: page.ogImage.height ?? 630,
         alt: page.ogImage.description ?? page.ogImage.title ?? metaTitle,
       }
-    : undefined;
+    : null;
+  const ogImages = ogImage ? [ogImage] : [{ url: ogImageForTitle(metaTitle) }];
 
   return {
     title: metaTitle,
@@ -64,17 +58,17 @@ export async function generateMetadata({ params }: GenericPageProps): Promise<Me
       canonical: canonicalUrl,
     },
     openGraph: {
-      type: "article",
+      type: "website",
       url: canonicalUrl,
       title: metaTitle,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      images: ogImages,
     },
     twitter: {
-      card: ogImage ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: metaTitle,
       description,
-      images: ogImage ? [ogImage.url] : undefined,
+      images: ogImages.map((image) => image.url),
     },
   } satisfies Metadata;
 }
@@ -87,9 +81,13 @@ export default async function GenericPage({ params }: GenericPageProps) {
     notFound();
   }
 
-  const canonicalUrl = `${siteUrl.replace(/\/$/, "")}/${page.slug}`;
-  const bodyText = richTextToPlainText(page.bodyRichText);
-  const description = page.seoDescription ?? truncate(bodyText, 160) ?? seoConfig.defaultDescription;
+  const path = page.slug === "home" ? "/" : `/${page.slug}`;
+  const canonicalUrl = canonicalFor(path).toString();
+  const excerpt = metaFromRichTextExcerpt(page.bodyRichText, 160);
+  const description =
+    page.seoDescription?.trim() ??
+    (excerpt || undefined) ??
+    seoConfig.defaultDescription;
 
   const breadcrumbList = {
     "@context": "https://schema.org",
@@ -99,7 +97,7 @@ export default async function GenericPage({ params }: GenericPageProps) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: siteUrl,
+        item: canonicalFor("/").toString(),
       },
       {
         "@type": "ListItem",
@@ -110,25 +108,19 @@ export default async function GenericPage({ params }: GenericPageProps) {
     ],
   } as const;
 
-  const webPageSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
+  const schema = webPageSchema({
     name: page.seoTitle ?? page.title,
-    headline: page.title,
-    description,
     url: canonicalUrl,
-  } as const;
+    description,
+    breadcrumb: breadcrumbList,
+  });
 
   const author = page.slug === "about" ? await getAuthorBySlug(PRIMARY_AUTHOR_SLUG) : null;
 
   return (
     <ArticleShell className="page-shell" innerClassName="prose page-article">
-      <script type="application/ld+json" suppressHydrationWarning>
-        {JSON.stringify(webPageSchema)}
-      </script>
-      <script type="application/ld+json" suppressHydrationWarning>
-        {JSON.stringify(breadcrumbList)}
-      </script>
+      <JsonLd item={schema} id="webpage-schema" />
+      <JsonLd item={breadcrumbList} id="breadcrumb-schema" />
       <h1>{page.title}</h1>
       <RichText document={page.bodyRichText} withProse={false} className="page-richtext" />
       {page.slug === "contact" ? (

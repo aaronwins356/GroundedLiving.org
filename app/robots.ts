@@ -1,13 +1,17 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.groundedliving.org";
+import { canonicalFor } from "@/lib/seo/meta";
 
-export default function robots(): MetadataRoute.Robots {
+export function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: ["/"],
-    },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+      },
+    ],
+    sitemap: canonicalFor("/sitemap.xml").toString(),
   };
 }
+
+export default robots;

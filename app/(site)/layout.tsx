@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -5,24 +6,61 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
-import { Fraunces, Inter } from "next/font/google";
+import { bodyFontLocal, displayFontLocal, fallbackFontFamilies } from "@/lib/fonts";
+import { siteUrl } from "@/lib/site";
+import seoConfig from "../../next-seo.config";
 
-const displayFont = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
+const disableFontDownloads =
+  process.env.NEXT_DISABLE_FONT_DOWNLOADS === "1" || process.env.NODE_ENV !== "production";
 
-const bodyFont = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-});
+const { displayFont: activeDisplayFont, bodyFont: activeBodyFont } = await (async () => {
+  if (disableFontDownloads) {
+    return { displayFont: displayFontLocal, bodyFont: bodyFontLocal };
+  }
 
-const fontClasses = `${displayFont.className} ${bodyFont.className}`;
-const fontVariables = `${displayFont.variable} ${bodyFont.variable}`;
-const displayFontFamily = displayFont.style?.fontFamily ?? "inherit";
-const bodyFontFamily = bodyFont.style?.fontFamily ?? "inherit";
+  const { Fraunces, Inter } = await import("next/font/google");
+  const displayFontRemote = Fraunces({
+    subsets: ["latin"],
+    variable: "--font-display",
+    display: "swap",
+  });
+  const bodyFontRemote = Inter({
+    subsets: ["latin"],
+    variable: "--font-body",
+    display: "swap",
+  });
+
+  return { displayFont: displayFontRemote, bodyFont: bodyFontRemote };
+})();
+
+const fontClasses = [activeDisplayFont.className, activeBodyFont.className]
+  .filter(Boolean)
+  .join(" ");
+const fontVariables = [activeDisplayFont.variable, activeBodyFont.variable]
+  .filter(Boolean)
+  .join(" ");
+const displayFontFamily =
+  activeDisplayFont.style?.fontFamily ?? fallbackFontFamilies.display;
+const bodyFontFamily =
+  activeBodyFont.style?.fontFamily ?? fallbackFontFamilies.body;
+
+const googleVerification = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
+
+export const metadata = {
+  metadataBase: siteUrl,
+  title: {
+    default: seoConfig.defaultTitle,
+    template: "%s | Grounded Living",
+  },
+  description: seoConfig.defaultDescription,
+  ...(googleVerification
+    ? {
+        verification: {
+          google: googleVerification,
+        },
+      }
+    : {}),
+} satisfies Metadata;
 
 interface SiteLayoutProps {
   children: ReactNode;

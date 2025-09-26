@@ -52,6 +52,7 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
    CONTENTFUL_MANAGEMENT_TOKEN=xxx
    CONTENTFUL_REVALIDATE_SECRET=choose-a-strong-secret
    NEXT_PUBLIC_SITE_URL=https://your-vercel-domain.vercel.app
+   NEXT_PUBLIC_GSC_VERIFICATION=google-site-verification-token
    NEXT_PUBLIC_GA_TRACKING_ID=G-XXXXXXXXXX
    NEXT_PUBLIC_NEWSLETTER_ACTION=https://app.convertkit.com/forms/YOUR_FORM_ID/subscriptions
    NEXT_PUBLIC_STRIPE_CHECKOUT_URL=https://buy.stripe.com/YOUR_TEST_CHECKOUT
@@ -76,6 +77,30 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
 | `npm run migrate:posts` | One-off migration of Markdown/legacy JSX posts into Contentful. |
 
 > Always run `npm run lint && npm run build` before committing to mirror CI.
+
+> **Offline builds:** When running in an environment without outbound network access (CI runners, airplanes, etc.), export
+> `NEXT_DISABLE_FONT_DOWNLOADS=1` so the layout sticks to system font stacks and `npm run build` succeeds without reaching
+> Google Fonts.
+
+### SEO & discovery tooling
+
+- **Canonical base:** All absolute URLs and metadata derive from `NEXT_PUBLIC_SITE_URL`, so keep it in sync with your active
+  Vercel domain.
+- **Verification:** Drop your Google Search Console HTML token into `NEXT_PUBLIC_GSC_VERIFICATION` to emit the required
+  `<meta name="google-site-verification" ...>` tag globally.
+- **Discovery endpoints:**
+  - `/robots.txt` – standard crawl directives
+  - `/sitemap.xml` – canonical URLs for home, trust pages, journal, categories, and posts
+  - `/feed.xml` – RSS 2.0 feed for recent stories
+  - `/og` – dynamic Open Graph image template that accepts `title`, `subtitle`, and `type`
+
+### Editorial SEO checklist
+
+- Provide a unique `SEO Title` and `SEO Description` in Contentful. The description should stay under ~155 characters so it
+  fits SERP snippets.
+- Attach an `ogImage` asset for premium visuals. When omitted, the platform auto-generates a branded card via `/og`.
+- Use the rich text editor’s excerpt field for a clear summary; the app falls back to it for metadata and RSS descriptions.
+- Confirm each story routes to the correct category to keep `/categories/<slug>` pages fresh for crawlers.
 
 ### GitHub Actions secrets
 

@@ -1,33 +1,59 @@
 import type { MetadataRoute } from "next";
 
-import { getAllBlogPosts, getCategories, getPages } from "../lib/contentful";
+import { getAllBlogPosts, getCategories, getPages } from "@/lib/contentful";
+import { canonicalFor } from "@/lib/seo/meta";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.groundedliving.org";
+const STATIC_ROUTES = ["/", "/about", "/contact", "/privacy", "/disclosure", "/journal", "/blog", "/shop"];
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, pages, categories] = await Promise.all([getAllBlogPosts(), getPages(), getCategories()]);
+export async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [posts, pages, categories] = await Promise.all([
+    getAllBlogPosts(),
+    getPages(),
+    getCategories(),
+  ]);
 
-  const postEntries: MetadataRoute.Sitemap = posts.map((post) => ({
-    url: `${baseUrl}/blog/${post.slug}`,
-    lastModified: post.datePublished ?? new Date().toISOString(),
-  }));
+  const seen = new Set<string>();
+  const now = new Date().toISOString();
 
-  const pageEntries: MetadataRoute.Sitemap = pages
-    .filter((page) => page.slug !== "home")
-    .map((page) => ({
-      url: `${baseUrl}/${page.slug}`,
-      lastModified: new Date().toISOString(),
-    }));
+  const entries: MetadataRoute.Sitemap = [];
 
-  const categoryEntries: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${baseUrl}/categories/${category.slug}`,
-    lastModified: new Date().toISOString(),
-  }));
+  for (const route of STATIC_ROUTES) {
+    const url = canonicalFor(route).toString();
+    if (!seen.has(url)) {
+      seen.add(url);
+      entries.push({ url, lastModified: now });
+    }
+  }
 
-  const staticRoutes: MetadataRoute.Sitemap = ["", "/blog", "/shop"].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date().toISOString(),
-  }));
+  for (const page of pages) {
+    const slug = page.slug === "home" ? "/" : `/${page.slug}`;
+    const url = canonicalFor(slug).toString();
+    if (!seen.has(url)) {
+      seen.add(url);
+      entries.push({ url, lastModified: now });
+    }
+  }
 
-  return [...staticRoutes, ...pageEntries, ...categoryEntries, ...postEntries];
+  for (const category of categories) {
+    const url = canonicalFor(`/categories/${category.slug}`).toString();
+    if (!seen.has(url)) {
+      seen.add(url);
+      entries.push({ url, lastModified: now });
+    }
+  }
+
+  for (const post of posts) {
+    const url = canonicalFor(`/blog/${post.slug}`).toString();
+    if (!seen.has(url)) {
+      seen.add(url);
+      entries.push({
+        url,
+        lastModified: post.datePublished ?? now,
+      });
+    }
+  }
+
+  return entries;
 }
+
+export default sitemap;
