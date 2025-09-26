@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { STUDIO_COOKIE_NAME } from "@/lib/studio/constants";
+import { getExpectedHash } from "@/lib/studio/security";
 
 const parseCookieValue = (cookieHeader: string | undefined, key: string) => {
   if (!cookieHeader) {
@@ -109,8 +110,9 @@ const StudioLoginPage = () => {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const sessionCookie = parseCookieValue(context.req.headers.cookie, STUDIO_COOKIE_NAME);
+  const expectedHash = getExpectedHash();
 
-  if (sessionCookie === "authenticated") {
+  if (expectedHash && sessionCookie === expectedHash) {
     return {
       redirect: {
         destination: "/studio",
