@@ -67,6 +67,13 @@ interface BlogPostGraphQL {
   } | null;
   datePublished?: string | null;
   seoDescription?: string | null;
+  affiliate?: boolean | null;
+  affiliateCtaText?: string | null;
+  affiliateCtaUrl?: string | null;
+  sponsored?: boolean | null;
+  sponsoredLabel?: string | null;
+  disclosureNeeded?: boolean | null;
+  disableAutoLinks?: boolean | null;
 }
 
 interface PageGraphQL {
@@ -213,6 +220,13 @@ function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
     content: enrichRichText(post.content?.json ?? null, post.content?.links?.assets?.block ?? []),
     author: mapAuthor(post.author ?? null),
     seoDescription: post.seoDescription ?? null,
+    affiliate: Boolean(post.affiliate),
+    affiliateCtaText: post.affiliateCtaText ?? null,
+    affiliateCtaUrl: post.affiliateCtaUrl ?? null,
+    sponsored: Boolean(post.sponsored),
+    sponsoredLabel: post.sponsoredLabel ?? null,
+    disclosureNeeded: Boolean(post.disclosureNeeded),
+    disableAutoLinks: Boolean(post.disableAutoLinks),
   } satisfies BlogPost;
 }
 
@@ -305,6 +319,13 @@ export const getBlogPostBySlug = cache(async (slug: string): Promise<BlogPost | 
           datePublished
           seoDescription
           coverImage { url title description width height }
+          affiliate
+          affiliateCtaText
+          affiliateCtaUrl
+          sponsored
+          sponsoredLabel
+          disclosureNeeded
+          disableAutoLinks
           content {
             json
             links {

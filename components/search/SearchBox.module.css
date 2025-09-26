@@ -1,0 +1,72 @@
+.searchBox {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.field {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(248, 245, 242, 0.96);
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem 0.3rem 0.9rem;
+  box-shadow: inset 0 0 0 1px rgba(111, 140, 123, 0.2);
+}
+
+.icon {
+  color: rgba(111, 140, 123, 0.9);
+}
+
+.input {
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  padding: 0.45rem 0.25rem;
+  color: inherit;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.clearButton,
+.submit {
+  border: none;
+  background: none;
+  padding: 0.4rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.clearButton:hover,
+.submit:hover,
+.clearButton:focus-visible,
+.submit:focus-visible {
+  background: rgba(111, 140, 123, 0.12);
+  color: rgba(15, 23, 42, 0.8);
+  outline: none;
+}
+
+.status {
+  font-size: 0.85rem;
+  min-height: 1rem;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+@media (max-width: 640px) {
+  .label {
+    display: none;
+  }
+}

@@ -1,0 +1,104 @@
+.results {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.summary {
+  font-size: 0.95rem;
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.summary strong {
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.list {
+  list-style: none;
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  padding: 0;
+  margin: 0;
+}
+
+.card {
+  composes: card from "../blog/PostCard.module.css";
+}
+
+.cardContent {
+  composes: content from "../blog/PostCard.module.css";
+}
+
+.meta {
+  composes: meta from "../blog/PostCard.module.css";
+  justify-content: space-between;
+}
+
+.category {
+  composes: category from "../blog/PostCard.module.css";
+}
+
+.title {
+  composes: title from "../blog/PostCard.module.css";
+}
+
+.excerpt {
+  composes: excerpt from "../blog/PostCard.module.css";
+}
+
+.author {
+  font-size: 0.95rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+
+.pagination button {
+  border: none;
+  background: rgba(111, 140, 123, 0.16);
+  color: rgba(28, 58, 43, 0.95);
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pagination button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.placeholder,
+.empty {
+  background: rgba(248, 245, 242, 0.6);
+  border-radius: 1.5rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  color: rgba(15, 23, 42, 0.72);
+  line-height: 1.7;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tag {
+  font-size: 0.85rem;
+  background: rgba(211, 193, 169, 0.45);
+  color: rgba(46, 42, 37, 0.88);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+}
+
+.timing {
+  margin-left: 0.4rem;
+  color: rgba(15, 23, 42, 0.5);
+}

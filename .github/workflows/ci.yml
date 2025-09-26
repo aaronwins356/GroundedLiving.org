@@ -34,3 +34,6 @@ jobs:
         env:
           NEXT_DISABLE_ESLINT: '1'
         run: npm run build
+
+      - name: Content lint
+        run: npm run lint:content

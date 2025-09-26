@@ -4,10 +4,12 @@ import type { ReactNode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { bodyFontLocal, displayFontLocal, fallbackFontFamilies } from "@/lib/fonts";
 import { siteUrl } from "@/lib/site";
+import { websiteSchema } from "@/lib/seo/schema";
 import seoConfig from "../../next-seo.config";
 
 const disableFontDownloads =
@@ -46,6 +48,12 @@ const bodyFontFamily =
 
 const googleVerification = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
 
+const websiteJsonLd = websiteSchema({
+  name: "Grounded Living",
+  url: siteUrl.toString(),
+  searchUrl: `${new URL("/search", siteUrl).toString()}?q=`,
+});
+
 export const metadata = {
   metadataBase: siteUrl,
   title: {
@@ -80,6 +88,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       <Footer />
       <GoogleAnalytics />
       <SpeedInsights />
+      <JsonLd item={websiteJsonLd} id="website-schema" />
     </div>
   );
 }

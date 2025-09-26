@@ -132,6 +132,102 @@ function renderText(value: string, marks: RichTextMark[], key: string): ReactNod
   return <Fragment key={key}>{element}</Fragment>;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderNodesToHtml(nodes: RichTextNode[] = []): string {
+  return nodes.map((node) => renderNodeToHtml(node)).join("");
+}
+
+function renderNodeToHtml(node: RichTextNode): string {
+  switch (node.nodeType) {
+    case "paragraph":
+      return `<p class=\"rt-paragraph\">${renderNodesToHtml(node.content ?? [])}</p>`;
+    case "heading-1":
+      return `<h1 class=\"rt-heading rt-heading-1\">${renderNodesToHtml(node.content ?? [])}</h1>`;
+    case "heading-2":
+      return `<h2 class=\"rt-heading rt-heading-2\">${renderNodesToHtml(node.content ?? [])}</h2>`;
+    case "heading-3":
+      return `<h3 class=\"rt-heading rt-heading-3\">${renderNodesToHtml(node.content ?? [])}</h3>`;
+    case "heading-4":
+      return `<h4 class=\"rt-heading rt-heading-4\">${renderNodesToHtml(node.content ?? [])}</h4>`;
+    case "heading-5":
+      return `<h5 class=\"rt-heading rt-heading-5\">${renderNodesToHtml(node.content ?? [])}</h5>`;
+    case "heading-6":
+      return `<h6 class=\"rt-heading rt-heading-6\">${renderNodesToHtml(node.content ?? [])}</h6>`;
+    case "unordered-list":
+      return `<ul class=\"rt-list rt-list-unordered\">${renderNodesToHtml(node.content ?? [])}</ul>`;
+    case "ordered-list":
+      return `<ol class=\"rt-list rt-list-ordered\">${renderNodesToHtml(node.content ?? [])}</ol>`;
+    case "list-item":
+      return `<li class=\"rt-list-item\">${renderNodesToHtml(node.content ?? [])}</li>`;
+    case "blockquote":
+      return `<blockquote class=\"rt-blockquote\">${renderNodesToHtml(node.content ?? [])}</blockquote>`;
+    case "hyperlink": {
+      const uri = typeof node.data?.uri === "string" ? node.data.uri : "#";
+      const children = renderNodesToHtml(node.content ?? []);
+      return `<a class=\"rt-link\" href=\"${escapeHtml(uri)}\">${children}</a>`;
+    }
+    case "embedded-asset-block": {
+      const target = (
+        node.data as {
+          target?: { url?: string; description?: string; title?: string; width?: number; height?: number };
+        }
+      )?.target;
+      if (!target?.url) {
+        return "";
+      }
+      const alt = target.description ?? target.title ?? "Embedded image";
+      const widthAttr = typeof target.width === "number" ? ` width=\"${target.width}\"` : "";
+      const heightAttr = typeof target.height === "number" ? ` height=\"${target.height}\"` : "";
+      const segments = [
+        `<figure class=\"rt-figure\">`,
+        `<img class=\"rt-image\" src=\"${escapeHtml(target.url)}\" alt=\"${escapeHtml(alt)}\"${widthAttr}${heightAttr} />`,
+      ];
+      if (alt) {
+        segments.push(`<figcaption class=\"rt-figcaption\">${escapeHtml(alt)}</figcaption>`);
+      }
+      segments.push("</figure>");
+      return segments.join("");
+    }
+    case "hr":
+      return `<hr class=\"rt-divider\" />`;
+    case "text": {
+      const content = escapeHtml(node.value ?? "");
+      return (node.marks ?? []).reduce((acc, mark) => {
+        switch (mark.type) {
+          case "bold":
+            return `<strong class=\"rt-strong\">${acc}</strong>`;
+          case "italic":
+            return `<em class=\"rt-em\">${acc}</em>`;
+          case "underline":
+            return `<span class=\"rt-underline\">${acc}</span>`;
+          case "code":
+            return `<code class=\"rt-code\">${acc}</code>`;
+          default:
+            return acc;
+        }
+      }, content);
+    }
+    default:
+      return node.content ? renderNodesToHtml(node.content) : "";
+  }
+}
+
+export function richTextToHtml(document: RichTextDocument | null): string {
+  if (!document) {
+    return "";
+  }
+
+  return renderNodesToHtml(document.content ?? []);
+}
+
 export function richTextToPlainText(document: RichTextDocument | null): string {
   if (!document) {
     return "";

@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 
 import { ArticleShell } from "@/components/blog/ArticleShell";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { Breadcrumbs } from "@/components/nav/Breadcrumbs";
 import { AuthorCard } from "@/components/site/AuthorCard";
 import { ContactForm } from "@/components/site/ContactForm";
 import { getAllPageSlugs, getAuthorBySlug, getPageBySlug } from "@/lib/cms";
 import { canonicalFor, metaFromRichTextExcerpt } from "@/lib/seo/meta";
 import { ogImageForTitle } from "@/lib/seo/og";
-import { webPageSchema } from "@/lib/seo/schema";
+import { breadcrumbList as buildBreadcrumbList, webPageSchema } from "@/lib/seo/schema";
 import { RichText } from "@/lib/richtext";
 import seoConfig from "../../../next-seo.config";
 
@@ -88,31 +89,17 @@ export default async function GenericPage({ params }: GenericPageProps) {
     page.seoDescription?.trim() ??
     (excerpt || undefined) ??
     seoConfig.defaultDescription;
-
-  const breadcrumbList = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: canonicalFor("/").toString(),
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: page.title,
-        item: canonicalUrl,
-      },
-    ],
-  } as const;
+  const breadcrumbItems = [
+    { href: canonicalFor("/").toString(), label: "Home" },
+    { href: canonicalUrl, label: page.title },
+  ];
+  const breadcrumbJsonLd = buildBreadcrumbList(breadcrumbItems);
 
   const schema = webPageSchema({
     name: page.seoTitle ?? page.title,
     url: canonicalUrl,
     description,
-    breadcrumb: breadcrumbList,
+    breadcrumb: breadcrumbJsonLd ?? undefined,
   });
 
   const author = page.slug === "about" ? await getAuthorBySlug(PRIMARY_AUTHOR_SLUG) : null;
@@ -120,7 +107,8 @@ export default async function GenericPage({ params }: GenericPageProps) {
   return (
     <ArticleShell className="page-shell" innerClassName="prose page-article">
       <JsonLd item={schema} id="webpage-schema" />
-      <JsonLd item={breadcrumbList} id="breadcrumb-schema" />
+      <JsonLd item={breadcrumbJsonLd} id="breadcrumb-schema" />
+      <Breadcrumbs items={breadcrumbItems} />
       <h1>{page.title}</h1>
       <RichText document={page.bodyRichText} withProse={false} className="page-richtext" />
       {page.slug === "contact" ? (

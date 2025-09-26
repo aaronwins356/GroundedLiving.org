@@ -3,8 +3,12 @@ import { notFound } from "next/navigation";
 
 import { CategoryChips } from "@components/blog/CategoryChips";
 import { PostCard } from "@components/blog/PostCard";
+import { Breadcrumbs } from "@/components/nav/Breadcrumbs";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getCategories, getPostsByCategory } from "@lib/contentful";
+import { canonicalFor } from "@/lib/seo/meta";
+import { breadcrumbList } from "@/lib/seo/schema";
 import type { ContentfulCategory } from "@project-types/contentful";
 
 export const revalidate = 300;
@@ -29,6 +33,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   return {
     title: `${category.name} stories`,
     description: category.description,
+    alternates: {
+      canonical: canonicalFor(`/categories/${slug}`).toString(),
+    },
   } satisfies Metadata;
 }
 
@@ -41,8 +48,18 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
+  const canonicalUrl = canonicalFor(`/categories/${slug}`).toString();
+  const breadcrumbItems = [
+    { href: canonicalFor("/").toString(), label: "Home" },
+    { href: canonicalFor("/blog").toString(), label: "Journal" },
+    { href: canonicalUrl, label: category.name },
+  ];
+  const breadcrumbSchema = breadcrumbList(breadcrumbItems);
+
   return (
     <div className="stack-xl">
+      <JsonLd item={breadcrumbSchema} id={`category-${slug}-breadcrumb`} />
+      <Breadcrumbs items={breadcrumbItems} />
       <header className="category-hero">
         <span className="category-label">Category</span>
         <h1>{category.name}</h1>
