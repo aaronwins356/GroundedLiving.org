@@ -74,13 +74,15 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
 | `npm run lint` | Run ESLint with `next/core-web-vitals`. |
 | `npm run build` | Create an optimized production build. |
 | `npm run typecheck` | Verify TypeScript types without emitting output. |
+| `npm run lint:content` | Lint seeded JSON posts for disclosures, metadata, and internal link candidates. |
+| `npm run check` | Run lint, typecheck, build, and content lint in one pass (mirrors CI). |
 | `npm run migrate:posts` | One-off migration of Markdown/legacy JSX posts into Contentful. |
 
-> Always run `npm run lint && npm run build` before committing to mirror CI.
+> Always run `npm run check` before committing to mirror CI.
 
-> **Offline builds:** When running in an environment without outbound network access (CI runners, airplanes, etc.), export
-> `NEXT_DISABLE_FONT_DOWNLOADS=1` so the layout sticks to system font stacks and `npm run build` succeeds without reaching
-> Google Fonts.
+> **Font downloads:** `npm run build` automatically sets `NEXT_DISABLE_FONT_DOWNLOADS=1` so production bundles rely on the
+> self-hosted fallbacks. If you want to opt back into Google Fonts (e.g., local dev with network access), unset the variable
+> before running the build.
 
 ### SEO & discovery tooling
 
@@ -93,6 +95,39 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
   - `/sitemap.xml` – canonical URLs for home, trust pages, journal, categories, and posts
   - `/feed.xml` – RSS 2.0 feed for recent stories
   - `/og` – dynamic Open Graph image template that accepts `title`, `subtitle`, and `type`
+
+#### Site search
+
+- `GET /api/search` accepts `q`, `page`, and `limit` query params. Results are scored by title, category, and excerpt weightings
+  for lightweight relevance sorting.
+- The server caches the computed search index for 10 minutes. If the cache is cold, the API rebuilds it from Contentful and
+  falls back to seeded Markdown/JSON posts when the CMS is empty.
+- Production rebuilds should be triggered via a Contentful webhook that calls `revalidateTag('search-index')` (see `lib/search/index.ts`).
+  Until the webhook is wired, the index refreshes on the 10-minute timer whenever the API is hit.
+- `/search` renders an accessible search experience (form, instant results, pagination) and injects `SearchAction` JSON-LD for
+  rich results.
+
+#### Breadcrumb trails
+
+- Use `<Breadcrumbs items={...} />` with `[{ href, label }]` arrays to add navigation context to new templates. Blog, category,
+  article, and marketing page shells already wire the component and matching `BreadcrumbList` JSON-LD.
+- When creating additional routes, mirror the `Home → Section → Page` pattern so crawlers receive a consistent hierarchy.
+
+#### Internal linking
+
+- `lib/internalLinks.ts` exposes a `LINK_MAP` for pillar topics. Editors can extend the map as new cornerstone pages launch.
+- During blog rendering the HTML passes through `autoLinkHtml`, which links the first occurrence of each mapped phrase (max 3
+  per article) while skipping existing links, headings, and code blocks.
+- Set `disableAutoLinks` on a post in Contentful to opt out of automatic linking for that entry.
+- Manual contextual links are still encouraged—aim for two or three hand-curated references per post in addition to the
+  automated ones.
+
+#### Content lint checks
+
+- `npm run lint:content` inspects seeded JSON posts under `content/posts`. It ensures the editorial disclosure flag is present,
+  recommends SEO-friendly title/description lengths, and verifies at least one internal link opportunity.
+- Contentful-enforced rules remain the source of truth for published entries; this script is a safety net for the local seed
+  data that powers CI and preview deployments.
 
 ### Editorial SEO checklist
 

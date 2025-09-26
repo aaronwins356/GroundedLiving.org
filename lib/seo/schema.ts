@@ -19,6 +19,11 @@ interface WebPageSchemaInput {
   breadcrumb?: JsonLdObject;
 }
 
+interface BreadcrumbListItem {
+  href: string;
+  label: string;
+}
+
 interface ArticleSchemaInput {
   headline: string;
   image: string | string[];
@@ -120,4 +125,21 @@ export function articleSchema({
   }
 
   return schema;
+}
+
+export function breadcrumbList(items: BreadcrumbListItem[]): JsonLdObject | null {
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      item: item.href,
+    })),
+  } satisfies JsonLdObject;
 }

@@ -2,10 +2,16 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { AffiliateDisclosure } from "@/components/blog/AffiliateDisclosure";
 import { PostCard } from "@components/blog/PostCard";
+import { Breadcrumbs } from "@/components/nav/Breadcrumbs";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
-import { RichTextRenderer } from "@components/content/RichTextRenderer";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { autoLinkHtml } from "@/lib/internalLinks";
 import { getAllBlogPosts, getBlogPostBySlug } from "@lib/contentful";
+import { canonicalFor } from "@/lib/seo/meta";
+import { breadcrumbList } from "@/lib/seo/schema";
+import { richTextToHtml } from "@/lib/richtext";
 import type { BlogPost, BlogPostSummary } from "@project-types/contentful";
 import seoConfig from "../../../../next-seo.config";
 
@@ -71,7 +77,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   } satisfies Metadata;
 }
 
-function buildJsonLd(post: BlogPost, canonicalUrl: string) {
+function buildJsonLd(post: BlogPost, canonicalUrl: string, breadcrumb: ReturnType<typeof breadcrumbList>) {
   const datePublished = post.datePublished ?? new Date().toISOString();
   // Encode core metadata so Google understands the editorial context of each post.
   return {
@@ -101,6 +107,7 @@ function buildJsonLd(post: BlogPost, canonicalUrl: string) {
       "@type": "WebPage",
       "@id": canonicalUrl,
     },
+    breadcrumb: breadcrumb ?? undefined,
   };
 }
 
@@ -115,6 +122,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const related = findRelatedPosts(posts, post);
   const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
   const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
+  const breadcrumbItems = [
+    { href: canonicalFor("/").toString(), label: "Home" },
+    { href: canonicalFor("/blog").toString(), label: "Journal" },
+    { href: canonicalUrl, label: post.title },
+  ];
+  const breadcrumbSchema = breadcrumbList(breadcrumbItems);
   const coverImage = post.coverImage?.url
     ? {
         src: `${post.coverImage.url}?w=1600&fit=fill`,
@@ -123,12 +136,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         height: post.coverImage.height ?? 900,
       }
     : null;
+  const rawHtml = richTextToHtml(post.content);
+  const html = post.disableAutoLinks ? rawHtml : autoLinkHtml(rawHtml);
 
   return (
     <article className="post-layout">
-      <script type="application/ld+json" suppressHydrationWarning>
-        {JSON.stringify(buildJsonLd(post, canonicalUrl))}
-      </script>
+      <JsonLd item={buildJsonLd(post, canonicalUrl, breadcrumbSchema)} id="article-schema" />
+      <JsonLd item={breadcrumbSchema} id="article-breadcrumb-schema" />
+      <Breadcrumbs items={breadcrumbItems} />
       <header className="post-hero">
         <div className="post-meta">
           {publishedDate ? <time dateTime={publishedDate.toISOString()}>{publishedDate.toLocaleDateString()}</time> : null}
@@ -136,6 +151,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
         <h1>{post.title}</h1>
         {post.excerpt ? <p className="post-excerpt">{post.excerpt}</p> : null}
+        {post.disclosureNeeded ? (
+          <div className="not-prose">
+            <AffiliateDisclosure ctaText={post.affiliateCtaText} ctaUrl={post.affiliateCtaUrl ?? undefined} />
+          </div>
+        ) : null}
         {coverImage ? (
           <figure className="post-cover">
             <Image
@@ -152,7 +172,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         ) : null}
       </header>
       <div className="post-body">
-        <RichTextRenderer document={post.content} />
+        <div className="prose rt-container" dangerouslySetInnerHTML={{ __html: html }} />
         <section className="post-author">
           <h3>About the author</h3>
           <div className="post-author-card">

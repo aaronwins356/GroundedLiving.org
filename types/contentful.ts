@@ -82,6 +82,13 @@ export interface BlogPost extends BlogPostSummary {
   content: RichTextDocument | null;
   author?: BlogPostAuthor | null;
   seoDescription?: string | null;
+  affiliate?: boolean;
+  affiliateCtaText?: string | null;
+  affiliateCtaUrl?: string | null;
+  sponsored?: boolean;
+  sponsoredLabel?: string | null;
+  disclosureNeeded?: boolean;
+  disableAutoLinks?: boolean;
 }
 
 /**
