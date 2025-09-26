@@ -1,0 +1,39 @@
+{
+  "name": "Aaron Winstead",
+  "slug": "aaron-winstead",
+  "headshotUrl": "/images/author-placeholder.svg",
+  "socialLinks": {
+    "linkedIn": "https://www.linkedin.com/in/aaronwinslow/",
+    "instagram": "https://www.instagram.com/groundedliving/"
+  },
+  "bioRichText": {
+    "nodeType": "document",
+    "data": {},
+    "content": [
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Aaron is a certified health coach and creative director who balances storytelling with evidence-based wellness research.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "When he\u2019s not testing adaptogenic recipes, you can find him leading community breathwork sessions or mapping hiking trails across the Pacific Northwest.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      }
+    ]
+  }
+}

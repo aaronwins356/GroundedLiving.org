@@ -92,7 +92,7 @@ interface CategoryGraphQL {
   description?: string | null;
 }
 
-async function fetchContentfulGraphQL<T>(
+export async function fetchContentfulGraphQL<T>(
   query: string,
   { preview = false, revalidate = DEFAULT_REVALIDATE_SECONDS, tags, variables }: GraphQLFetchOptions = {},
 ): Promise<T | null> {
@@ -216,7 +216,7 @@ function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
   } satisfies BlogPost;
 }
 
-function enrichRichText(
+export function enrichRichText(
   document: RichTextDocument | null,
   assets: Array<AssetGraphQL & { sys: { id: string } }> = [],
 ): RichTextDocument | null {

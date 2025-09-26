@@ -221,3 +221,15 @@ Seed your first post with:
 
 With this foundation you can deliver high-quality, SEO-friendly content, monetize through affiliates or Stripe products, and
 ship updates without touching code.
+
+## 8. Trust Pages & Contact
+
+Grounded Living now ships with evergreen trust content and a private contact flow so readers can reach the team without leaving the site.
+
+- **Managed in Contentful:** Create four `Page` entries with the slugs `about`, `contact`, `privacy`, and `disclosure`. Populate `bodyRichText`, `seoTitle`, `seoDescription`, and optional `ogImage`. The App Router route `app/(site)/[slug]/page.tsx` renders any matching slug with breadcrumbs, WebPage schema, and `.prose` typography.
+- **Local fallbacks:** When the Contentful environment variables are missing, the helpers in `lib/cms.ts` read JSON seeds from `content/pages/*.json` and `content/authors/*.json`. Update these files in development to mirror draft copy or to seed preview deployments.
+- **Author card:** The About page pulls an Author record via `getAuthorBySlug` and displays it through `components/site/AuthorCard.tsx`. Add social links (`linkedIn`, `instagram`) and a `bioRichText` field in Contentful for each author you want to highlight.
+- **Contact form:** `components/site/ContactForm.tsx` posts to `POST /api/contact`. The endpoint performs basic validation, rate-limits to five submissions per minute per IP, logs payloads server-side, and responds with `{ ok: true }` on success. Integrate your preferred email or Slack provider later by replacing the console log.
+- **Trust links:** The global footer links directly to `/about`, `/contact`, `/privacy`, and `/disclosure` so every page surfaces the policy content.
+
+> Email delivery is intentionally deferred. Wire up your transactional service of choice in a future iteration by extending `app/api/contact/route.ts`.
