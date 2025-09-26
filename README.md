@@ -11,6 +11,28 @@ Contentful CMS, modern SEO automation, and monetization-ready UI primitives so n
 - **Analytics:** Google Analytics 4 and Vercel Speed Insights
 - **Deployment:** Vercel with ISR + webhook-triggered cache revalidation
 
+## Design system foundation
+
+The design tokens and primitives established in this iteration provide a consistent visual rhythm across future templates.
+
+- **Color tokens:**
+  - `ink` (`#0F172A`) – primary text and iconography
+  - `bone` (`#F8F5F2`) – global page background
+  - `moss` (`#5B7F6B`) – primary accent and interactive states
+  - `clay` (`#C8A98E`) – secondary accent and surface treatments
+  - `saffron` (`#D9A441`) – highlight color for focus states and badges
+- **Border radii:** default `0.75rem` with `xl` (`1rem`) and `2xl` (`1.25rem`) options surfaced via the `--radius-*` CSS variables.
+- **Typography:** Fraunces drives headlines (`--font-display`) while Inter anchors body copy (`--font-body`). Both fonts are self-hosted via `next/font` with `font-display: swap`.
+- **UI primitives:**
+  - `Container` handles responsive width constraints and page padding.
+  - `Section` applies vertical spacing for page sections.
+  - `Button` includes `primary`, `secondary`, and `ghost` variants with accessible focus rings.
+  - `Callout` provides a soft-highlight panel for tips or disclosures.
+  - `NewsletterForm` ships a form shell ready for ESP integration and shares button/input styling.
+  - `ArticleShell` wraps long-form content inside `.prose` typography styles for blog posts and documentation pages.
+
+Use the sandbox route at `/sandbox/typography` to preview the typography scale, blockquotes, code blocks, and interaction states as new components roll out.
+
 ## 1. Local development
 
 1. **Install dependencies**
