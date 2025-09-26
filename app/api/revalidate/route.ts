@@ -1,6 +1,9 @@
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
+// Revalidation relies on Node-only cache APIs, so force the Node runtime for Vercel.
+export const runtime = "nodejs";
+
 type RevalidatePayload = {
   secret?: string;
   tag?: string;
