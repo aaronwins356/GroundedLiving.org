@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { STUDIO_COOKIE_NAME } from "./studio/constants";
+import { getExpectedHash } from "./studio/security";
 
 const AUTH_COOKIE_NAME = STUDIO_COOKIE_NAME;
-const AUTH_COOKIE_VALUE = "authenticated";
 
 const parseCookieHeader = (cookieHeader: string | undefined): Record<string, string> => {
   if (!cookieHeader) {
@@ -32,7 +32,12 @@ export const isStudioRequestAuthorized = (req: NextApiRequest): boolean => {
   }
 
   const cookies = parseCookieHeader(req.headers.cookie);
-  return cookies[AUTH_COOKIE_NAME] === AUTH_COOKIE_VALUE;
+  const expectedHash = getExpectedHash();
+  if (!expectedHash) {
+    return false;
+  }
+
+  return cookies[AUTH_COOKIE_NAME] === expectedHash;
 };
 
 export const requireStudioAuthorization = (req: NextApiRequest, res: NextApiResponse): boolean => {
@@ -45,7 +50,12 @@ export const requireStudioAuthorization = (req: NextApiRequest, res: NextApiResp
 };
 
 export const createAuthCookie = (maxAgeSeconds = 60 * 60 * 4): string => {
-  const base = `${AUTH_COOKIE_NAME}=${AUTH_COOKIE_VALUE}`;
+  const expectedHash = getExpectedHash();
+  if (!expectedHash) {
+    throw new Error("STUDIO_ADMIN_KEY environment variable is required");
+  }
+
+  const base = `${AUTH_COOKIE_NAME}=${expectedHash}`;
   const attributes = [
     "HttpOnly",
     "Path=/",
