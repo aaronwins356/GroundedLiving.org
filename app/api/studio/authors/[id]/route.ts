@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+// The Contentful management SDK depends on Node APIs, so keep this handler on Node.
+export const runtime = "nodejs";
+
 import { deleteAuthor, getAuthor, updateAuthor } from "../../../../../lib/contentfulManagement";
 import { guardRequest, handleError } from "../../utils";
 

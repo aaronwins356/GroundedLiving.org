@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Buffer } from "node:buffer";
 import { createClient } from "contentful-management";
 
 import type { RichTextDocument } from "../types/contentful";
@@ -49,7 +50,7 @@ interface ManagementEnvironment {
     fields: {
       title: Record<string, string>;
       description: Record<string, string | null>;
-      file: Record<string, { contentType: string; fileName: string; file: Blob }>;
+      file: Record<string, { contentType: string; fileName: string; file: Blob | Buffer }>;
     };
   }): Promise<ManagementAsset>;
 }
@@ -493,15 +494,33 @@ export async function deleteAuthor(id: string): Promise<void> {
 }
 
 export interface AssetUploadPayload {
-  file: Blob;
+  file: Blob | Buffer;
   fileName: string;
   contentType: string;
   title?: string;
   description?: string;
 }
 
+async function toNodeBuffer(blobOrBuffer: Blob | Buffer): Promise<Buffer> {
+  if (Buffer.isBuffer(blobOrBuffer)) {
+    return blobOrBuffer;
+  }
+
+  const blob = blobOrBuffer as Blob;
+  if (typeof blob.arrayBuffer !== "function") {
+    throw new Error("Unsupported file payload: expected Blob with arrayBuffer() method");
+  }
+
+  // Contentful's management SDK expects a Node.js Buffer. Convert incoming Blob/File
+  // instances (produced by the Web Fetch API) so uploads succeed inside Vercel's
+  // Node-based serverless runtime without relying on experimental Blob support.
+  const arrayBuffer = await blob.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
 export async function uploadAsset(payload: AssetUploadPayload): Promise<StudioAsset> {
   const environment = await getEnvironment();
+  const fileBuffer = await toNodeBuffer(payload.file);
 
   const asset = await environment.createAssetFromFiles({
     fields: {
@@ -511,7 +530,7 @@ export async function uploadAsset(payload: AssetUploadPayload): Promise<StudioAs
         [DEFAULT_LOCALE]: {
           contentType: payload.contentType,
           fileName: payload.fileName,
-          file: payload.file,
+          file: fileBuffer,
         },
       },
     },
