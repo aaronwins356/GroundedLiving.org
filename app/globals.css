@@ -5,13 +5,21 @@
   --color-ink: #2f3532;
   --color-ink-soft: #5f6761;
   --color-muted: #7c867f;
-  --color-cream: #f8f4ef;
-  --color-shell: #fbf8f3;
-  --color-blush: #f1e4dc;
-  --color-sage: #cbd8ce;
-  --color-fern: #a8c1ad;
-  --color-moss: #6f8c7b;
-  --color-gold: #d3c1a9;
+  -  /*
+   * Refreshed colour palette inspired by holistic lifestyle sites like
+   * healingsoulfully.com and mytxkitchen.com. The hues lean warmer and more
+   * organic while maintaining the muted, grounded feel of the original theme.
+   */
+  --color-cream: #fff9f3;
+  --color-shell: #f7f1e8;
+  --color-blush: #f4e2d8;
+  --color-sage: #cddcc7;
+  --color-fern: #a6bfa0;
+  --color-moss: #6f8462;
+  --color-gold: #d1b894;
+  /* additional accents for buttons and highlights */
+  --color-accent: #d89b6e;
+  --color-secondary: #a38974;3c1a9;
   --color-white: #ffffff;
   --color-divider: rgba(143, 153, 143, 0.25);
   --shadow-soft: 0 24px 70px rgba(66, 77, 70, 0.18);
