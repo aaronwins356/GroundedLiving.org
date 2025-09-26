@@ -1,0 +1,16 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Author placeholder</title>
+  <desc id="desc">Abstract circle illustration used as a temporary author portrait.</desc>
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d9a441" />
+      <stop offset="100%" stop-color="#5b7f6b" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="120" fill="url(#gradient)" />
+  <path
+    d="M120 60c-20.435 0-37 16.565-37 37s16.565 37 37 37 37-16.565 37-37-16.565-37-37-37zm0 92c-36.123 0-65.5 20.806-65.5 46.5v12h131v-12c0-25.694-29.377-46.5-65.5-46.5z"
+    fill="#f8f5f2"
+    fill-opacity="0.9"
+  />
+</svg>

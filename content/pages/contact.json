@@ -1,0 +1,48 @@
+{
+  "title": "Contact Grounded Living",
+  "slug": "contact",
+  "seoTitle": "Contact Grounded Living",
+  "seoDescription": "Send a private note to the Grounded Living team for partnerships, press, or wellness questions.",
+  "bodyRichText": {
+    "nodeType": "document",
+    "data": {},
+    "content": [
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "We read every message because relationships fuel this publication. The more context you can share, the faster we can point you toward the right resources.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Use the form below for partnership ideas, press opportunities, product samples, or heartfelt reader questions.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "We typically respond within two business days and never share your contact information without consent.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      }
+    ]
+  }
+}
