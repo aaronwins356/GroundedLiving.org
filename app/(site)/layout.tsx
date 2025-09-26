@@ -3,13 +3,15 @@ import type { ReactNode } from "react";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { Gtag } from "@/components/analytics/Gtag";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { bodyFontLocal, displayFontLocal, fallbackFontFamilies } from "@/lib/fonts";
 import { siteUrl } from "@/lib/site";
 import { websiteSchema } from "@/lib/seo/schema";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { ConsentProvider } from "@/context/ConsentContext";
 import seoConfig from "../../next-seo.config";
 
 const disableFontDownloads =
@@ -76,19 +78,22 @@ interface SiteLayoutProps {
 
 export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
-    <div className={`${fontClasses} ${fontVariables}`}>
-      <style>{`:root{--font-display:${displayFontFamily};--font-body:${bodyFontFamily};}`}</style>
-      <a href="#content" className="skip-link">
-        Skip to content
-      </a>
-      <Header />
-      <main id="content" className="site-main" role="main">
-        {children}
-      </main>
-      <Footer />
-      <GoogleAnalytics />
-      <SpeedInsights />
-      <JsonLd item={websiteJsonLd} id="website-schema" />
-    </div>
+    <ConsentProvider>
+      <div className={`${fontClasses} ${fontVariables}`}>
+        <style>{`:root{--font-display:${displayFontFamily};--font-body:${bodyFontFamily};}`}</style>
+        <a href="#content" className="skip-link">
+          Skip to content
+        </a>
+        <Header />
+        <main id="content" className="site-main" role="main">
+          {children}
+        </main>
+        <Footer />
+        <ConsentBanner />
+        <Gtag />
+        <SpeedInsights />
+        <JsonLd item={websiteJsonLd} id="website-schema" />
+      </div>
+    </ConsentProvider>
   );
 }

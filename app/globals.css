@@ -359,6 +359,17 @@ details[open] .site-nav__panel {
   font-weight: 550;
 }
 
+.site-footer__contact {
+  font-size: 0.95rem;
+  color: rgba(15, 23, 42, 0.78);
+  margin-bottom: 1rem;
+}
+
+.site-footer__contact a {
+  color: var(--color-moss);
+  font-weight: 600;
+}
+
 .site-footer__meta {
   margin-top: 2.5rem;
   font-size: 0.9rem;
@@ -520,6 +531,123 @@ details[open] .site-nav__panel {
   color: rgba(15, 23, 42, 0.7);
 }
 
+.newsletter-form__status {
+  font-size: 0.9rem;
+  color: rgba(15, 23, 42, 0.7);
+  min-height: 1.25rem;
+}
+
+.newsletter-form__status:empty {
+  display: none;
+  min-height: 0;
+}
+
+.newsletter-form--inline {
+  gap: 0.5rem;
+}
+
+.newsletter-form__inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.consent-banner {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100% - 2rem, 640px);
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 24px 48px -24px rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  z-index: 50;
+}
+
+.consent-banner__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.consent-banner__message {
+  margin: 0;
+  color: rgba(15, 23, 42, 0.78);
+  font-size: 0.95rem;
+}
+
+.consent-banner__link {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+
+.consent-banner__link a {
+  color: var(--color-moss);
+  font-weight: 600;
+}
+
+.consent-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.consent-banner__preferences {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding-top: 1rem;
+}
+
+.consent-banner__legend {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.consent-banner__option {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.consent-banner__option:last-of-type {
+  border-bottom: none;
+}
+
+.consent-banner__option-title {
+  font-weight: 600;
+  display: block;
+  color: rgba(15, 23, 42, 0.88);
+}
+
+.consent-banner__option-description {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.consent-banner__toggle {
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.consent-banner__preferences input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.consent-banner__preferences-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .author-card {
   display: grid;
   gap: 1.5rem;
@@ -590,6 +718,47 @@ details[open] .site-nav__panel {
 .author-card__bio a {
   color: var(--color-moss);
   text-decoration: underline;
+}
+
+.thank-you {
+  padding-block: 4rem;
+}
+
+.thank-you__inner {
+  max-width: 36rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.thank-you__card {
+  background: rgba(248, 245, 242, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.thank-you__download {
+  justify-self: center;
+}
+
+.thank-you__note {
+  font-size: 0.95rem;
+  color: rgba(15, 23, 42, 0.75);
+  margin: 0;
+}
+
+.thank-you__hint {
+  font-size: 0.9rem;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.thank-you__hint a {
+  color: var(--color-moss);
+  font-weight: 600;
 }
 
 .author-card__links {
@@ -1366,11 +1535,25 @@ details[open] .site-nav__panel {
   .newsletter-form__actions .btn {
     height: 100%;
   }
+
+  .newsletter-form__inline-fields {
+    flex-wrap: nowrap;
+  }
+
+  .consent-banner__content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .consent-banner__content > div:first-of-type {
+    flex: 1;
+  }
 }
 
 @media (min-width: 768px) {
   .site-footer__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1386,6 +1569,10 @@ details[open] .site-nav__panel {
 
   .site-nav {
     gap: 1.25rem;
+  }
+
+  .site-footer__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

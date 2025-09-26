@@ -51,10 +51,16 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
    CONTENTFUL_PREVIEW_TOKEN=xxx
    CONTENTFUL_MANAGEMENT_TOKEN=xxx
    CONTENTFUL_REVALIDATE_SECRET=choose-a-strong-secret
+
+   NEWSLETTER_PROVIDER=mailerlite
+   NEWSLETTER_API_KEY=
+   NEWSLETTER_LIST_ID=
+   NEWSLETTER_DOUBLE_OPT_IN=true
+
    NEXT_PUBLIC_SITE_URL=https://your-vercel-domain.vercel.app
    NEXT_PUBLIC_GSC_VERIFICATION=google-site-verification-token
-   NEXT_PUBLIC_GA_TRACKING_ID=G-XXXXXXXXXX
-   NEXT_PUBLIC_NEWSLETTER_ACTION=https://app.convertkit.com/forms/YOUR_FORM_ID/subscriptions
+   NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+   NEXT_PUBLIC_CONTACT_EMAIL=hello@groundedliving.org
    NEXT_PUBLIC_STRIPE_CHECKOUT_URL=https://buy.stripe.com/YOUR_TEST_CHECKOUT
    ```
 
@@ -76,6 +82,7 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
 | `npm run typecheck` | Verify TypeScript types without emitting output. |
 | `npm run lint:content` | Lint seeded JSON posts for disclosures, metadata, and internal link candidates. |
 | `npm run check` | Run lint, typecheck, build, and content lint in one pass (mirrors CI). |
+| `npm run test` | Execute the Node test suite (uses `ts-node` loader). |
 | `npm run migrate:posts` | One-off migration of Markdown/legacy JSX posts into Contentful. |
 
 > Always run `npm run check` before committing to mirror CI.
@@ -95,6 +102,39 @@ Use the sandbox route at `/sandbox/typography` to preview the typography scale, 
   - `/sitemap.xml` – canonical URLs for home, trust pages, journal, categories, and posts
   - `/feed.xml` – RSS 2.0 feed for recent stories
   - `/og` – dynamic Open Graph image template that accepts `title`, `subtitle`, and `type`
+
+### Newsletter capture & lead magnets
+
+- Configure the API proxy with the `NEWSLETTER_PROVIDER`, `NEWSLETTER_API_KEY`, `NEWSLETTER_LIST_ID`, and `NEWSLETTER_DOUBLE_OPT_IN`
+  variables. Supported providers: `mailerlite`, `convertkit`, `beehiiv`, `resend-list`, or `custom` (logs only).
+- `<NewsletterForm />` and `<NewsletterSignup />` POST to `/api/newsletter`, then redirect subscribers to `/thank-you?lg=<lead-magnet>`.
+- Drop PDF assets inside `public/lead-magnets/` and register the key in `app/(site)/thank-you/page.tsx` so CTAs can link to
+  `/thank-you?lg=your-key`.
+- When `NEWSLETTER_DOUBLE_OPT_IN=true`, the thank-you page prompts readers to confirm their email before the magnet lands in
+  their inbox. Setting it to `false` offers an immediate download and still emails a backup copy.
+
+### Consent & analytics
+
+- The consent banner stores preferences in `gl_consent=v1.analytics:<0|1>,ads:<0|1>` (cookie + `localStorage`). To reset for
+  testing, clear the cookie and remove the localStorage item in DevTools.
+- Set `NEXT_PUBLIC_GA_ID` to your GA4 Measurement ID. Analytics loads only after the visitor opts into the `analytics`
+  category; otherwise the proxy refuses to emit GA scripts.
+- Client events sent via `track()` include:
+  - `newsletter_subscribed` – fired after `/api/newsletter` confirms a subscription (includes optional `tag`/`source`).
+  - `lead_magnet_downloaded` – triggered when the download button is clicked on `/thank-you`.
+
+### Contentful webhook revalidation
+
+- Point a Contentful webhook at `https://<your-domain>/api/revalidate` with method `POST` and header
+  `x-webhook-secret: ${CONTENTFUL_REVALIDATE_SECRET}`.
+- Example payloads:
+  ```json
+  { "type": "BlogPost", "slug": "spring-cleaning-rituals", "event": "publish" }
+  { "type": "Page", "slug": "about", "event": "update" }
+  { "type": "Category", "slug": "rituals", "event": "unpublish" }
+  ```
+- Every webhook call refreshes the search cache (`revalidateTag('search-index')`) and `/sitemap.xml`. Blog/category/page
+  paths are selectively revalidated when their slugs are present.
 
 #### Site search
 
@@ -254,11 +294,11 @@ Seed your first post with:
 
 ## 7. Monetization & growth hooks
 
-- **Newsletter:** The ConvertKit/Mailchimp form posts to `NEXT_PUBLIC_NEWSLETTER_ACTION` and renders inline + footer modules.
+- **Newsletter:** `<NewsletterForm />` and `<NewsletterSignup />` both call `/api/newsletter`, respect the configured provider, and surface inline + footer modules that redirect to `/thank-you` with the active lead magnet.
 - **Affiliate disclosure:** Toggle the `affiliate` boolean on any post to surface an FTC-compliant notice with configurable CTA.
 - **Sponsored stories:** Mark `sponsored` and optionally provide `sponsoredLabel` to badge hero metadata.
 - **Digital products:** `/shop` includes a placeholder Stripe checkout button wired to `NEXT_PUBLIC_STRIPE_CHECKOUT_URL`.
-- **Analytics:** GA4 loads automatically when `NEXT_PUBLIC_GA_TRACKING_ID` is present.
+- **Analytics:** GA4 loads automatically when `NEXT_PUBLIC_GA_ID` is present and the visitor opts into analytics tracking.
 
 ## 8. Deployment
 

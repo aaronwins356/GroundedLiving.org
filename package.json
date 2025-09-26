@@ -21,6 +21,8 @@
     "lint:content": "TS_NODE_PROJECT=tsconfig.scripts.json tsx scripts/lint-content.ts",
     "// check": "Runs the full CI gate locally (lint, typecheck, build, content lint).",
     "check": "npm run lint && npm run typecheck && npm run build && npm run lint:content",
+    "// test": "Runs unit tests with Node's built-in test runner using ts-node for TypeScript support.",
+    "test": "rm -rf .tests-dist && NODE_PATH=./stubs tsc -p tsconfig.tests.json && node -e \"require('fs').writeFileSync('.tests-dist/package.json', '{\\\"type\\\":\\\"commonjs\\\"}')\" && NODE_PATH=./stubs node -r ./scripts/register-test-paths.cjs .tests-dist/scripts/run-tests.js",
     "// migrate:posts": "One-off migration of Markdown or legacy JSX posts into Contentful.",
     "migrate:posts": "ts-node --esm scripts/migrate-posts.ts",
     "// test:migration": "Creates a sample blogPost entry to verify Contentful credentials end-to-end.",

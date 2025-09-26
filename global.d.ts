@@ -69,3 +69,18 @@ declare module "contentful-management" {
 
   export function createClient(config: { accessToken: string }): ContentfulClient;
 }
+
+declare global {
+  interface Window {
+    dataLayer?: Array<unknown>;
+    gtag?: (...args: unknown[]) => void;
+    __glConsent?: {
+      analytics: boolean;
+      ads: boolean;
+      necessary: true;
+      version: string;
+    };
+  }
+}
+
+export {};
