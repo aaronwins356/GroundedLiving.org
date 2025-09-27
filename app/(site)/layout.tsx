@@ -59,10 +59,7 @@ const websiteJsonLd = websiteSchema({
 
 export const metadata = {
   metadataBase: siteUrl,
-  title: {
-    default: seoConfig.defaultTitle,
-    template: "%s | Grounded Living",
-  },
+  title: seoConfig.defaultTitle,
   description: seoConfig.defaultDescription,
   ...(googleVerification
     ? {

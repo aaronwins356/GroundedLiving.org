@@ -5,8 +5,16 @@ import { Container } from "@/components/ui/Container";
 import { LeadMagnetDownloadButton } from "@/components/site/LeadMagnetDownloadButton";
 import { canonicalFor } from "@/lib/seo/meta";
 import { webPageSchema } from "@/lib/seo/schema";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 
 const CANONICAL_URL = canonicalFor("/thank-you").toString();
+const PAGE_TITLE = "You're in — check your inbox";
+const META_TITLE = buildMetaTitle(PAGE_TITLE);
+const PAGE_DESCRIPTION = truncateAtBoundary(
+  "Thanks for joining the Grounded Living circle. Confirm your email and grab the Evening Ritual Checklist to wind down with intention.",
+  155,
+);
 
 const LEAD_MAGNETS: Record<string, { title: string; description: string; file: string }> = {
   "evening-ritual-checklist": {
@@ -29,9 +37,8 @@ const LEAD_MAGNETS: Record<string, { title: string; description: string; file: s
 };
 
 export const metadata: Metadata = {
-  title: "You're in — check your inbox | Grounded Living",
-  description:
-    "Thanks for joining the Grounded Living circle. Confirm your email and grab the Evening Ritual Checklist to wind down with intention.",
+  title: META_TITLE,
+  description: PAGE_DESCRIPTION,
   alternates: {
     canonical: CANONICAL_URL,
   },
@@ -48,10 +55,9 @@ export default async function ThankYouPage({ searchParams }: ThankYouPageProps) 
   const magnet = LEAD_MAGNETS[magnetKey];
   const doubleOptIn = (process.env.NEWSLETTER_DOUBLE_OPT_IN ?? "true").toLowerCase() === "true";
   const schema = webPageSchema({
-    name: "Newsletter Confirmation",
+    name: PAGE_TITLE,
     url: CANONICAL_URL,
-    description:
-      "Grounded Living newsletter confirmation page with access to the Evening Ritual Checklist lead magnet.",
+    description: PAGE_DESCRIPTION,
   });
 
   return (

@@ -5,6 +5,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { SearchPageClient } from "@/components/search/SearchPageClient";
 import { getCategories } from "@/lib/contentful";
 import { canonicalFor } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 import { breadcrumbList, websiteSchema } from "@/lib/seo/schema";
 import {
   buildSearchIndex,
@@ -16,10 +18,15 @@ import { siteUrl } from "@/lib/site";
 
 const CANONICAL_URL = canonicalFor("/search").toString();
 const DEFAULT_LIMIT = 10;
+const PAGE_TITLE = buildMetaTitle("Search");
+const PAGE_DESCRIPTION = truncateAtBoundary(
+  "Search rituals, recipes, and trusted guides from the Grounded Living journal.",
+  155,
+);
 
 export const metadata: Metadata = {
-  title: "Search — Grounded Living",
-  description: "Search rituals, recipes, and trusted guides from the Grounded Living journal.",
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
   alternates: {
     canonical: CANONICAL_URL,
   },

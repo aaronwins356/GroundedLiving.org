@@ -7,6 +7,8 @@ import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { getAllProducts, getCheckoutUrl, getProductBySlug } from "@/lib/shop/products";
 import { canonicalFor } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 
 export const revalidate = 300;
 
@@ -28,8 +30,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const canonicalUrl = canonicalFor(`/shop/${product.slug}`).toString();
-  const description = product.seo?.description ?? product.shortDescription;
-  const title = product.seo?.title ?? `${product.name} | Homemade Remedies`;
+  const rawDescription = product.seo?.description ?? product.shortDescription ?? "";
+  const description = truncateAtBoundary(
+    rawDescription || `Explore the ${product.name} remedy from Grounded Living.`,
+    155,
+  );
+  const title = buildMetaTitle(product.seo?.title ?? product.name);
   const imageUrl = new URL(product.image.src, canonicalFor("/")).toString();
 
   return {

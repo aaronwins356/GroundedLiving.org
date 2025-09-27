@@ -8,6 +8,8 @@ import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCategories, getPostsByCategory } from "@lib/contentful";
 import { canonicalFor } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 import { breadcrumbList } from "@/lib/seo/schema";
 import type { ContentfulCategory } from "@project-types/contentful";
 
@@ -30,9 +32,14 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     return {};
   }
 
+  const title = buildMetaTitle(`${category.name} stories`);
+  const rawDescription =
+    category.description?.trim() ?? `Browse mindful ${category.name.toLowerCase()} articles from Grounded Living.`;
+  const description = truncateAtBoundary(rawDescription, 155);
+
   return {
-    title: `${category.name} stories`,
-    description: category.description,
+    title,
+    description,
     alternates: {
       canonical: canonicalFor(`/categories/${slug}`).toString(),
     },

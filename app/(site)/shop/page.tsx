@@ -7,29 +7,33 @@ import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { getAllProducts } from "@/lib/shop/products";
 import { canonicalFor } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 import { ogImageForTitle } from "@/lib/seo/og";
 
 const PAGE_TITLE = "Homemade Remedies";
 const PAGE_DESCRIPTION =
   "Small-batch remedies and digital rituals crafted by the Grounded Living team. Secure checkout, thoughtful sourcing, and gentle disclaimers for every product.";
+const META_TITLE = buildMetaTitle(PAGE_TITLE);
+const META_DESCRIPTION = truncateAtBoundary(PAGE_DESCRIPTION, 155);
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
-  description: PAGE_DESCRIPTION,
+  title: META_TITLE,
+  description: META_DESCRIPTION,
   alternates: {
     canonical: canonicalFor("/shop").toString(),
   },
   openGraph: {
     type: "website",
     url: canonicalFor("/shop").toString(),
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
+    title: META_TITLE,
+    description: META_DESCRIPTION,
     images: [{ url: ogImageForTitle(PAGE_TITLE) }],
   },
   twitter: {
     card: "summary_large_image",
-    title: PAGE_TITLE,
-    description: PAGE_DESCRIPTION,
+    title: META_TITLE,
+    description: META_DESCRIPTION,
     images: [ogImageForTitle(PAGE_TITLE)],
   },
 };

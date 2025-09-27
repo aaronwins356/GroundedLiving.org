@@ -5,12 +5,17 @@ import { ArticleShell } from "@/components/blog/ArticleShell";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getAllBlogPosts } from "@/lib/contentful";
 import { canonicalFor } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 import { ogImageForTitle } from "@/lib/seo/og";
 import { webPageSchema } from "@/lib/seo/schema";
 
 const PAGE_TITLE = "Journal";
-const PAGE_DESCRIPTION =
-  "Discover soulful wellness rituals, seasonal recipes, and mindful living tips from the Grounded Living editorial team.";
+const META_TITLE = buildMetaTitle(PAGE_TITLE);
+const PAGE_DESCRIPTION = truncateAtBoundary(
+  "Discover soulful wellness rituals, seasonal recipes, and mindful living tips from the Grounded Living editorial team.",
+  155,
+);
 
 export const revalidate = 300;
 
@@ -19,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImageUrl = ogImageForTitle(PAGE_TITLE);
 
   return {
-    title: PAGE_TITLE,
+    title: META_TITLE,
     description: PAGE_DESCRIPTION,
     alternates: {
       canonical: canonicalUrl,
@@ -27,13 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       url: canonicalUrl,
-      title: PAGE_TITLE,
+      title: META_TITLE,
       description: PAGE_DESCRIPTION,
       images: [{ url: ogImageUrl }],
     },
     twitter: {
       card: "summary_large_image",
-      title: PAGE_TITLE,
+      title: META_TITLE,
       description: PAGE_DESCRIPTION,
       images: [ogImageUrl],
     },
