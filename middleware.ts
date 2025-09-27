@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import seoConfig from "./next-seo.config";
 
 const canonicalUrlString = process.env.NEXT_PUBLIC_SITE_URL ?? seoConfig.siteUrl;
+const disableCanonicalRedirects =
+  process.env.NEXT_DISABLE_CANONICAL_REDIRECTS === "true";
 let canonicalUrl: URL | null = null;
 try {
   canonicalUrl = new URL(canonicalUrlString);
@@ -17,6 +19,11 @@ const canonicalProtocol = canonicalUrl?.protocol ?? null;
 const LOCAL_HOST_PATTERNS = [/^localhost(:\d+)?$/i, /^127\.0\.0\.1(:\d+)?$/];
 
 export function middleware(request: NextRequest) {
+  if (disableCanonicalRedirects) {
+    // Allow preview/testing flows to run without forcing the canonical domain.
+    return NextResponse.next();
+  }
+
   if (!canonicalHost) {
     return NextResponse.next();
   }
