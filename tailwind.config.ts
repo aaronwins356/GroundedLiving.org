@@ -3,16 +3,20 @@ import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
 
 import {
+  breakpoints,
   colorTokens,
   containerWidths,
   easingTokens,
   fontFamilyTokens,
+  fontWeightTokens,
+  lineHeightScale,
   radiiTokens,
   shadowTokens,
   spacingTokens,
   surfaceTokens,
   transitionDurations,
   typeScale,
+  zIndexTokens,
 } from "./lib/design/tokens";
 
 const config: Config = {
@@ -23,6 +27,7 @@ const config: Config = {
     "./lib/**/*.{ts,tsx}",
   ],
   theme: {
+    screens: breakpoints,
     container: {
       center: true,
       padding: "1rem",
@@ -45,6 +50,13 @@ const config: Config = {
       fontFamily: {
         display: fontFamilyTokens.display,
         body: fontFamilyTokens.body,
+        mono: fontFamilyTokens.mono,
+      },
+      fontWeight: {
+        ...fontWeightTokens,
+      },
+      lineHeight: {
+        ...lineHeightScale,
       },
       fontSize: {
         ...typeScale,
@@ -52,15 +64,20 @@ const config: Config = {
       boxShadow: {
         ...shadowTokens,
       },
+      zIndex: {
+        ...zIndexTokens,
+      },
       transitionDuration: {
         subtle: transitionDurations.subtle,
         base: transitionDurations.base,
         slow: transitionDurations.slow,
+        deliberate: transitionDurations.deliberate,
       },
       transitionTimingFunction: {
         standard: easingTokens.standard,
         entrance: easingTokens.entrance,
         exit: easingTokens.exit,
+        emphasized: easingTokens.emphasized,
       },
       maxWidth: {
         prose: containerWidths.prose,

@@ -1,0 +1,13 @@
+<svg width="320" height="72" viewBox="0 0 320 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Grounded Living wordmark</title>
+  <rect width="320" height="72" rx="12" fill="#FAF7F2"/>
+  <rect x="8" y="8" width="304" height="56" rx="10" fill="#FFFFFF"/>
+  <text x="24" y="44" fill="#13221E" font-family="'Fraunces', 'Times New Roman', serif" font-size="36" font-weight="600" letter-spacing="-0.02em">
+    Grounded
+  </text>
+  <text x="204" y="44" fill="#5B7F6B" font-family="'Inter', 'Segoe UI', sans-serif" font-size="24" font-weight="500" letter-spacing="0.05em">
+    Living
+  </text>
+  <circle cx="192" cy="30" r="6" fill="#C58A2F"/>
+  <circle cx="192" cy="42" r="4" fill="#F0F7F2" stroke="#5B7F6B" stroke-width="1.5"/>
+</svg>
