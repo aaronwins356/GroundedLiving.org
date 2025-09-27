@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { BlogPostSummary } from "../../types/contentful";
+import { buildContentfulImageUrl } from "@/lib/images";
 
 import styles from "./HeroCarousel.module.css";
 
@@ -16,19 +17,29 @@ interface HeroCarouselProps {
 export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
   const items = useMemo(() => posts.slice(0, 5), [posts]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     if (items.length <= 1) {
       return;
     }
 
-    // Auto-advance the carousel so featured stories get balanced exposure on load.
+    if (!hasMounted) {
+      return;
+    }
+
+    // Auto-advance the carousel so featured stories get balanced exposure once
+    // the browser has hydrated and can paint subsequent slides.
     const timer = setInterval(() => {
       setActiveIndex((current) => (current + 1) % items.length);
     }, intervalMs);
 
     return () => clearInterval(timer);
-  }, [intervalMs, items.length]);
+  }, [hasMounted, intervalMs, items.length]);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   if (items.length === 0) {
     return null;
@@ -39,10 +50,20 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
       <div className={styles.gradient} aria-hidden />
       <div className={styles.slides}>
         {items.map((item, index) => {
+          if (index > 0 && !hasMounted) {
+            // Defer rendering non-LCP slides until after hydration so we only
+            // download the hero image needed for first paint.
+            return null;
+          }
+
           const isActive = index === activeIndex;
           const heroImage = item.coverImage?.url
             ? {
-                src: `${item.coverImage.url}?w=1200&h=900&fit=fill`,
+                src: buildContentfulImageUrl(item.coverImage.url, {
+                  width: 1200,
+                  height: 900,
+                  fit: "fill",
+                }),
                 alt: item.coverImage.description ?? item.coverImage.title ?? item.title,
               }
             : null;
@@ -70,6 +91,8 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
                       fill
                       sizes="(min-width: 900px) 50vw, 100vw"
                       priority={index === 0}
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                      loading={index === 0 ? "eager" : "lazy"}
                       className={styles.mediaImage}
                     />
                   </div>

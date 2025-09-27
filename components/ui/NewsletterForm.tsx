@@ -9,7 +9,7 @@ import { track } from "@/lib/analytics";
 
 type NewsletterStatus = "idle" | "submitting" | "success" | "error";
 
-interface NewsletterFormProps {
+export interface NewsletterFormProps {
   tag?: string;
   source?: string;
   placeholder?: string;

@@ -1,6 +1,7 @@
 import type { BlogPost } from "@/types/contentful";
 import { metaFromRichTextExcerpt } from "@/lib/seo/meta";
 import { richTextToPlainText } from "@/lib/richtext";
+import { buildContentfulImageUrl } from "@/lib/images";
 import type { JsonLdObject } from "./schema";
 
 import seoConfig from "../../next-seo.config";
@@ -233,7 +234,7 @@ function resolvePostImage(post: BlogPost): PostMetaImage {
     ]);
 
     return {
-      url: `${post.coverImage.url}?w=1200&h=630&fit=fill`,
+      url: buildContentfulImageUrl(post.coverImage.url, { width: 1200, height: 630, fit: "fill" }),
       alt,
       width: 1200,
       height: 630,

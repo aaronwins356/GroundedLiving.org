@@ -30,6 +30,38 @@
   gap: 1rem;
 }
 
+.formSkeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.formPlaceholder {
+  flex: 1 1 16rem;
+  min-height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(221, 228, 221, 0.6));
+  box-shadow: inset 0 0 0 1px rgba(111, 140, 123, 0.14);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.buttonPlaceholder {
+  flex: 0 0 auto;
+  width: clamp(9rem, 20vw, 12rem);
+  min-height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(211, 193, 169, 0.7), rgba(168, 193, 173, 0.6));
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.noscriptMessage {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
 .form input {
   flex: 1 1 16rem;
   padding: 0.85rem 1.25rem;
@@ -55,6 +87,16 @@
 .form button:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-soft);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+
+  100% {
+    background-position: 200px 0;
+  }
 }
 
 @media (min-width: 768px) {

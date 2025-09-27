@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { RichText } from "@/lib/richtext";
 import type { RichTextDocument } from "@/types/contentful";
+import { buildContentfulImageUrl } from "@/lib/images";
 
 interface AuthorCardProps {
   name: string;
@@ -21,7 +22,10 @@ const SOCIAL_LABELS: Record<string, string> = {
 };
 
 export function AuthorCard({ name, headshotUrl, links, bioRichText, bio }: AuthorCardProps) {
-  const headshot = headshotUrl?.trim();
+  const headshotBase = headshotUrl?.trim();
+  const headshot = headshotBase?.includes("ctfassets.net")
+    ? buildContentfulImageUrl(headshotBase, { width: 256, height: 256, fit: "thumb" })
+    : headshotBase;
   const initials = name
     .split(" ")
     .map((part) => part.trim())

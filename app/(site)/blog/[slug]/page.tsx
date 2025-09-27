@@ -9,6 +9,7 @@ import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { autoLinkHtml } from "@/lib/internalLinks";
 import { getAllBlogPosts, getBlogPostBySlug } from "@lib/contentful";
+import { buildContentfulImageUrl } from "@lib/images";
 import { canonicalFor } from "@/lib/seo/meta";
 import { breadcrumbList } from "@/lib/seo/schema";
 import { buildArticleJsonLd, buildRecipeJsonLd, resolvePostMeta } from "@/lib/seo/post";
@@ -97,7 +98,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const breadcrumbSchema = breadcrumbList(breadcrumbItems);
   const coverImage = post.coverImage?.url
     ? {
-        src: `${post.coverImage.url}?w=1600&fit=fill`,
+        src: buildContentfulImageUrl(post.coverImage.url, { width: 1600, fit: "fill" }),
         alt: post.coverImage.description ?? post.coverImage.title ?? post.title,
         width: post.coverImage.width ?? 1600,
         height: post.coverImage.height ?? 900,
@@ -151,6 +152,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               height={coverImage.height}
               sizes="(min-width: 1024px) 960px, 100vw"
               priority
+              fetchPriority="high"
               className="post-cover-image"
             />
             {post.coverImage?.description ? <figcaption>{post.coverImage.description}</figcaption> : null}
@@ -164,7 +166,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="post-author-card">
             {post.author?.avatarImage?.url ? (
               <Image
-                src={`${post.author.avatarImage.url}?w=160&h=160&fit=fill`}
+                src={buildContentfulImageUrl(post.author.avatarImage.url, {
+                  width: 160,
+                  height: 160,
+                  fit: "thumb",
+                })}
                 alt={post.author?.name ?? post.title}
                 width={160}
                 height={160}
