@@ -8,6 +8,7 @@ This kit centralizes the repeatable process for planning, outlining, drafting, a
 - [`outline-template.md`](./outline-template.md) — structure for writer outlines and approval.
 - [`draft-checklist.md`](./draft-checklist.md) — ensures drafts meet editorial quality before submission.
 - [`optimization-checklist.md`](./optimization-checklist.md) — QA tool to satisfy acceptance tests and SEO requirements.
+- [`editorial-seo-engine.md`](./editorial-seo-engine.md) — blueprint for scaling topic clusters, workflow, tooling, and KPIs.
 - [`image-spec-sheet.md`](./image-spec-sheet.md) — photography and graphic guidelines.
 
 ## Usage Workflow
