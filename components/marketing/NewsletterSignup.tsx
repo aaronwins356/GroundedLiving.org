@@ -1,4 +1,4 @@
-import { NewsletterForm } from "@/components/ui/NewsletterForm";
+import { ProgressiveNewsletterForm } from "@/components/marketing/ProgressiveNewsletterForm";
 
 import styles from "./NewsletterSignup.module.css";
 
@@ -18,13 +18,24 @@ export function NewsletterSignup({
           <h2>{title}</h2>
           <p>{description}</p>
         </div>
-        <NewsletterForm
+        <ProgressiveNewsletterForm
+          // Defer hydrating the interactive form until the block is scrolled
+          // near the viewport so the homepage ships less JavaScript up front.
           variant="inline"
           className={styles.form}
           hideLabel
           submitLabel="Join the circle"
           source="marketing-inline"
+          fallback={
+            <div className={styles.formSkeleton} aria-hidden>
+              <div className={styles.formPlaceholder} />
+              <div className={styles.buttonPlaceholder} />
+            </div>
+          }
         />
+        <noscript>
+          <p className={styles.noscriptMessage}>Enable JavaScript to join the newsletter.</p>
+        </noscript>
       </div>
     </section>
   );

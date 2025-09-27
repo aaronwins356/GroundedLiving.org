@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { BlogPostSummary } from "../../types/contentful";
+import { buildContentfulImageUrl } from "@/lib/images";
 
 import styles from "./PostCard.module.css";
 
@@ -13,7 +14,7 @@ export function PostCard({ post }: PostCardProps) {
   const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
   const coverImage = post.coverImage?.url
     ? {
-        src: `${post.coverImage.url}?w=800&h=600&fit=fill`,
+        src: buildContentfulImageUrl(post.coverImage.url, { width: 800, height: 600, fit: "fill" }),
         alt: post.coverImage.description ?? post.coverImage.title ?? post.title,
       }
     : null;
@@ -26,7 +27,8 @@ export function PostCard({ post }: PostCardProps) {
             src={coverImage.src}
             alt={coverImage.alt}
             fill
-            sizes="(min-width: 768px) 50vw, 100vw"
+            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+            loading="lazy"
             className={styles.coverImage}
           />
         ) : (
