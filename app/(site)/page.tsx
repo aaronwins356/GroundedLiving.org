@@ -4,6 +4,7 @@ import { CategoryChips } from "@components/blog/CategoryChips";
 import { HeroCarousel } from "@components/blog/HeroCarousel";
 import { PostCard } from "@components/blog/PostCard";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
+import { buttonClassNames } from "@/components/ui/Button";
 import { getAllBlogPosts, getCategories, getPages } from "@lib/contentful";
 import type { BlogPostSummary, ContentfulPage, RichTextNode } from "@project-types/contentful";
 
@@ -26,10 +27,10 @@ export default async function HomePage() {
             curated to help you feel rooted every day.
           </p>
           <div className="hero-actions">
-            <Link href="/blog" className="btn-primary">
+            <Link href="/blog" className={buttonClassNames({ size: "lg" })}>
               Explore the journal
             </Link>
-            <Link href="/shop" className="btn-secondary">
+            <Link href="/shop" className={buttonClassNames({ variant: "secondary", size: "lg" })}>
               Visit the shop
             </Link>
           </div>

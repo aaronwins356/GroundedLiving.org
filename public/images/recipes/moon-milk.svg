@@ -1,0 +1,41 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Moon milk illustration</title>
+  <desc id="desc">Abstract illustration of a mug of moon milk with a cinnamon stick and herbal garnish.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6F1EB" />
+      <stop offset="100%" stop-color="#E8DCCD" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="40%">
+      <stop offset="0%" stop-color="#F8EFE4" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#F8EFE4" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="mug" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E6DED2" />
+    </linearGradient>
+    <linearGradient id="liquid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F2D3C1" />
+      <stop offset="100%" stop-color="#ECD8B6" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)" />
+  <circle cx="600" cy="320" r="360" fill="url(#glow)" />
+  <ellipse cx="600" cy="720" rx="320" ry="90" fill="rgba(19,34,30,0.08)" />
+  <g transform="translate(360 260)">
+    <path d="M420 160c68 0 124 56 124 124s-56 124-124 124h-18v-64h18c33 0 60-27 60-60s-27-60-60-60h-18v-64h18z" fill="#F0E8DA" />
+    <path d="M64 64c0-35 29-64 64-64h280c35 0 64 29 64 64v300c0 94-76 170-170 170h-68c-94 0-170-76-170-170V64z" fill="url(#mug)" />
+    <path d="M96 124c0-18 14-32 32-32h280c18 0 32 14 32 32v28c0 22-18 40-40 40H136c-22 0-40-18-40-40v-28z" fill="url(#liquid)" />
+    <path d="M112 292c0 98 72 182 168 196-120-22-168-126-168-196z" fill="#F3EAE0" />
+    <path d="M352 0h24c10 0 18 8 18 18v278h-42V0z" fill="#C58A2F" />
+    <path d="M368 0h8c6 0 10 4 10 10v262h-18V0z" fill="#8F5E16" />
+    <path d="M140 320c12 40 52 70 108 70s96-30 108-70H140z" fill="#FFFFFF" opacity="0.65" />
+    <path d="M60 64c0-11 9-20 20-20h284c11 0 20 9 20 20" stroke="#E2D3C4" stroke-width="12" stroke-linecap="round" />
+  </g>
+  <g transform="translate(280 140)">
+    <ellipse cx="880" cy="260" rx="50" ry="120" fill="#D9A441" transform="rotate(18 880 260)" />
+    <path d="M870 160c-14 40-24 86-24 132 0 34 6 68 18 96" stroke="#7C521B" stroke-width="12" stroke-linecap="round" />
+    <path d="M812 220c24-18 58-26 92-20" stroke="#6D9E78" stroke-width="14" stroke-linecap="round" />
+    <path d="M840 312c26 18 40 44 44 78" stroke="#6D9E78" stroke-width="14" stroke-linecap="round" />
+  </g>
+</svg>

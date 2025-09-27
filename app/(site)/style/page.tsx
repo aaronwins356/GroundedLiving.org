@@ -1,11 +1,13 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassNames } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Container } from "@/components/ui/Container";
 import { NewsletterForm } from "@/components/ui/NewsletterForm";
 import { Section } from "@/components/ui/Section";
+import { RecipeLayout } from "@/components/recipes/RecipeLayout";
 import {
   colorTokens,
   spacingTokens,
@@ -75,6 +77,59 @@ const typeEntries = Object.entries(typeScale) as Array<[
 const sampleCopy =
   "Grounded Living is an editorial home for rituals, recipes, and tools that help you slow down and nourish well.";
 
+const brandAssets = [
+  {
+    title: "Horizontal wordmark",
+    description: "Primary usage across site header, PDFs, and email templates.",
+    src: "/brand/grounded-living-wordmark.svg",
+    download: "/brand/grounded-living-wordmark.svg",
+    width: 480,
+    height: 160,
+  },
+  {
+    title: "Stacked lockup",
+    description: "Use for avatars, cards, and square placements.",
+    src: "/brand/grounded-living-stacked.svg",
+    download: "/brand/grounded-living-stacked.svg",
+    width: 260,
+    height: 260,
+  },
+  {
+    title: "Leaf monogram",
+    description: "Favicon, social icon, and watermark element.",
+    src: "/brand/grounded-living-mark.svg",
+    download: "/brand/grounded-living-mark.svg",
+    width: 200,
+    height: 200,
+  },
+] as const;
+
+const recipeSample = {
+  title: "Lemon Balm Evening Tea",
+  description: "A gentle blend for easing into parasympathetic mode.",
+  hero: {
+    src: "/images/recipes/moon-milk.svg",
+    alt: "Illustrated herbal tea cup",
+  },
+  meta: { prep: "5 mins", cook: "10 mins", total: "15 mins", yield: "1 mug" },
+  ingredients: [
+    {
+      heading: "Infusion",
+      items: ["1 tbsp dried lemon balm", "1 tsp chamomile", "1 cup hot water"],
+    },
+    {
+      heading: "Finish",
+      items: ["1 tsp raw honey", "Splash of oat milk"],
+    },
+  ] as const,
+  steps: [
+    { description: "Steep herbs in just-off-boil water for 8 minutes." },
+    { description: "Strain, stir in honey, and finish with oat milk." },
+  ] as const,
+  tips: <p className="text-sm text-ink-muted">Add a pinch of lavender for floral depth when winding down.</p>,
+  tags: ["Caffeine-free", "Nervous system"],
+} as const;
+
 export default function DesignSystemPage() {
   return (
     <Section className="bg-surface-canvas">
@@ -87,6 +142,42 @@ export default function DesignSystemPage() {
         </p>
 
         <div className="mt-16 grid gap-16">
+          <section aria-labelledby="brand-heading" className="space-y-8">
+            <div>
+              <h2 id="brand-heading" className="font-display text-3xl">
+                Brandmarks
+              </h2>
+              <p className="text-ink-muted md:w-2/3">
+                Wordmarks and symbols grounded in our herbaceous palette. Use SVG for web and export to PNG/WebP when raster assets are required.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {brandAssets.map((asset) => (
+                <article
+                  key={asset.title}
+                  className="flex flex-col gap-6 rounded-3xl border border-ink/8 bg-white/85 p-6 shadow-[0_24px_72px_-48px_rgba(19,34,30,0.42)]"
+                >
+                  <div className="flex min-h-[180px] items-center justify-center rounded-2xl bg-surface-subtle p-4">
+                    <Image src={asset.src} alt={asset.title} width={asset.width} height={asset.height} />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-display text-xl text-ink">{asset.title}</h3>
+                    <p className="text-sm text-ink-muted">{asset.description}</p>
+                  </div>
+                  <div className="mt-auto">
+                    <a
+                      href={asset.download}
+                      className={buttonClassNames({ variant: "ghost", size: "sm", className: "w-full justify-center" })}
+                      download
+                    >
+                      Download SVG
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <section aria-labelledby="palette-heading" className="space-y-8">
             <div>
               <h2 id="palette-heading" className="font-display text-3xl">
@@ -261,6 +352,20 @@ export default function DesignSystemPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section aria-labelledby="recipe-pattern" className="space-y-6">
+            <div>
+              <h2 id="recipe-pattern" className="font-display text-3xl">
+                Recipe pattern
+              </h2>
+              <p className="text-ink-muted md:w-2/3">
+                A responsive layout combining hero storytelling with a printable recipe card. Includes a jump link, structured ingredients, method steps, and space for chef notes.
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-3xl border border-ink/8 bg-white/80 p-6 shadow-[0_28px_84px_-56px_rgba(19,34,30,0.5)]">
+              <RecipeLayout {...recipeSample} />
             </div>
           </section>
         </div>

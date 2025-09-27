@@ -1,0 +1,54 @@
+<svg width="320" height="360" viewBox="0 0 320 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Grounded Living stacked logo</title>
+  <desc id="desc">Stacked logo variant with the herb motif above the brand name.</desc>
+  <defs>
+    <linearGradient id="leaf-gradient" x1="12%" y1="8%" x2="84%" y2="92%">
+      <stop offset="0%" stop-color="#8AB794" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#3D574A" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(124 54)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5">
+    <path
+      d="M15.5 42.4c10.2-4.6 18.3-13 23-23 4.8-10 17.5-11.3 23.5-4.4 6 6.9 2.6 18.7-7.3 23.9-9.9 5.2-19.5 16.6-21.8 27.9"
+      stroke="url(#leaf-gradient)"
+    />
+    <path d="M14.6 43.4c4.1 11.3 13.2 17.3 20.2 19.7" stroke="#3D574A" />
+    <circle cx="16.8" cy="42.2" r="6.6" fill="#C58A2F" stroke="#C58A2F" />
+  </g>
+  <text
+    x="160"
+    y="212"
+    text-anchor="middle"
+    font-family="'Fraunces', 'Times New Roman', serif"
+    font-size="48"
+    font-weight="600"
+    letter-spacing="-0.015em"
+    fill="#13221E"
+  >
+    Grounded
+  </text>
+  <text
+    x="160"
+    y="268"
+    text-anchor="middle"
+    font-family="'Fraunces', 'Times New Roman', serif"
+    font-size="48"
+    font-weight="600"
+    letter-spacing="-0.015em"
+    fill="#13221E"
+  >
+    Living
+  </text>
+  <text
+    x="160"
+    y="314"
+    text-anchor="middle"
+    font-family="'Inter', 'Source Sans Pro', 'Segoe UI', sans-serif"
+    font-size="14"
+    font-weight="600"
+    letter-spacing="0.5em"
+    fill="rgba(19,34,30,0.62)"
+  >
+    WELLNESS JOURNAL
+  </text>
+</svg>

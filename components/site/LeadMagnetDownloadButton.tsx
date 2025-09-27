@@ -1,7 +1,7 @@
 "use client";
 
 import { track } from "@/lib/analytics";
-import { cn } from "@/lib/utils/cn";
+import { buttonClassNames } from "@/components/ui/Button";
 
 interface LeadMagnetDownloadButtonProps {
   href: string;
@@ -21,12 +21,7 @@ export function LeadMagnetDownloadButton({
   };
 
   return (
-    <a
-      href={href}
-      className={cn("btn btn--primary btn--md", className)}
-      onClick={handleClick}
-      download
-    >
+    <a href={href} className={buttonClassNames({ className })} onClick={handleClick} download>
       {label}
     </a>
   );

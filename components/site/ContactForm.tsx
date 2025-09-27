@@ -2,6 +2,8 @@
 
 import { useId, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/Button";
+
 interface ContactFormState {
   name: string;
   email: string;
@@ -171,9 +173,9 @@ export function ContactForm() {
             </p>
           ) : null}
         </div>
-        <button type="submit" className="contact-form__submit btn btn--primary btn--md" disabled={isSubmitting}>
+        <Button type="submit" className="contact-form__submit" loading={isSubmitting} disabled={isSubmitting}>
           {isSubmitting ? "Sending…" : "Send message"}
-        </button>
+        </Button>
       </fieldset>
       <div
         className="contact-form__feedback"
