@@ -43,6 +43,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (normalizedHost.endsWith(".vercel.app")) {
+    // Allow Vercel preview/production domains to serve content directly without forcing the
+    // canonical custom domain. This ensures groundedlivingorg.vercel.app remains usable when
+    // the custom domain is not configured in the Vercel project.
+    return NextResponse.next();
+  }
+
   if (process.env.NODE_ENV !== "production" && !normalizedHost.endsWith(".vercel.app")) {
     return NextResponse.next();
   }
