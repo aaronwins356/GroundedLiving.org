@@ -12,6 +12,8 @@ import type {
   ContentfulImageAsset,
   ContentfulPage,
   GraphQLResponse,
+  InfographicBlock,
+  InfographicListItem,
   RichTextDocument,
   RichTextNode,
 } from "../types/contentful";
@@ -58,6 +60,9 @@ interface BlogPostGraphQL {
       assets?: {
         block?: Array<AssetGraphQL & { sys: { id: string } }>;
       };
+      entries?: {
+        block?: EntryLinkGraphQL[];
+      };
     } | null;
   } | null;
   coverImage?: AssetGraphQL | null;
@@ -102,6 +107,9 @@ interface PageGraphQL {
     links?: {
       assets?: {
         block?: Array<AssetGraphQL & { sys: { id: string } }>;
+      };
+      entries?: {
+        block?: EntryLinkGraphQL[];
       };
     } | null;
   } | null;
@@ -201,7 +209,11 @@ function mapPage(page: PageGraphQL): ContentfulPage | null {
     id: page.sys.id,
     title: page.title,
     slug: page.slug,
-    content: enrichRichText(page.content?.json ?? null, page.content?.links?.assets?.block ?? []),
+    content: enrichRichText(
+      page.content?.json ?? null,
+      page.content?.links?.assets?.block ?? [],
+      page.content?.links?.entries?.block ?? [],
+    ),
     navigationLabel: page.navigationLabel ?? null,
     navigationPriority: page.navigationPriority ?? null,
     heroImage: mapAsset(page.heroImage ?? null),
@@ -282,7 +294,11 @@ function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
 
   return {
     ...summary,
-    content: enrichRichText(post.content?.json ?? null, post.content?.links?.assets?.block ?? []),
+    content: enrichRichText(
+      post.content?.json ?? null,
+      post.content?.links?.assets?.block ?? [],
+      post.content?.links?.entries?.block ?? [],
+    ),
     author: mapAuthor(post.author ?? null),
     seoDescription: post.seoDescription ?? null,
     affiliate: Boolean(post.affiliate),
@@ -296,11 +312,37 @@ function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
   } satisfies BlogPost;
 }
 
+type InfographicEntryGraphQL = {
+  __typename: "InfographicBlock";
+  sys: { id: string };
+  eyebrow?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  footnote?: string | null;
+  theme?: string | null;
+  itemsCollection?: {
+    items?: Array<InfographicListItemGraphQL | null> | null;
+  } | null;
+  items?: Array<InfographicListItemGraphQL | null> | null;
+};
+
+type InfographicListItemGraphQL = {
+  title?: string | null;
+  description?: string | null;
+};
+
+type EntryLinkGraphQL = (InfographicEntryGraphQL & { sys: { id: string } }) | null | undefined;
+
 export function enrichRichText(
   document: RichTextDocument | null,
   assets: Array<AssetGraphQL & { sys: { id: string } }> = [],
+  entries: EntryLinkGraphQL[] = [],
 ): RichTextDocument | null {
-  if (!document || assets.length === 0) {
+  if (!document) {
+    return document;
+  }
+
+  if (assets.length === 0 && entries.length === 0) {
     return document;
   }
 
@@ -311,6 +353,13 @@ export function enrichRichText(
     assets
       .filter((asset) => asset.sys?.id && asset.url)
       .map((asset) => [asset.sys.id, asset]),
+  );
+
+  const entryMap = new Map(
+    entries
+      .map((entry) => mapEntryLink(entry))
+      .filter((entry): entry is { id: string; block: { __typename: string; data: InfographicBlock } } => Boolean(entry))
+      .map((entry) => [entry.id, entry.block]),
   );
 
   const clone = JSON.parse(JSON.stringify(document)) as RichTextDocument;
@@ -333,6 +382,21 @@ export function enrichRichText(
             width: asset.width ?? undefined,
             height: asset.height ?? undefined,
           },
+        };
+      }
+    }
+
+    if (node.nodeType === "embedded-entry-block") {
+      const targetId =
+        typeof node.data?.target === "object" && node.data?.target && "sys" in node.data.target
+          ? (node.data.target as { sys?: { id?: string } }).sys?.id
+          : undefined;
+
+      const entry = targetId ? entryMap.get(targetId) : undefined;
+      if (entry) {
+        node.data = {
+          ...(node.data ?? {}),
+          target: entry,
         };
       }
     }
@@ -417,6 +481,25 @@ export const getBlogPostBySlug = cache(async (slug: string): Promise<BlogPost | 
                   height
                 }
               }
+              entries {
+                block {
+                  __typename
+                  sys { id }
+                  ... on InfographicBlock {
+                    eyebrow
+                    title
+                    summary
+                    footnote
+                    theme
+                    itemsCollection {
+                      items {
+                        title
+                        description
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
           author {
@@ -462,6 +545,25 @@ export const getPages = cache(async (): Promise<ContentfulPage[]> => {
                   height
                 }
               }
+              entries {
+                block {
+                  __typename
+                  sys { id }
+                  ... on InfographicBlock {
+                    eyebrow
+                    title
+                    summary
+                    footnote
+                    theme
+                    itemsCollection {
+                      items {
+                        title
+                        description
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -499,6 +601,25 @@ export const getPageBySlug = cache(async (slug: string): Promise<ContentfulPage 
                   description
                   width
                   height
+                }
+              }
+              entries {
+                block {
+                  __typename
+                  sys { id }
+                  ... on InfographicBlock {
+                    eyebrow
+                    title
+                    summary
+                    footnote
+                    theme
+                    itemsCollection {
+                      items {
+                        title
+                        description
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -544,3 +665,49 @@ export const getPostsByCategory = cache(async (_slug: string): Promise<BlogPostS
   );
   return [];
 });
+function mapEntryLink(entry: EntryLinkGraphQL): { id: string; block: { __typename: string; data: InfographicBlock } } | null {
+  if (!entry || entry.__typename !== "InfographicBlock" || !entry.sys?.id || !entry.title) {
+    return null;
+  }
+
+  const itemsSource = entry.itemsCollection?.items ?? entry.items ?? [];
+  const items = itemsSource
+    .map((item) => mapInfographicItem(item))
+    .filter((item): item is InfographicListItem => item !== null);
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  const block: InfographicBlock = {
+    id: entry.sys.id,
+    eyebrow: entry.eyebrow ?? null,
+    title: entry.title,
+    summary: entry.summary ?? null,
+    items,
+    footnote: entry.footnote ?? null,
+    theme: normalizeInfographicTheme(entry.theme),
+  };
+
+  return { id: entry.sys.id, block: { __typename: entry.__typename, data: block } };
+}
+
+function mapInfographicItem(item: InfographicListItemGraphQL | null | undefined): InfographicListItem | null {
+  if (!item?.title) {
+    return null;
+  }
+
+  return { title: item.title, description: item.description ?? null } satisfies InfographicListItem;
+}
+
+function normalizeInfographicTheme(theme: string | null | undefined): InfographicBlock["theme"] {
+  switch (theme) {
+    case "moss":
+    case "spruce":
+    case "saffron":
+    case "linen":
+      return theme;
+    default:
+      return "linen";
+  }
+}

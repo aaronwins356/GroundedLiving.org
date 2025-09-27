@@ -6,6 +6,7 @@ import { SocialLinks } from "@/components/site/SocialLinks";
 import { Logo } from "@/components/site/Logo";
 import { footerNavigation, primaryNavigation } from "@/lib/navigation/primary";
 import { getCategories } from "@/lib/contentful";
+import { getAllProducts } from "@/lib/shop/products";
 
 const DEFAULT_CONTACT_EMAIL = "hello@groundedliving.org";
 
@@ -13,12 +14,20 @@ export async function Footer() {
   const year = new Date().getFullYear();
   const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? DEFAULT_CONTACT_EMAIL;
   let categories: Awaited<ReturnType<typeof getCategories>> = [];
+  let products: ReturnType<typeof getAllProducts> = [];
 
   try {
     categories = (await getCategories()).slice(0, 4);
   } catch (error) {
     console.warn("Failed to load categories for footer navigation", error);
     categories = [];
+  }
+
+  try {
+    products = getAllProducts().slice(0, 3);
+  } catch (error) {
+    console.warn("Failed to load shop products for footer navigation", error);
+    products = [];
   }
 
   return (
@@ -54,6 +63,18 @@ export async function Footer() {
                   {categories.map((category) => (
                     <li key={category.slug}>
                       <Link href={`/categories/${category.slug}`}>{category.name}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
+            {products.length ? (
+              <nav aria-label="Shop highlights" className="site-footer__nav">
+                <h3 className="site-footer__subtitle">Shop highlights</h3>
+                <ul>
+                  {products.map((product) => (
+                    <li key={product.slug}>
+                      <Link href={`/shop/${product.slug}`}>{product.name}</Link>
                     </li>
                   ))}
                 </ul>

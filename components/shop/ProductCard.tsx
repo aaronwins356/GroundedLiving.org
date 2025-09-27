@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Reveal } from "@/components/ui/Reveal";
 import type { ShopProduct } from "@project-types/shop";
 import { formatCurrency } from "@/lib/utils/currency";
 
@@ -13,7 +16,10 @@ export function ProductCard({ product }: ProductCardProps) {
   const price = formatCurrency(product.priceCents, product.priceCurrency);
 
   return (
-    <li className="group flex flex-col overflow-hidden rounded-3xl border border-ink/10 bg-white/90 shadow-[0_24px_60px_-30px_rgba(19,34,30,0.4)] transition hover:-translate-y-1 hover:shadow-[0_32px_80px_-36px_rgba(19,34,30,0.35)]">
+    <Reveal
+      as="li"
+      className="group flex flex-col overflow-hidden rounded-3xl border border-[color:var(--card-border-default)] bg-[var(--card-bg-default)] shadow-[var(--card-shadow-default)] transition-transform duration-subtle ease-[cubic-bezier(0.33,1,0.68,1)] motion-safe:will-change-transform hover:-translate-y-[6px] hover:shadow-[0_32px_80px_-36px_rgba(19,34,30,0.35)] focus-within:-translate-y-[6px] focus-within:shadow-[0_32px_80px_-36px_rgba(19,34,30,0.35)]"
+    >
       <Link href={`/shop/${product.slug}`} className="flex flex-1 flex-col">
         <div className="relative aspect-[5/4] w-full">
           <Image
@@ -21,8 +27,11 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.image.alt}
             fill
             sizes="(min-width: 1024px) 420px, (min-width: 768px) 45vw, 90vw"
-            className="object-cover"
+            className="fade-media object-cover"
             priority={false}
+            onLoadingComplete={(img) => {
+              img.classList.add("is-loaded");
+            }}
           />
         </div>
         <div className="flex flex-1 flex-col gap-4 p-6">
@@ -56,6 +65,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </Link>
-    </li>
+    </Reveal>
   );
 }

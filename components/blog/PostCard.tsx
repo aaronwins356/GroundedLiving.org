@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -30,6 +32,7 @@ export function PostCard({ post }: PostCardProps) {
             sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
             loading="lazy"
             className={styles.coverImage}
+            onLoadingComplete={(img) => img.classList.add("is-loaded")}
           />
         ) : (
           <div className={styles.coverPlaceholder} aria-hidden>

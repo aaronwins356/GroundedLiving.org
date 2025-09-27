@@ -10,6 +10,7 @@ import { SearchResults } from "@/components/search/SearchResults";
 import { Container } from "@/components/ui/Container";
 import { SocialLinks } from "@/components/site/SocialLinks";
 import { Logo } from "@/components/site/Logo";
+import { ThemeToggle } from "@/components/site/ThemeToggle";
 import { primaryNavigation } from "@/lib/navigation/primary";
 
 const SEARCH_MODAL_RESULTS_ID = "header-search-results";
@@ -181,6 +182,7 @@ export function Header() {
           ))}
         </nav>
         <div className="site-header__actions">
+          <ThemeToggle className="site-header__theme-toggle" />
           <button
             type="button"
             className="search-trigger"

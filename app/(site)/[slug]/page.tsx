@@ -53,7 +53,17 @@ export async function generateMetadata({ params }: GenericPageProps): Promise<Me
         alt: page.ogImage.description ?? page.ogImage.title ?? metaTitle,
       }
     : null;
-  const ogImages = ogImage ? [ogImage] : [{ url: ogImageForTitle(metaTitle) }];
+  const ogImages = ogImage
+    ? [ogImage]
+    : [
+        {
+          url: ogImageForTitle(metaTitle, {
+            subtitle: description,
+            eyebrow: page.slug === "contact" ? "Connect" : "Guide",
+            variant: "editorial",
+          }),
+        },
+      ];
 
   return {
     title: metaTitle,

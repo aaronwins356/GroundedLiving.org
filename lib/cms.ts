@@ -48,6 +48,9 @@ interface PageGraphQL {
       assets?: {
         block?: Array<LinkedAsset>;
       };
+      entries?: {
+        block?: Array<LinkedEntry>;
+      };
     } | null;
   } | null;
 }
@@ -67,6 +70,9 @@ interface AuthorGraphQL {
     links?: {
       assets?: {
         block?: Array<LinkedAsset>;
+      };
+      entries?: {
+        block?: Array<LinkedEntry>;
       };
     } | null;
   } | null;
@@ -92,6 +98,22 @@ type LinkedAsset = CmsAsset & {
   sys?: {
     id?: string | null;
   } | null;
+};
+
+type LinkedEntry = {
+  sys?: {
+    id?: string | null;
+  } | null;
+  __typename?: string | null;
+  eyebrow?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  footnote?: string | null;
+  theme?: string | null;
+  itemsCollection?: {
+    items?: Array<{ title?: string | null; description?: string | null } | null> | null;
+  } | null;
+  items?: Array<{ title?: string | null; description?: string | null } | null> | null;
 };
 
 type RichTextAssetBlock = CmsAsset & {
@@ -169,6 +191,7 @@ function mapPage(page: PageGraphQL | null | undefined): CmsPage | null {
   const enrichedBody = enrichRichText(
     page.bodyRichText?.json ?? null,
     normalizeLinkedAssets(page.bodyRichText?.links?.assets?.block ?? []),
+    normalizeLinkedEntries(page.bodyRichText?.links?.entries?.block ?? []),
   );
 
   return {
@@ -189,6 +212,7 @@ function mapAuthor(author: AuthorGraphQL | null | undefined): CmsAuthor | null {
   const enrichedBio = enrichRichText(
     author.bioRichText?.json ?? null,
     normalizeLinkedAssets(author.bioRichText?.links?.assets?.block ?? []),
+    normalizeLinkedEntries(author.bioRichText?.links?.entries?.block ?? []),
   );
 
   return {
@@ -236,6 +260,25 @@ const getPageFromContentful = cache(async (slug: string): Promise<CmsPage | null
                   height
                 }
               }
+              entries {
+                block {
+                  __typename
+                  sys { id }
+                  ... on InfographicBlock {
+                    eyebrow
+                    title
+                    summary
+                    footnote
+                    theme
+                    itemsCollection {
+                      items {
+                        title
+                        description
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -279,6 +322,25 @@ const getAuthorFromContentful = cache(async (slug: string): Promise<CmsAuthor | 
                   description
                   width
                   height
+                }
+              }
+              entries {
+                block {
+                  __typename
+                  sys { id }
+                  ... on InfographicBlock {
+                    eyebrow
+                    title
+                    summary
+                    footnote
+                    theme
+                    itemsCollection {
+                      items {
+                        title
+                        description
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -377,5 +439,30 @@ function normalizeLinkedAssets(assets: LinkedAsset[]): RichTextAssetBlock[] {
 
     return acc;
   }, []);
+}
+
+function normalizeLinkedEntries(entries: LinkedEntry[]): Parameters<typeof enrichRichText>[2] {
+  const normalized: Parameters<typeof enrichRichText>[2] = [];
+
+  entries.forEach((entry) => {
+    const id = entry?.sys?.id;
+    if (!id) {
+      return;
+    }
+
+    normalized.push({
+      __typename: entry.__typename === "InfographicBlock" ? entry.__typename : "InfographicBlock",
+      sys: { id },
+      eyebrow: entry.eyebrow ?? null,
+      title: entry.title ?? null,
+      summary: entry.summary ?? null,
+      footnote: entry.footnote ?? null,
+      theme: entry.theme ?? null,
+      itemsCollection: entry.itemsCollection ?? null,
+      items: entry.items ?? null,
+    });
+  });
+
+  return normalized;
 }
 

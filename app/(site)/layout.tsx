@@ -7,6 +7,9 @@ import { Gtag } from "@/components/analytics/Gtag";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
+import { LiveAnnouncer } from "@/components/site/LiveAnnouncer";
+import { PageTransition } from "@/components/site/PageTransition";
+import { ThemeProvider } from "@/components/site/ThemeProvider";
 import { NewsletterRibbon } from "@/components/site/NewsletterRibbon";
 import { bodyFontLocal, displayFontLocal, fallbackFontFamilies } from "@/lib/fonts";
 import { siteUrl } from "@/lib/site";
@@ -77,22 +80,27 @@ interface SiteLayoutProps {
 export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
     <ConsentProvider>
-      <div className={`${fontClasses} ${fontVariables}`}>
-        <style>{`:root{--font-display:${displayFontFamily};--font-body:${bodyFontFamily};}`}</style>
-        <a href="#content" className="skip-link">
-          Skip to content
-        </a>
-        <Header />
-        <main id="content" className="site-main" role="main">
-          {children}
-        </main>
-        <NewsletterRibbon />
-        <Footer />
-        <ConsentBanner />
-        <Gtag />
-        <SpeedInsights />
-        <JsonLd item={websiteJsonLd} id="website-schema" />
-      </div>
+      <ThemeProvider>
+        <LiveAnnouncer />
+        <div className={`${fontClasses} ${fontVariables}`}>
+          <style>{`:root{--font-display:${displayFontFamily};--font-body:${bodyFontFamily};}`}</style>
+          <a href="#content" className="skip-link">
+            Skip to content
+          </a>
+          <Header />
+          <PageTransition>
+            <main id="content" className="site-main" role="main">
+              {children}
+            </main>
+          </PageTransition>
+          <NewsletterRibbon />
+          <Footer />
+          <ConsentBanner />
+          <Gtag />
+          <SpeedInsights />
+          <JsonLd item={websiteJsonLd} id="website-schema" />
+        </div>
+      </ThemeProvider>
     </ConsentProvider>
   );
 }
