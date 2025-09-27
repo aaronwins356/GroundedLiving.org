@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AffiliateDisclosure } from "@/components/blog/AffiliateDisclosure";
 import { InlineNewsletterPortal } from "@/components/blog/InlineNewsletterPortal";
+import { TableOfContents } from "@/components/blog/TableOfContents";
 import { ShopTheRemedy } from "@/components/blog/ShopTheRemedy";
 import { PostEngagementPoll } from "@/components/blog/PostEngagementPoll";
 import { PostCard } from "@components/blog/PostCard";
@@ -17,7 +18,7 @@ import { buildContentfulImageUrl } from "@lib/images";
 import { canonicalFor } from "@/lib/seo/meta";
 import { breadcrumbList } from "@/lib/seo/schema";
 import { buildArticleJsonLd, buildRecipeJsonLd, resolvePostMeta } from "@/lib/seo/post";
-import { richTextToHtml } from "@/lib/richtext";
+import { renderRichText } from "@/lib/richtext";
 import { getProductForPost } from "@/lib/shop/products";
 import type { BlogPost, BlogPostSummary } from "@project-types/contentful";
 
@@ -110,11 +111,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         height: post.coverImage.height ?? 900,
       }
     : null;
-  const rawHtml = richTextToHtml(post.content);
+  const { html: renderedHtml, headings } = renderRichText(post.content);
+  const shouldRenderToc = headings.length >= 3;
+  const rawHtml = renderedHtml;
   const html = post.disableAutoLinks ? rawHtml : autoLinkHtml(rawHtml);
   const articleJsonLd = buildArticleJsonLd(post, {
     canonicalUrl,
     title: meta.title,
+    headline: meta.headline,
     description: meta.description,
     imageUrl: meta.image.url,
     breadcrumb: breadcrumbSchema,
@@ -124,7 +128,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   });
   const recipeJsonLd = buildRecipeJsonLd(post, {
     canonicalUrl,
-    title: meta.title,
+    title: meta.headline,
     description: meta.description,
     imageUrl: meta.image.url,
     authorName: meta.authorName,
@@ -166,6 +170,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         ) : null}
       </header>
       <div className="post-body">
+        {shouldRenderToc ? <TableOfContents items={headings} /> : null}
         <div className="prose rt-container" dangerouslySetInnerHTML={{ __html: html }} />
         <InlineNewsletterPortal slug={post.slug} />
         {featuredProduct ? <ShopTheRemedy product={featuredProduct} articleSlug={post.slug} /> : null}

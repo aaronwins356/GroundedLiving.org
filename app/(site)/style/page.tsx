@@ -12,11 +12,18 @@ import {
   typeScale,
 } from "@/lib/design/tokens";
 import { cn } from "@/lib/utils/cn";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
+
+const PAGE_TITLE = buildMetaTitle("Design system");
+const PAGE_DESCRIPTION = truncateAtBoundary(
+  "Grounded Living’s design language—color, typography, spacing, and core interaction patterns—documented for designers and engineers.",
+  155,
+);
 
 export const metadata: Metadata = {
-  title: "Design system",
-  description:
-    "Grounded Living’s design language—color, typography, spacing, and core interaction patterns—documented for designers and engineers.",
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
 };
 
 const paletteGroups = [

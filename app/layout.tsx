@@ -6,10 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.groundedliving.org"),
-  title: {
-    default: seoConfig.defaultTitle,
-    template: "%s | Grounded Living",
-  },
+  title: seoConfig.defaultTitle,
   description: seoConfig.defaultDescription,
   openGraph: {
     type: "website",

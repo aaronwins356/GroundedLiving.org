@@ -8,17 +8,23 @@ import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getAllBlogPosts, getCategories } from "@lib/contentful";
 import { canonicalFor } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 import { breadcrumbList } from "@/lib/seo/schema";
 import type { BlogPostSummary } from "@project-types/contentful";
 
 export const revalidate = 300;
 
 const CANONICAL_URL = canonicalFor("/blog").toString();
+const PAGE_TITLE = buildMetaTitle("Journal");
+const PAGE_DESCRIPTION = truncateAtBoundary(
+  "Explore our latest rituals, remedies, and reflections for grounded living. Mindful wellness stories updated weekly.",
+  155,
+);
 
 export const metadata: Metadata = {
-  title: "Journal",
-  description:
-    "Explore our latest rituals, remedies, and reflections for grounded living. Mindful wellness stories updated weekly.",
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
   alternates: {
     canonical: CANONICAL_URL,
   },

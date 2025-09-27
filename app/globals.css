@@ -1805,6 +1805,48 @@ details[open] .site-nav__panel {
   gap: clamp(2rem, 5vw, 3rem);
 }
 
+.post-toc {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(91, 127, 107, 0.22);
+  background: rgba(250, 247, 242, 0.85);
+  padding: clamp(1.5rem, 4vw, 2rem);
+  box-shadow: var(--shadow-soft);
+}
+
+.post-toc__heading {
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-moss);
+  margin-bottom: 1rem;
+}
+
+.post-toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.post-toc__item a {
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+.post-toc__item a:hover,
+.post-toc__item a:focus-visible {
+  color: var(--color-moss-strong);
+  outline: none;
+}
+
+.post-toc__item--level-3 {
+  padding-left: 1rem;
+  font-size: 0.95rem;
+}
+
 .post-share {
   border-radius: 1.75rem;
   border: 1px solid rgba(91, 127, 107, 0.18);

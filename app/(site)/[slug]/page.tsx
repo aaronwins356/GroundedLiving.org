@@ -8,6 +8,8 @@ import { AuthorCard } from "@/components/site/AuthorCard";
 import { ContactForm } from "@/components/site/ContactForm";
 import { getAllPageSlugs, getAuthorBySlug, getPageBySlug } from "@/lib/cms";
 import { canonicalFor, metaFromRichTextExcerpt } from "@/lib/seo/meta";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { truncateAtBoundary } from "@/lib/seo/text";
 import { ogImageForTitle } from "@/lib/seo/og";
 import { breadcrumbList as buildBreadcrumbList, webPageSchema } from "@/lib/seo/schema";
 import { RichText } from "@/lib/richtext";
@@ -36,11 +38,12 @@ export async function generateMetadata({ params }: GenericPageProps): Promise<Me
 
   const path = page.slug === "home" ? "/" : `/${page.slug}`;
   const excerpt = metaFromRichTextExcerpt(page.bodyRichText, 160);
-  const description =
+  const rawDescription =
     page.seoDescription?.trim() ??
     (excerpt || undefined) ??
     seoConfig.defaultDescription;
-  const metaTitle = page.seoTitle ?? page.title;
+  const description = truncateAtBoundary(rawDescription, 155);
+  const metaTitle = buildMetaTitle(page.seoTitle ?? page.title);
   const canonicalUrl = canonicalFor(path).toString();
   const ogImage = page.ogImage?.url
     ? {
@@ -85,10 +88,11 @@ export default async function GenericPage({ params }: GenericPageProps) {
   const path = page.slug === "home" ? "/" : `/${page.slug}`;
   const canonicalUrl = canonicalFor(path).toString();
   const excerpt = metaFromRichTextExcerpt(page.bodyRichText, 160);
-  const description =
+  const rawDescription =
     page.seoDescription?.trim() ??
     (excerpt || undefined) ??
     seoConfig.defaultDescription;
+  const description = truncateAtBoundary(rawDescription, 155);
   const breadcrumbItems = [
     { href: canonicalFor("/").toString(), label: "Home" },
     { href: canonicalUrl, label: page.title },

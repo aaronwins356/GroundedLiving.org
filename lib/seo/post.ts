@@ -2,11 +2,13 @@ import type { BlogPost } from "@/types/contentful";
 import { metaFromRichTextExcerpt } from "@/lib/seo/meta";
 import { richTextToPlainText } from "@/lib/richtext";
 import { buildContentfulImageUrl } from "@/lib/images";
+import { buildMetaTitle } from "@/lib/seo/title";
+import { collapseWhitespace, pickFirst, truncateAtBoundary } from "@/lib/seo/text";
 import type { JsonLdObject } from "./schema";
 
 import seoConfig from "../../next-seo.config";
 
-const MAX_TITLE_LENGTH = 65;
+const MAX_TITLE_LENGTH = 60;
 const MAX_DESCRIPTION_LENGTH = 155;
 const DEFAULT_AUTHOR = "Grounded Living";
 const FALLBACK_IMAGE_URL = new URL("/og-image.svg", seoConfig.siteUrl).toString();
@@ -20,6 +22,7 @@ interface PostMetaImage {
 
 export interface PostMeta {
   title: string;
+  headline: string;
   description: string;
   image: PostMetaImage;
   publishedTime: string | null;
@@ -30,6 +33,7 @@ export interface PostMeta {
 interface ArticleJsonLdOptions {
   canonicalUrl: string;
   title: string;
+  headline?: string;
   description: string;
   imageUrl?: string;
   breadcrumb?: JsonLdObject | null;
@@ -48,12 +52,13 @@ interface RecipeJsonLdOptions {
 }
 
 export function resolvePostMeta(post: BlogPost): PostMeta {
-  const baseTitle = pickFirst([
+  const rawHeadline = pickFirst([
     collapseWhitespace(post.seoTitle),
     collapseWhitespace(post.title),
     seoConfig.defaultTitle,
   ]);
-  const title = truncateAtBoundary(baseTitle, MAX_TITLE_LENGTH);
+  const headline = truncateAtBoundary(rawHeadline, 110);
+  const title = buildMetaTitle(rawHeadline, { maxLength: MAX_TITLE_LENGTH });
 
   const description = truncateAtBoundary(
     pickFirst([
@@ -71,6 +76,7 @@ export function resolvePostMeta(post: BlogPost): PostMeta {
 
   return {
     title,
+    headline,
     description,
     image,
     authorName,
@@ -86,7 +92,7 @@ export function buildArticleJsonLd(post: BlogPost, options: ArticleJsonLdOptions
   const schema: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: options.title,
+    headline: options.headline ?? options.title,
     description: options.description,
     url: options.canonicalUrl,
     mainEntityOfPage: {
@@ -197,31 +203,6 @@ export function buildRecipeJsonLd(post: BlogPost, options: RecipeJsonLdOptions):
   }
 
   return schema;
-}
-
-function collapseWhitespace(value?: string | null): string {
-  return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
-}
-
-function pickFirst<T extends string>(values: T[]): T {
-  for (const value of values) {
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value;
-    }
-  }
-  return values[values.length - 1];
-}
-
-function truncateAtBoundary(value: string, maxLength: number): string {
-  const trimmed = value.trim();
-  if (trimmed.length <= maxLength) {
-    return trimmed;
-  }
-
-  const slice = trimmed.slice(0, maxLength);
-  const lastSpace = slice.lastIndexOf(" ");
-  const base = lastSpace > Math.floor(maxLength * 0.6) ? slice.slice(0, lastSpace) : slice;
-  return `${base.replace(/[.…]+$/u, "").trimEnd()}…`;
 }
 
 function resolvePostImage(post: BlogPost): PostMetaImage {

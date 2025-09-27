@@ -6,6 +6,21 @@ import type { RichTextDocument, RichTextMark, RichTextNode } from "@/types/conte
 
 import { cn } from "@/lib/utils/cn";
 
+export interface TableOfContentsItem {
+  id: string;
+  title: string;
+  level: number;
+}
+
+interface HeadingSlugger {
+  slug: (value: string) => string;
+}
+
+interface RenderContext {
+  slugger: HeadingSlugger;
+  headings: TableOfContentsItem[];
+}
+
 interface RichTextProps {
   document: RichTextDocument | null;
   className?: string;
@@ -141,37 +156,43 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function renderNodesToHtml(nodes: RichTextNode[] = []): string {
-  return nodes.map((node) => renderNodeToHtml(node)).join("");
+function renderNodesToHtml(nodes: RichTextNode[] = [], context: RenderContext): string {
+  return nodes.map((node) => renderNodeToHtml(node, context)).join("");
 }
 
-function renderNodeToHtml(node: RichTextNode): string {
+function renderNodeToHtml(node: RichTextNode, context: RenderContext): string {
   switch (node.nodeType) {
     case "paragraph":
-      return `<p class=\"rt-paragraph\">${renderNodesToHtml(node.content ?? [])}</p>`;
+      return `<p class=\"rt-paragraph\">${renderNodesToHtml(node.content ?? [], context)}</p>`;
     case "heading-1":
-      return `<h1 class=\"rt-heading rt-heading-1\">${renderNodesToHtml(node.content ?? [])}</h1>`;
     case "heading-2":
-      return `<h2 class=\"rt-heading rt-heading-2\">${renderNodesToHtml(node.content ?? [])}</h2>`;
     case "heading-3":
-      return `<h3 class=\"rt-heading rt-heading-3\">${renderNodesToHtml(node.content ?? [])}</h3>`;
     case "heading-4":
-      return `<h4 class=\"rt-heading rt-heading-4\">${renderNodesToHtml(node.content ?? [])}</h4>`;
     case "heading-5":
-      return `<h5 class=\"rt-heading rt-heading-5\">${renderNodesToHtml(node.content ?? [])}</h5>`;
-    case "heading-6":
-      return `<h6 class=\"rt-heading rt-heading-6\">${renderNodesToHtml(node.content ?? [])}</h6>`;
+    case "heading-6": {
+      const level = Number.parseInt(node.nodeType.split("-")[1] ?? "1", 10);
+      const textContent = collectPlainText(node.content ?? []);
+      const slugSource = textContent || `section-${context.headings.length + 1}`;
+      const id = context.slugger.slug(slugSource);
+      if (level >= 2 && level <= 3 && textContent) {
+        context.headings.push({ id, level, title: textContent });
+      }
+      return `<h${level} id=\"${id}\" class=\"rt-heading rt-heading-${level}\">${renderNodesToHtml(
+        node.content ?? [],
+        context,
+      )}</h${level}>`;
+    }
     case "unordered-list":
-      return `<ul class=\"rt-list rt-list-unordered\">${renderNodesToHtml(node.content ?? [])}</ul>`;
+      return `<ul class=\"rt-list rt-list-unordered\">${renderNodesToHtml(node.content ?? [], context)}</ul>`;
     case "ordered-list":
-      return `<ol class=\"rt-list rt-list-ordered\">${renderNodesToHtml(node.content ?? [])}</ol>`;
+      return `<ol class=\"rt-list rt-list-ordered\">${renderNodesToHtml(node.content ?? [], context)}</ol>`;
     case "list-item":
-      return `<li class=\"rt-list-item\">${renderNodesToHtml(node.content ?? [])}</li>`;
+      return `<li class=\"rt-list-item\">${renderNodesToHtml(node.content ?? [], context)}</li>`;
     case "blockquote":
-      return `<blockquote class=\"rt-blockquote\">${renderNodesToHtml(node.content ?? [])}</blockquote>`;
+      return `<blockquote class=\"rt-blockquote\">${renderNodesToHtml(node.content ?? [], context)}</blockquote>`;
     case "hyperlink": {
       const uri = typeof node.data?.uri === "string" ? node.data.uri : "#";
-      const children = renderNodesToHtml(node.content ?? []);
+      const children = renderNodesToHtml(node.content ?? [], context);
       return `<a class=\"rt-link\" href=\"${escapeHtml(uri)}\">${children}</a>`;
     }
     case "embedded-asset-block": {
@@ -216,16 +237,69 @@ function renderNodeToHtml(node: RichTextNode): string {
       }, content);
     }
     default:
-      return node.content ? renderNodesToHtml(node.content) : "";
+      return node.content ? renderNodesToHtml(node.content, context) : "";
   }
 }
 
-export function richTextToHtml(document: RichTextDocument | null): string {
+function collectPlainText(nodes: RichTextNode[] = []): string {
+  return nodes
+    .map((node) => {
+      if (node.nodeType === "text") {
+        return node.value ?? "";
+      }
+
+      if (node.content) {
+        return collectPlainText(node.content);
+      }
+
+      return "";
+    })
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function createHeadingSlugger(): HeadingSlugger {
+  const counts = new Map<string, number>();
+  return {
+    slug(value: string) {
+      const base = slugifyHeading(value);
+      const safeBase = base || "section";
+      const previous = counts.get(safeBase) ?? 0;
+      const next = previous + 1;
+      counts.set(safeBase, next);
+      return previous === 0 ? safeBase : `${safeBase}-${next}`;
+    },
+  };
+}
+
+function slugifyHeading(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+export interface RenderRichTextResult {
+  html: string;
+  headings: TableOfContentsItem[];
+}
+
+export function renderRichText(document: RichTextDocument | null): RenderRichTextResult {
   if (!document) {
-    return "";
+    return { html: "", headings: [] };
   }
 
-  return renderNodesToHtml(document.content ?? []);
+  const context: RenderContext = { slugger: createHeadingSlugger(), headings: [] };
+  const html = renderNodesToHtml(document.content ?? [], context);
+  return { html, headings: context.headings };
+}
+
+export function richTextToHtml(document: RichTextDocument | null): string {
+  return renderRichText(document).html;
 }
 
 export function richTextToPlainText(document: RichTextDocument | null): string {
@@ -233,25 +307,6 @@ export function richTextToPlainText(document: RichTextDocument | null): string {
     return "";
   }
 
-  const collect = (nodes: RichTextNode[] = []): string =>
-    nodes
-      .map((node) => {
-        if (node.nodeType === "text") {
-          return node.value ?? "";
-        }
-
-        if (node.nodeType === "hyperlink") {
-          return collect(node.content);
-        }
-
-        if (node.content) {
-          return collect(node.content);
-        }
-
-        return "";
-      })
-      .join(" ");
-
-  return collect(document.content).replace(/\s+/g, " ").trim();
+  return collectPlainText(document.content ?? []);
 }
 
