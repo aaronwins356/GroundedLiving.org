@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SearchBox, useSearchController } from "@/components/search/SearchBox";
 import { SearchResults } from "@/components/search/SearchResults";
 import { Container } from "@/components/ui/Container";
+import { SocialLinks } from "@/components/site/SocialLinks";
 
 const navigation = [
   { href: "/", label: "Home" },
@@ -128,6 +129,7 @@ export function Header() {
           ))}
         </nav>
         <div className="site-header__actions">
+          <SocialLinks variant="compact" className="site-header__social" />
           <button
             type="button"
             className="search-trigger"

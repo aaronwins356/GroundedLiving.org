@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Container } from "@/components/ui/Container";
 import { NewsletterForm } from "@/components/ui/NewsletterForm";
+import { SocialLinks } from "@/components/site/SocialLinks";
 import { getCategories } from "@/lib/contentful";
 
 const pageLinks = [
@@ -79,6 +80,7 @@ export async function Footer() {
                 </li>
               </ul>
             </nav>
+            <SocialLinks variant="stacked" className="site-footer__social" />
           </div>
         </div>
         <p className="site-footer__meta">&copy; {year} Grounded Living. All rights reserved.</p>

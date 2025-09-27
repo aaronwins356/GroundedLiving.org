@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AffiliateDisclosure } from "@/components/blog/AffiliateDisclosure";
+import { InlineNewsletterPortal } from "@/components/blog/InlineNewsletterPortal";
+import { PostEngagementPoll } from "@/components/blog/PostEngagementPoll";
 import { PostCard } from "@components/blog/PostCard";
+import { SocialShareButtons } from "@/components/blog/SocialShareButtons";
 import { Breadcrumbs } from "@/components/nav/Breadcrumbs";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -161,6 +164,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       </header>
       <div className="post-body">
         <div className="prose rt-container" dangerouslySetInnerHTML={{ __html: html }} />
+        <InlineNewsletterPortal slug={post.slug} />
+        <SocialShareButtons url={canonicalUrl} title={post.title} />
+        <PostEngagementPoll slug={post.slug} />
         <section className="post-author">
           <h3>About the author</h3>
           <div className="post-author-card">
