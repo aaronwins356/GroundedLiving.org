@@ -11,17 +11,15 @@ import { autoLinkHtml } from "@/lib/internalLinks";
 import { getAllBlogPosts, getBlogPostBySlug } from "@lib/contentful";
 import { canonicalFor } from "@/lib/seo/meta";
 import { breadcrumbList } from "@/lib/seo/schema";
+import { buildArticleJsonLd, buildRecipeJsonLd, resolvePostMeta } from "@/lib/seo/post";
 import { richTextToHtml } from "@/lib/richtext";
 import type { BlogPost, BlogPostSummary } from "@project-types/contentful";
-import seoConfig from "../../../../next-seo.config";
 
 export const revalidate = 300;
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? seoConfig.siteUrl;
 
 export async function generateStaticParams() {
   const posts = await getAllBlogPosts();
@@ -43,72 +41,40 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     return {};
   }
 
-  const description = post.seoDescription ?? post.excerpt ?? undefined;
-  const imageUrl = post.coverImage?.url ? `${post.coverImage.url}?w=1200&h=630&fit=fill` : "/og-image.svg";
-  const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
+  const canonicalUrl = canonicalFor(`/blog/${post.slug}`).toString();
+  const meta = resolvePostMeta(post);
+  const image = meta.image;
 
   return {
-    title: post.title,
-    description,
+    title: meta.title,
+    description: meta.description,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
       type: "article",
-      title: post.title,
-      description,
-      publishedTime: post.datePublished ?? undefined,
+      title: meta.title,
+      description: meta.description,
+      publishedTime: meta.publishedTime ?? undefined,
+      modifiedTime: meta.modifiedTime ?? undefined,
       url: canonicalUrl,
       images: [
         {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: post.coverImage?.description ?? post.coverImage?.title ?? post.title,
+          url: image.url,
+          width: image.width,
+          height: image.height,
+          alt: image.alt,
         },
       ],
+      authors: [meta.authorName],
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
-      description,
-      images: [imageUrl],
+      title: meta.title,
+      description: meta.description,
+      images: [image.url],
     },
   } satisfies Metadata;
-}
-
-function buildJsonLd(post: BlogPost, canonicalUrl: string, breadcrumb: ReturnType<typeof breadcrumbList>) {
-  const datePublished = post.datePublished ?? new Date().toISOString();
-  // Encode core metadata so Google understands the editorial context of each post.
-  return {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: post.seoDescription ?? post.excerpt ?? undefined,
-    datePublished,
-    dateModified: datePublished,
-    image: post.coverImage?.url ?? undefined,
-    author: post.author
-      ? {
-          "@type": "Person",
-          name: post.author.name,
-          description: post.author.bio ?? undefined,
-        }
-      : undefined,
-    publisher: {
-      "@type": "Organization",
-      name: "Grounded Living",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://www.groundedliving.org/og-image.svg",
-      },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": canonicalUrl,
-    },
-    breadcrumb: breadcrumb ?? undefined,
-  };
 }
 
 function findRelatedPosts(posts: BlogPostSummary[], current: BlogPostSummary | BlogPost) {
@@ -121,7 +87,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const posts = await getAllBlogPosts();
   const related = findRelatedPosts(posts, post);
   const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
-  const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
+  const canonicalUrl = canonicalFor(`/blog/${post.slug}`).toString();
+  const meta = resolvePostMeta(post);
   const breadcrumbItems = [
     { href: canonicalFor("/").toString(), label: "Home" },
     { href: canonicalFor("/blog").toString(), label: "Journal" },
@@ -138,10 +105,29 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     : null;
   const rawHtml = richTextToHtml(post.content);
   const html = post.disableAutoLinks ? rawHtml : autoLinkHtml(rawHtml);
+  const articleJsonLd = buildArticleJsonLd(post, {
+    canonicalUrl,
+    title: meta.title,
+    description: meta.description,
+    imageUrl: meta.image.url,
+    breadcrumb: breadcrumbSchema,
+    authorName: meta.authorName,
+    publishedTime: meta.publishedTime,
+    modifiedTime: meta.modifiedTime,
+  });
+  const recipeJsonLd = buildRecipeJsonLd(post, {
+    canonicalUrl,
+    title: meta.title,
+    description: meta.description,
+    imageUrl: meta.image.url,
+    authorName: meta.authorName,
+    datePublished: meta.publishedTime,
+  });
 
   return (
     <article className="post-layout">
-      <JsonLd item={buildJsonLd(post, canonicalUrl, breadcrumbSchema)} id="article-schema" />
+      <JsonLd item={articleJsonLd} id="article-schema" />
+      <JsonLd item={recipeJsonLd} id="recipe-schema" />
       <JsonLd item={breadcrumbSchema} id="article-breadcrumb-schema" />
       <Breadcrumbs items={breadcrumbItems} />
       <header className="post-hero">

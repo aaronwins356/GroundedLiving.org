@@ -76,12 +76,13 @@ export interface BlogPostSummary {
   excerpt?: string | null;
   coverImage?: ContentfulImageAsset | null;
   datePublished?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
 }
 
 export interface BlogPost extends BlogPostSummary {
   content: RichTextDocument | null;
   author?: BlogPostAuthor | null;
-  seoDescription?: string | null;
   affiliate?: boolean;
   affiliateCtaText?: string | null;
   affiliateCtaUrl?: string | null;
@@ -89,6 +90,18 @@ export interface BlogPost extends BlogPostSummary {
   sponsoredLabel?: string | null;
   disclosureNeeded?: boolean;
   disableAutoLinks?: boolean;
+  recipe?: BlogPostRecipe | null;
+}
+
+export interface BlogPostRecipe {
+  name?: string | null;
+  description?: string | null;
+  yield?: string | null;
+  prepTime?: string | number | null;
+  cookTime?: string | number | null;
+  totalTime?: string | number | null;
+  ingredients?: string[] | null;
+  instructions?: string[] | null;
 }
 
 /**

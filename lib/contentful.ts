@@ -5,6 +5,7 @@ import { cache } from "react";
 import type {
   BlogPost,
   BlogPostAuthor,
+  BlogPostRecipe,
   BlogPostSummary,
   ContentfulCategory,
   ContentfulCollection,
@@ -66,6 +67,7 @@ interface BlogPostGraphQL {
     avatarImage?: AssetGraphQL | null;
   } | null;
   datePublished?: string | null;
+  seoTitle?: string | null;
   seoDescription?: string | null;
   affiliate?: boolean | null;
   affiliateCtaText?: string | null;
@@ -74,6 +76,18 @@ interface BlogPostGraphQL {
   sponsoredLabel?: string | null;
   disclosureNeeded?: boolean | null;
   disableAutoLinks?: boolean | null;
+  recipe?: RecipeGraphQL | null;
+}
+
+interface RecipeGraphQL {
+  name?: string | null;
+  description?: string | null;
+  yield?: string | null;
+  prepTime?: string | number | null;
+  cookTime?: string | number | null;
+  totalTime?: string | number | null;
+  ingredients?: Array<string | null> | null;
+  instructions?: Array<string | null> | null;
 }
 
 interface PageGraphQL {
@@ -206,7 +220,58 @@ function mapBlogPostSummary(post: BlogPostGraphQL): BlogPostSummary | null {
     excerpt: post.excerpt ?? null,
     coverImage: mapAsset(post.coverImage ?? null),
     datePublished: post.datePublished ?? null,
+    seoTitle: post.seoTitle ?? null,
+    seoDescription: post.seoDescription ?? null,
   } satisfies BlogPostSummary;
+}
+
+function normalizeNullableString(value: string | null | undefined): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function mapRecipe(recipe: RecipeGraphQL | null | undefined): BlogPostRecipe | null {
+  if (!recipe) {
+    return null;
+  }
+
+  const ingredients = (recipe.ingredients ?? [])
+    .map((item) => normalizeNullableString(item ?? undefined))
+    .filter((value): value is string => Boolean(value));
+
+  const instructions = (recipe.instructions ?? [])
+    .map((item) => normalizeNullableString(item ?? undefined))
+    .filter((value): value is string => Boolean(value));
+
+  const hasCoreDetails = ingredients.length > 0 || instructions.length > 0;
+  const hasMetadata =
+    normalizeNullableString(recipe.description) !== null ||
+    normalizeNullableString(recipe.yield) !== null ||
+    recipe.prepTime != null ||
+    recipe.cookTime != null ||
+    recipe.totalTime != null;
+
+  if (!hasCoreDetails && !hasMetadata) {
+    return null;
+  }
+
+  return {
+    name: normalizeNullableString(recipe.name),
+    description: normalizeNullableString(recipe.description),
+    yield: normalizeNullableString(recipe.yield),
+    prepTime:
+      typeof recipe.prepTime === "number" ? recipe.prepTime : normalizeNullableString(recipe.prepTime ?? undefined),
+    cookTime:
+      typeof recipe.cookTime === "number" ? recipe.cookTime : normalizeNullableString(recipe.cookTime ?? undefined),
+    totalTime:
+      typeof recipe.totalTime === "number" ? recipe.totalTime : normalizeNullableString(recipe.totalTime ?? undefined),
+    ingredients: ingredients.length > 0 ? ingredients : null,
+    instructions: instructions.length > 0 ? instructions : null,
+  } satisfies BlogPostRecipe;
 }
 
 function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
@@ -227,6 +292,7 @@ function mapBlogPost(post: BlogPostGraphQL): BlogPost | null {
     sponsoredLabel: post.sponsoredLabel ?? null,
     disclosureNeeded: Boolean(post.disclosureNeeded),
     disableAutoLinks: Boolean(post.disableAutoLinks),
+    recipe: mapRecipe(post.recipe ?? null),
   } satisfies BlogPost;
 }
 
@@ -290,6 +356,7 @@ const getAllBlogPostsInternal = cache(async (): Promise<BlogPostSummary[]> => {
           slug
           excerpt
           datePublished
+          seoTitle
           seoDescription
           coverImage { url title description width height }
         }
@@ -317,6 +384,7 @@ export const getBlogPostBySlug = cache(async (slug: string): Promise<BlogPost | 
           slug
           excerpt
           datePublished
+          seoTitle
           seoDescription
           coverImage { url title description width height }
           affiliate
@@ -326,6 +394,16 @@ export const getBlogPostBySlug = cache(async (slug: string): Promise<BlogPost | 
           sponsoredLabel
           disclosureNeeded
           disableAutoLinks
+          recipe {
+            name
+            description
+            yield
+            prepTime
+            cookTime
+            totalTime
+            ingredients
+            instructions
+          }
           content {
             json
             links {
