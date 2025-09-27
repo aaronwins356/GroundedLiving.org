@@ -140,6 +140,59 @@ export const X = createIcon(
   </>
 );
 
+export const Instagram = createIcon(
+  <>
+    <rect x="3" y="3" width="18" height="18" rx="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </>
+);
+
+export const Youtube = createIcon(
+  <>
+    <path d="M2.5 17.5v-11a2 2 0 0 1 2-2h15a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2z" />
+    <path d="m10 15 5-3-5-3z" />
+  </>
+);
+
+export const Mail = createIcon(
+  <>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <polyline points="3 7 12 13 21 7" />
+  </>
+);
+
+export const Share2 = createIcon(
+  <>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </>
+);
+
+export const Link2 = createIcon(
+  <>
+    <path d="M9 17H7a5 5 0 0 1 0-10h2" />
+    <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
+    <line x1="8" y1="12" x2="16" y2="12" />
+  </>
+);
+
+export const Send = createIcon(
+  <>
+    <path d="m22 2-7 20-4-9-9-4Z" />
+    <path d="M22 2 11 13" />
+  </>
+);
+
+export const MessageCircle = createIcon(
+  <>
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" />
+  </>
+);
+
 export default {
   LayoutDashboard,
   FileText,
@@ -155,4 +208,11 @@ export default {
   Moon,
   SunMedium,
   X,
+  Instagram,
+  Youtube,
+  Mail,
+  Share2,
+  Link2,
+  Send,
+  MessageCircle,
 };

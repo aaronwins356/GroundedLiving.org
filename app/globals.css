@@ -310,6 +310,75 @@ video {
   gap: var(--space-xs);
 }
 
+.site-header__social {
+  display: none;
+}
+
+.social-links {
+  list-style: none;
+  display: flex;
+  gap: 0.65rem;
+  padding: 0;
+  margin: 0;
+}
+
+.social-links__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: var(--radius-pill);
+  padding: 0.35rem 0.85rem;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: rgba(26, 46, 36, 0.88);
+  background: rgba(250, 247, 242, 0.75);
+  border: 1px solid rgba(91, 127, 107, 0.22);
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.social-links__link:hover,
+.social-links__link:focus-visible {
+  color: var(--color-moss-strong);
+  border-color: rgba(91, 127, 107, 0.45);
+  background: rgba(91, 127, 107, 0.16);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+.social-links__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.social-links--compact .social-links__link {
+  padding: 0.3rem;
+  width: 2.15rem;
+  height: 2.15rem;
+  justify-content: center;
+}
+
+.social-links--compact .social-links__label {
+  display: none;
+}
+
+.social-links--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.social-links--stacked .social-links__link {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+@media (min-width: 768px) {
+  .site-header__social {
+    display: flex;
+    margin-right: 0.35rem;
+  }
+}
+
 .search-trigger {
   display: inline-flex;
   align-items: center;
@@ -480,6 +549,10 @@ details[open] .site-nav__panel {
 .site-footer__contact a {
   color: var(--color-moss);
   font-weight: 600;
+}
+
+.site-footer__social {
+  margin-top: 1.25rem;
 }
 
 .site-footer__meta {
@@ -675,6 +748,60 @@ details[open] .site-nav__panel {
 .newsletter-form__status:empty {
   display: none;
   min-height: 0;
+}
+
+.post-inline-newsletter {
+  margin: clamp(2.5rem, 6vw, 4.5rem) 0;
+}
+
+.inline-newsletter {
+  border-radius: var(--radius-2xl);
+  padding: clamp(1.75rem, 4vw, 2.5rem);
+  background: linear-gradient(135deg, rgba(91, 127, 107, 0.12), rgba(250, 247, 242, 0.92));
+  border: 1px solid rgba(91, 127, 107, 0.18);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 1rem;
+}
+
+.inline-newsletter__eyebrow {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(19, 34, 30, 0.55);
+}
+
+.inline-newsletter__title {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.75rem);
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.inline-newsletter__body {
+  color: rgba(19, 34, 30, 0.75);
+  font-size: var(--font-size-base);
+}
+
+.inline-newsletter__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+  font-size: var(--font-size-sm);
+  color: rgba(19, 34, 30, 0.7);
+}
+
+.inline-newsletter__bullets li::before {
+  content: "•";
+  margin-right: 0.4rem;
+  color: var(--color-moss);
+}
+
+.inline-newsletter .newsletter-form__inline-fields {
+  flex-wrap: wrap;
 }
 
 .newsletter-form--inline {
@@ -1568,6 +1695,128 @@ details[open] .site-nav__panel {
 .post-body {
   display: grid;
   gap: clamp(2rem, 5vw, 3rem);
+}
+
+.post-share {
+  border-radius: 1.75rem;
+  border: 1px solid rgba(91, 127, 107, 0.18);
+  background: rgba(250, 247, 242, 0.9);
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 1rem;
+}
+
+.post-share__heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 650;
+  color: rgba(19, 34, 30, 0.75);
+}
+
+.post-share__icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.post-share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.post-share__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(91, 127, 107, 0.24);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(19, 34, 30, 0.75);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.post-share__button:hover,
+.post-share__button:focus-visible {
+  color: var(--color-moss-strong);
+  border-color: rgba(91, 127, 107, 0.45);
+  background: rgba(91, 127, 107, 0.16);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+.post-poll {
+  border-radius: 1.75rem;
+  border: 1px solid rgba(91, 127, 107, 0.18);
+  background: rgba(239, 236, 229, 0.65);
+  padding: clamp(1.25rem, 4vw, 1.85rem);
+  display: grid;
+  gap: 1.2rem;
+}
+
+.post-poll__header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.post-poll__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-moss);
+}
+
+.post-poll__header h3 {
+  margin: 0;
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1.25rem;
+}
+
+.post-poll__header p {
+  margin: 0.35rem 0 0 0;
+  font-size: var(--font-size-sm);
+  color: rgba(19, 34, 30, 0.7);
+}
+
+.post-poll__options {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.post-poll__option {
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(91, 127, 107, 0.24);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: rgba(19, 34, 30, 0.75);
+  cursor: pointer;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.post-poll__option:hover,
+.post-poll__option:focus-visible {
+  color: var(--color-moss-strong);
+  border-color: rgba(91, 127, 107, 0.45);
+  background: rgba(91, 127, 107, 0.16);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+.post-poll__option--selected {
+  background: rgba(91, 127, 107, 0.18);
+  border-color: rgba(91, 127, 107, 0.6);
+  color: var(--color-moss-strong);
 }
 
 .post-author {

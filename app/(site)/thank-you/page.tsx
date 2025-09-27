@@ -14,6 +14,18 @@ const LEAD_MAGNETS: Record<string, { title: string; description: string; file: s
     description: "A gentle framework to help you unwind, reset, and close the day with intention.",
     file: "/lead-magnets/evening-ritual-checklist.pdf",
   },
+  "herbal-remedies-cold-season": {
+    title: "5 Herbal Remedies for Cold Season",
+    description:
+      "A concise reference for easing cold season discomfort with trusted botanicals, safety notes, and brewing guidance.",
+    file: "/lead-magnets/herbal-remedies-cold-season.pdf",
+  },
+  "whole-food-breakfast-blueprint": {
+    title: "7-Day Whole-Food Breakfast Blueprint",
+    description:
+      "Seven quick-prep, dietitian-reviewed breakfasts with macros, swap ideas, and prep notes for calmer mornings.",
+    file: "/lead-magnets/whole-food-breakfast-blueprint.pdf",
+  },
 };
 
 export const metadata: Metadata = {
