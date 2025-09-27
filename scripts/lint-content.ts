@@ -13,6 +13,8 @@ interface PostSeed {
   content?: string;
   references?: unknown;
   disclosureNeeded?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 async function loadJsonPosts(): Promise<Array<{ file: string; data: PostSeed }>> {
@@ -45,7 +47,15 @@ function hasInternalLinkCandidate(seed: PostSeed): boolean {
     return true;
   }
 
-  const textSources = [seed.title, seed.description, seed.excerpt, seed.body, seed.content]
+  const textSources = [
+    seed.title,
+    seed.description,
+    seed.excerpt,
+    seed.body,
+    seed.content,
+    seed.seoTitle,
+    seed.seoDescription,
+  ]
     .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
     .join(" \n")
     .toLowerCase();
@@ -72,6 +82,16 @@ function validatePost(file: string, seed: PostSeed): string[] {
     errors.push("missing description or excerpt");
   } else if (description.length > 160) {
     errors.push(`description exceeds 160 characters (${description.length})`);
+  }
+
+  const seoTitle = typeof seed.seoTitle === "string" ? seed.seoTitle.trim() : "";
+  if (seoTitle.length > 65) {
+    errors.push(`seoTitle exceeds 65 characters (${seoTitle.length})`);
+  }
+
+  const seoDescription = typeof seed.seoDescription === "string" ? seed.seoDescription.trim() : "";
+  if (seoDescription.length > 160) {
+    errors.push(`seoDescription exceeds 160 characters (${seoDescription.length})`);
   }
 
   if (typeof seed.disclosureNeeded !== "boolean") {

@@ -152,6 +152,7 @@ export interface BlogPostSummary extends EntrySummary {
   excerpt?: string | null;
   datePublished?: string | null;
   coverImage?: StudioAsset | null;
+  seoTitle?: string | null;
   seoDescription?: string | null;
 }
 
@@ -219,6 +220,7 @@ function mapBlogPostSummary(entry: ManagementEntry): BlogPostSummary {
     slug: getLocalizedField<string>(entry.fields, "slug"),
     excerpt: getLocalizedField<string>(entry.fields, "excerpt"),
     datePublished: getLocalizedField<string>(entry.fields, "date-published"),
+    seoTitle: getLocalizedField<string>(entry.fields, "seoTitle"),
     seoDescription: getLocalizedField<string>(entry.fields, "seo-description"),
     createdAt: entry.sys.createdAt ?? new Date().toISOString(),
     updatedAt: entry.sys.updatedAt ?? new Date().toISOString(),
