@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AffiliateDisclosure } from "@/components/blog/AffiliateDisclosure";
 import { InlineNewsletterPortal } from "@/components/blog/InlineNewsletterPortal";
+import { ShopTheRemedy } from "@/components/blog/ShopTheRemedy";
 import { PostEngagementPoll } from "@/components/blog/PostEngagementPoll";
 import { PostCard } from "@components/blog/PostCard";
 import { SocialShareButtons } from "@/components/blog/SocialShareButtons";
@@ -17,6 +18,7 @@ import { canonicalFor } from "@/lib/seo/meta";
 import { breadcrumbList } from "@/lib/seo/schema";
 import { buildArticleJsonLd, buildRecipeJsonLd, resolvePostMeta } from "@/lib/seo/post";
 import { richTextToHtml } from "@/lib/richtext";
+import { getProductForPost } from "@/lib/shop/products";
 import type { BlogPost, BlogPostSummary } from "@project-types/contentful";
 
 export const revalidate = 300;
@@ -90,6 +92,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await resolvePost(slug);
   const posts = await getAllBlogPosts();
   const related = findRelatedPosts(posts, post);
+  const featuredProduct = getProductForPost(post.slug);
   const publishedDate = post.datePublished ? new Date(post.datePublished) : null;
   const canonicalUrl = canonicalFor(`/blog/${post.slug}`).toString();
   const meta = resolvePostMeta(post);
@@ -165,6 +168,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <div className="post-body">
         <div className="prose rt-container" dangerouslySetInnerHTML={{ __html: html }} />
         <InlineNewsletterPortal slug={post.slug} />
+        {featuredProduct ? <ShopTheRemedy product={featuredProduct} articleSlug={post.slug} /> : null}
         <SocialShareButtons url={canonicalUrl} title={post.title} />
         <PostEngagementPoll slug={post.slug} />
         <section className="post-author">

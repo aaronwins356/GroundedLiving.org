@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" role="img" aria-labelledby="title desc">
+  <title id="title">Restorative Rhythm Planner illustration</title>
+  <desc id="desc">Illustrated tablet displaying planner pages with gentle gradients.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f1f8" />
+      <stop offset="100%" stop-color="#f0f8f4" />
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e9f4ef" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="960" fill="url(#bg)" rx="60" />
+  <g transform="translate(320 200)">
+    <ellipse cx="300" cy="540" rx="250" ry="70" fill="#dbe2e7" />
+    <rect x="120" y="40" width="360" height="520" rx="48" fill="#303c42" opacity="0.9" />
+    <rect x="150" y="90" width="300" height="420" rx="36" fill="url(#screen)" />
+    <rect x="180" y="130" width="240" height="48" rx="18" fill="#d7e8de" />
+    <rect x="180" y="200" width="240" height="26" rx="12" fill="#c4d9cf" />
+    <rect x="180" y="240" width="240" height="26" rx="12" fill="#c4d9cf" opacity="0.7" />
+    <rect x="180" y="280" width="240" height="26" rx="12" fill="#c4d9cf" opacity="0.5" />
+    <g fill="#b7cbd0">
+      <rect x="180" y="340" width="110" height="120" rx="14" />
+      <rect x="310" y="340" width="110" height="120" rx="14" />
+    </g>
+    <circle cx="300" cy="570" r="12" fill="#8ea4ad" />
+  </g>
+</svg>
