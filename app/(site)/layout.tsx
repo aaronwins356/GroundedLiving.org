@@ -7,6 +7,7 @@ import { Gtag } from "@/components/analytics/Gtag";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
+import { NewsletterRibbon } from "@/components/site/NewsletterRibbon";
 import { bodyFontLocal, displayFontLocal, fallbackFontFamilies } from "@/lib/fonts";
 import { siteUrl } from "@/lib/site";
 import { websiteSchema } from "@/lib/seo/schema";
@@ -88,6 +89,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         <main id="content" className="site-main" role="main">
           {children}
         </main>
+        <NewsletterRibbon />
         <Footer />
         <ConsentBanner />
         <Gtag />

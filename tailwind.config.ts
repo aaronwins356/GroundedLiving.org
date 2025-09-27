@@ -2,6 +2,19 @@ import type { Config } from "tailwindcss";
 
 import typography from "@tailwindcss/typography";
 
+import {
+  colorTokens,
+  containerWidths,
+  easingTokens,
+  fontFamilyTokens,
+  radiiTokens,
+  shadowTokens,
+  spacingTokens,
+  surfaceTokens,
+  transitionDurations,
+  typeScale,
+} from "./lib/design/tokens";
+
 const config: Config = {
   content: [
     "./app/**/*.{ts,tsx}",
@@ -10,24 +23,128 @@ const config: Config = {
     "./lib/**/*.{ts,tsx}",
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "1rem",
+      screens: {
+        "2xl": containerWidths.wide,
+      },
+    },
     extend: {
       colors: {
-        ink: "#0F172A",
-        bone: "#F8F5F2",
-        moss: "#5B7F6B",
-        clay: "#C8A98E",
-        saffron: "#D9A441",
+        ...colorTokens,
+        surface: surfaceTokens,
+      },
+      spacing: {
+        ...spacingTokens,
       },
       borderRadius: {
-        DEFAULT: "0.75rem",
-        lg: "0.75rem",
-        xl: "1rem",
-        "2xl": "1.25rem",
+        ...radiiTokens,
+        DEFAULT: radiiTokens.md,
       },
       fontFamily: {
-        display: "var(--font-display)",
-        body: "var(--font-body)",
+        display: fontFamilyTokens.display,
+        body: fontFamilyTokens.body,
       },
+      fontSize: {
+        ...typeScale,
+      },
+      boxShadow: {
+        ...shadowTokens,
+      },
+      transitionDuration: {
+        subtle: transitionDurations.subtle,
+        base: transitionDurations.base,
+        slow: transitionDurations.slow,
+      },
+      transitionTimingFunction: {
+        standard: easingTokens.standard,
+        entrance: easingTokens.entrance,
+        exit: easingTokens.exit,
+      },
+      maxWidth: {
+        prose: containerWidths.prose,
+        tight: containerWidths.tight,
+      },
+      typography: ({ theme }: { theme: (path: string) => string }) => ({
+        DEFAULT: {
+          css: {
+            color: "var(--color-ink)",
+            fontFamily: fontFamilyTokens.body,
+            maxWidth: containerWidths.prose,
+            strong: {
+              color: "var(--color-ink)",
+            },
+            a: {
+              color: theme("colors.moss.500"),
+              fontWeight: "600",
+              textDecoration: "none",
+              borderBottom: `1px solid ${theme("colors.moss.200")}`,
+              transition: `color ${transitionDurations.base} ${easingTokens.standard}, border-color ${transitionDurations.base} ${easingTokens.standard}`,
+            },
+            "a:hover": {
+              color: theme("colors.moss.600"),
+              borderColor: theme("colors.moss.400"),
+            },
+            h1: {
+              fontFamily: fontFamilyTokens.display,
+              fontWeight: "600",
+              color: "var(--color-ink)",
+              lineHeight: "1.12",
+              marginBottom: theme("spacing.md"),
+            },
+            h2: {
+              fontFamily: fontFamilyTokens.display,
+              fontWeight: "600",
+              color: "var(--color-ink)",
+              lineHeight: "1.18",
+              marginTop: `calc(${theme("spacing.xl")} * 1.1)`,
+              marginBottom: theme("spacing.sm"),
+            },
+            h3: {
+              fontFamily: fontFamilyTokens.display,
+              fontWeight: "600",
+              color: "var(--color-ink)",
+              lineHeight: "1.24",
+              marginTop: theme("spacing.lg"),
+              marginBottom: theme("spacing.2xs"),
+            },
+            blockquote: {
+              fontStyle: "normal",
+              fontFamily: fontFamilyTokens.display,
+              color: theme("colors.moss.600"),
+              borderLeftColor: theme("colors.moss.300"),
+            },
+            "blockquote p:first-of-type::before": { content: "none" },
+            "blockquote p:last-of-type::after": { content: "none" },
+            "ol li::marker": {
+              color: theme("colors.moss.500"),
+            },
+            "ul li::marker": {
+              color: theme("colors.moss.500"),
+            },
+            hr: {
+              borderColor: theme("colors.slate.300"),
+            },
+            code: {
+              color: theme("colors.moss.600"),
+              backgroundColor: theme("colors.sand.100"),
+              padding: "0.125em 0.35em",
+              borderRadius: radiiTokens.sm,
+            },
+            pre: {
+              backgroundColor: theme("colors.sand.100"),
+              borderRadius: radiiTokens.lg,
+              padding: theme("spacing.sm"),
+              color: "var(--color-ink)",
+            },
+            "figure figcaption": {
+              color: theme("colors.ink.muted"),
+              fontSize: theme("fontSize.sm"),
+            },
+          },
+        },
+      }),
     },
   },
   plugins: [typography],

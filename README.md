@@ -13,25 +13,26 @@ Contentful CMS, modern SEO automation, and monetization-ready UI primitives so n
 
 ## Design system foundation
 
-The design tokens and primitives established in this iteration provide a consistent visual rhythm across future templates.
+The design tokens and primitives established in this iteration provide a calmer editorial rhythm and power the Tailwind theme extension.
 
-- **Color tokens:**
-  - `ink` (`#0F172A`) – primary text and iconography
-  - `bone` (`#F8F5F2`) – global page background
-  - `moss` (`#5B7F6B`) – primary accent and interactive states
-  - `clay` (`#C8A98E`) – secondary accent and surface treatments
-  - `saffron` (`#D9A441`) – highlight color for focus states and badges
-- **Border radii:** default `0.75rem` with `xl` (`1rem`) and `2xl` (`1.25rem`) options surfaced via the `--radius-*` CSS variables.
-- **Typography:** Fraunces drives headlines (`--font-display`) while Inter anchors body copy (`--font-body`). Both fonts are self-hosted via `next/font` with `font-display: swap`.
+- **Color + surface tokens:**
+  - `ink` (`#13221E`) for body text with `ink.soft`/`ink.muted` transparencies.
+  - `sand` (`25/50/100/200`) for layered neutrals and the base page wash.
+  - `moss` (`400–700`) as the primary accent, paired with `fern` tints for soft gradients.
+  - `clay` (`100–400`) as a warm counter-tone for cards and callouts.
+  - `saffron` (`300–500`) to highlight focus states and key badges.
+  - Surface tokens (`page`, `panel`, `card`, `overlay`) coordinate translucent panels and overlays.
+- **Spacing + radii:** semantic space scale (`--space-3xs` → `--space-3xl`) plus rounded geometry (`--radius-pill`, `--radius-2xl`) applied consistently across cards, modals, and buttons.
+- **Typography:** responsive type scale defined via `typeScale` tokens (e.g., `fontSize.2xl = clamp(1.85rem, 1.5rem + 1.25vw, 2.6rem)`) with Fraunces for headings and Inter for body copy.
+- **Motion & shadows:** duration tokens (`subtle`, `base`, `slow`) and easing curves (`standard`, `entrance`, `exit`) feed Tailwind’s transition utilities, while `shadowTokens` (`soft`, `floating`, `focus`) keep elevation consistent.
 - **UI primitives:**
-  - `Container` handles responsive width constraints and page padding.
-  - `Section` applies vertical spacing for page sections.
-  - `Button` includes `primary`, `secondary`, and `ghost` variants with accessible focus rings.
-  - `Callout` provides a soft-highlight panel for tips or disclosures.
-  - `NewsletterForm` ships a form shell ready for ESP integration and shares button/input styling.
-  - `ArticleShell` wraps long-form content inside `.prose` typography styles for blog posts and documentation pages.
+  - `Container` + `Section` govern horizontal rhythm and breathing room.
+  - `Button` variants (`primary`, `secondary`, `ghost`) inherit gradient fills, pill radii, and ring tokens for AA+ focus states.
+  - `Callout` and `NewsletterForm` use clay/moss overlays for gentle emphasis.
+  - `NewsletterRibbon` is a fixed, dismissible capture surface that respects the consent banner via a shared CSS variable.
+  - `ArticleShell` (see `/sandbox/typography`) applies the tuned prose styles for long-form reading.
 
-Use the sandbox route at `/sandbox/typography` to preview the typography scale, blockquotes, code blocks, and interaction states as new components roll out.
+Use the sandbox route at `/sandbox/typography` to preview the type scale, blockquotes, code blocks, and interaction states as new components roll out.
 
 ## 1. Local development
 
