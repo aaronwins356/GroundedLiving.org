@@ -1,0 +1,49 @@
+<svg width="640" height="180" viewBox="0 0 640 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Grounded Living wordmark</title>
+  <desc id="desc">Horizontal logo for Grounded Living featuring a herb motif and the brand name.</desc>
+  <defs>
+    <linearGradient id="leaf-gradient" x1="12%" y1="8%" x2="84%" y2="92%">
+      <stop offset="0%" stop-color="#8AB794" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#3D574A" />
+    </linearGradient>
+    <filter id="soft-shadow" x="-15%" y="-25%" width="130%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#1F2B25" flood-opacity="0.16" />
+    </filter>
+  </defs>
+  <g transform="translate(40 34)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" filter="url(#soft-shadow)">
+    <path
+      d="M15.5 42.4c10.2-4.6 18.3-13 23-23 4.8-10 17.5-11.3 23.5-4.4 6 6.9 2.6 18.7-7.3 23.9-9.9 5.2-19.5 16.6-21.8 27.9"
+      stroke="url(#leaf-gradient)"
+    />
+    <path d="M14.6 43.4c4.1 11.3 13.2 17.3 20.2 19.7" stroke="#3D574A" />
+    <circle cx="16.8" cy="42.2" r="6.6" fill="#C58A2F" stroke="#C58A2F" />
+  </g>
+  <g transform="translate(160 82)">
+    <text
+      x="0"
+      y="0"
+      font-family="'Fraunces', 'Times New Roman', serif"
+      font-size="60"
+      font-weight="600"
+      letter-spacing="-0.02em"
+      fill="#13221E"
+      dominant-baseline="central"
+    >
+      Grounded Living
+    </text>
+  </g>
+  <g transform="translate(160 124)">
+    <text
+      x="0"
+      y="0"
+      font-family="'Inter', 'Source Sans Pro', 'Segoe UI', sans-serif"
+      font-size="18"
+      font-weight="600"
+      letter-spacing="0.44em"
+      textLength="380"
+      fill="rgba(19,34,30,0.62)"
+    >
+      HOLISTIC RITUALS · NOURISHMENT
+    </text>
+  </g>
+</svg>

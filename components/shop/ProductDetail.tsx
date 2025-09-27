@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { Badge } from "@/components/ui/badge";
+import { buttonClassNames } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { ShopProduct } from "@project-types/shop";
 
@@ -61,7 +62,7 @@ export function ProductDetail({ product, checkoutUrl }: ProductDetailProps) {
             href={checkoutUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn--primary btn--lg w-full justify-center text-base"
+            className={buttonClassNames({ size: "lg", className: "w-full justify-center text-base" })}
             data-analytics-action="checkout"
           >
             Checkout on Stripe

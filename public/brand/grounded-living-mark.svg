@@ -1,0 +1,21 @@
+<svg width="180" height="180" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Grounded Living leaf symbol</title>
+  <desc id="desc">Circular herb motif used as the Grounded Living icon.</desc>
+  <defs>
+    <linearGradient id="leaf-gradient" x1="12%" y1="8%" x2="84%" y2="92%">
+      <stop offset="0%" stop-color="#8AB794" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#3D574A" />
+    </linearGradient>
+    <filter id="soft-shadow" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1F2B25" flood-opacity="0.18" />
+    </filter>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" filter="url(#soft-shadow)">
+    <path
+      d="M15.5 42.4c10.2-4.6 18.3-13 23-23 4.8-10 17.5-11.3 23.5-4.4 6 6.9 2.6 18.7-7.3 23.9-9.9 5.2-19.5 16.6-21.8 27.9"
+      stroke="url(#leaf-gradient)"
+    />
+    <path d="M14.6 43.4c4.1 11.3 13.2 17.3 20.2 19.7" stroke="#3D574A" />
+    <circle cx="16.8" cy="42.2" r="6.6" fill="#C58A2F" stroke="#C58A2F" />
+  </g>
+</svg>

@@ -10,7 +10,7 @@ perfectly aligned.
 
 | Token | Value | Usage |
 | --- | --- | --- |
-| `colors.stone.50` | `#FAF7F2` | Canvas background, neutral cards |
+| `colors.stone.50` | `#FDFBF9` | Canvas background, neutral cards |
 | `colors.stone.900` | `#26211C` | Deep overlays, dark text on warm panels |
 | `colors.moss.500` | `#5B7F6B` | Primary brand actions, interactive states |
 | `colors.fern.400` | `#8AB794` | Secondary accents, badges, wellness tags |
@@ -18,7 +18,7 @@ perfectly aligned.
 | `colors.saffron.500` | `#C58A2F` | Primary CTA + focus outline |
 | `colors.success.500` | `#3F7A49` | Confirmation banners, success toasts |
 | `colors.danger.500` | `#B9503B` | Error states, destructive actions |
-| `surface.page` | `var(--color-stone-25)` | Global background |
+| `surface.page` | `var(--color-stone-50)` | Global background |
 | `surface.panel` | `rgba(250, 247, 242, 0.92)` | Sticky nav, TOC, light cards |
 | `surface.overlay` | `rgba(19, 34, 30, 0.36)` | Scrims for modals, mobile nav |
 

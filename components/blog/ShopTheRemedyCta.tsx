@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback } from "react";
 
 import { track } from "@/lib/analytics";
+import { buttonClassNames } from "@/components/ui/Button";
 
 interface ShopTheRemedyCtaProps {
   href: string;
@@ -21,7 +22,11 @@ export function ShopTheRemedyCta({ href, productName, postSlug }: ShopTheRemedyC
   }, [href, postSlug, productName]);
 
   return (
-    <Link href={href} className="btn btn--secondary btn--lg" onClick={handleClick}>
+    <Link
+      href={href}
+      className={buttonClassNames({ variant: "secondary", size: "lg" })}
+      onClick={handleClick}
+    >
       Explore the remedy
     </Link>
   );
