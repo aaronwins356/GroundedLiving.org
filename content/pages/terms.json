@@ -1,0 +1,216 @@
+{
+  "title": "Terms of Service",
+  "slug": "terms",
+  "seoTitle": "Grounded Living Terms of Service",
+  "seoDescription": "The legal terms governing use of Grounded Living, including shop purchases, disclaimers, and customer responsibilities.",
+  "bodyRichText": {
+    "nodeType": "document",
+    "data": {},
+    "content": [
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "By visiting Grounded Living or purchasing any remedy, you agree to the terms below. They ensure we can offer thoughtful content and products while being transparent about limitations and responsibilities.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "heading-2",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Use of the site",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Grounded Living provides educational content. We do not offer medical, nutritional, or mental health advice. Always consult a licensed professional before acting on information from this site.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "heading-2",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Purchases and fulfillment",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "unordered-list",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "list-item",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "data": {},
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "Checkout is processed securely by Stripe. Taxes and shipping are calculated at checkout based on your location.",
+                    "marks": [],
+                    "data": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "nodeType": "list-item",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "data": {},
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "Digital products are delivered immediately via email. Because access is instant, all digital sales are final.",
+                    "marks": [],
+                    "data": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "nodeType": "list-item",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "data": {},
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "Physical remedies ship within 3–5 business days. If an item arrives damaged, contact hello@groundedliving.org within 7 days for a resolution.",
+                    "marks": [],
+                    "data": {}
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "nodeType": "heading-2",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Disclaimers",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "unordered-list",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "list-item",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "data": {},
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "Statements about herbs and rituals have not been evaluated by the Food and Drug Administration.",
+                    "marks": [],
+                    "data": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "nodeType": "list-item",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "data": {},
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "Our products are not intended to diagnose, treat, cure, or prevent any disease.",
+                    "marks": [],
+                    "data": {}
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "nodeType": "list-item",
+            "data": {},
+            "content": [
+              {
+                "nodeType": "paragraph",
+                "data": {},
+                "content": [
+                  {
+                    "nodeType": "text",
+                    "value": "By purchasing, you acknowledge personal responsibility for evaluating allergies, contraindications, and dosage.",
+                    "marks": [],
+                    "data": {}
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "nodeType": "heading-2",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "Updates",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      },
+      {
+        "nodeType": "paragraph",
+        "data": {},
+        "content": [
+          {
+            "nodeType": "text",
+            "value": "We may update these terms as the shop evolves. Material changes will be announced on the site or via our newsletter. Continued use of Grounded Living means you accept the updated terms.",
+            "marks": [],
+            "data": {}
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" role="img" aria-labelledby="title desc">
+  <title id="title">Evening Grounding Oil illustration</title>
+  <desc id="desc">Illustrated body oil bottle with calming botanicals and moon phases.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4f6f8" />
+      <stop offset="100%" stop-color="#e9f1ef" />
+    </linearGradient>
+    <linearGradient id="bottle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d3a3b" />
+      <stop offset="100%" stop-color="#4a6860" />
+    </linearGradient>
+    <linearGradient id="label" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3e9cf" />
+      <stop offset="100%" stop-color="#f9f4df" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="960" fill="url(#bg)" rx="60" />
+  <g transform="translate(360 160)">
+    <ellipse cx="260" cy="700" rx="240" ry="70" fill="#dbe3dd" />
+    <rect x="260" y="90" width="60" height="110" rx="18" fill="#d8b48a" />
+    <rect x="200" y="180" width="180" height="460" rx="90" fill="url(#bottle)" />
+    <rect x="220" y="260" width="140" height="200" rx="40" fill="url(#label)" />
+    <text x="290" y="340" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="600" font-size="36" fill="#2c3c36">Evening</text>
+    <text x="290" y="380" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" fill="#2c3c36">Grounding Oil</text>
+    <g fill="#7c937f" opacity="0.8">
+      <circle cx="60" cy="620" r="24" />
+      <circle cx="110" cy="580" r="18" />
+      <circle cx="460" cy="590" r="28" />
+      <circle cx="500" cy="640" r="20" />
+    </g>
+    <g fill="#cbd4ce" opacity="0.9">
+      <circle cx="120" cy="240" r="36" />
+      <circle cx="460" cy="220" r="30" />
+      <circle cx="520" cy="280" r="24" />
+    </g>
+  </g>
+</svg>

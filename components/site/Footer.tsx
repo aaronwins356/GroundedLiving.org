@@ -12,6 +12,7 @@ const pageLinks = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
   { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
   { href: "/disclosure", label: "Disclosure" },
 ];
 
@@ -74,6 +75,9 @@ export async function Footer() {
                 </li>
                 <li>
                   <Link href="/privacy">Privacy</Link>
+                </li>
+                <li>
+                  <Link href="/terms">Terms</Link>
                 </li>
                 <li>
                   <Link href="/disclosure">Disclosure</Link>
