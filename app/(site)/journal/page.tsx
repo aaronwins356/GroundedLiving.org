@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ArticleShell } from "@/components/blog/ArticleShell";
+import { InfographicCard } from "@/components/blog/InfographicCard";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getAllBlogPosts } from "@/lib/contentful";
 import { canonicalFor } from "@/lib/seo/meta";
@@ -21,7 +22,7 @@ export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   const canonicalUrl = canonicalFor("/journal").toString();
-  const ogImageUrl = ogImageForTitle(PAGE_TITLE);
+  const ogImageUrl = ogImageForTitle(PAGE_TITLE, { subtitle: PAGE_DESCRIPTION, eyebrow: "Journal", variant: "editorial" });
 
   return {
     title: META_TITLE,
@@ -123,6 +124,20 @@ export default async function JournalPage() {
             Fresh stories are brewing. Check back soon for the latest rituals and reflections.
           </p>
         )}
+      </div>
+      <div className="mt-16 not-prose">
+        <InfographicCard
+          eyebrow="Editorial tools"
+          title="How to stage a nervous system reset"
+          summary="A four-part ritual to help your readers pause, breathe, nourish, and restore—perfect for sharing on social."
+          items={[
+            { title: "Ground", description: "Start with a slow, diaphragmatic breathing practice to cue safety." },
+            { title: "Nourish", description: "Sip a magnesium-forward tonic and swap blue light for amber glow." },
+            { title: "Restore", description: "Journal three supportive thoughts, then stretch before bed." },
+          ]}
+          footnote="Download the printable infographic to embed in your next wellness guide."
+          theme="moss"
+        />
       </div>
     </ArticleShell>
   );

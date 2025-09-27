@@ -5,6 +5,7 @@ import { HeroCarousel } from "@components/blog/HeroCarousel";
 import { PostCard } from "@components/blog/PostCard";
 import { NewsletterSignup } from "@components/marketing/NewsletterSignup";
 import { buttonClassNames } from "@/components/ui/Button";
+import { Reveal } from "@/components/ui/Reveal";
 import { getAllBlogPosts, getCategories, getPages } from "@lib/contentful";
 import type { BlogPostSummary, ContentfulPage, RichTextNode } from "@project-types/contentful";
 
@@ -18,7 +19,7 @@ export default async function HomePage() {
 
   return (
     <div className="stack-xl">
-      <section className="home-hero">
+      <Reveal as="section" className="home-hero" delay={60}>
         <div className="home-hero-copy">
           <span className="hero-eyebrow">Grounded rituals for intentional living</span>
           <h1>Your sanctuary for soulful wellness</h1>
@@ -36,9 +37,9 @@ export default async function HomePage() {
           </div>
         </div>
         <HeroCarousel posts={featured} />
-      </section>
+      </Reveal>
 
-      <section className="home-section">
+      <Reveal as="section" className="home-section" delay={120}>
         <div className="section-header">
           <div>
             <span className="section-eyebrow">Discover</span>
@@ -49,9 +50,9 @@ export default async function HomePage() {
           </Link>
         </div>
         <CategoryChips categories={categories} />
-      </section>
+      </Reveal>
 
-      <section className="home-section">
+      <Reveal as="section" className="home-section" delay={160}>
         <div className="section-header">
           <div>
             <span className="section-eyebrow">Fresh from the journal</span>
@@ -66,12 +67,14 @@ export default async function HomePage() {
             <PostCard key={post.id} post={post} />
           ))}
         </div>
-      </section>
+      </Reveal>
 
-      <NewsletterSignup />
+      <Reveal as="div" className="home-newsletter" delay={200}>
+        <NewsletterSignup />
+      </Reveal>
 
       {aboutPage ? (
-        <section className="home-section about-highlight">
+        <Reveal as="section" className="home-section about-highlight" delay={220}>
           <div className="section-header">
             <div>
               <span className="section-eyebrow">About</span>
@@ -84,7 +87,7 @@ export default async function HomePage() {
           <div className="about-panel">
             <RichTextPreview content={aboutPage.content?.content ?? []} />
           </div>
-        </section>
+        </Reveal>
       ) : null}
     </div>
   );

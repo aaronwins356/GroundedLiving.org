@@ -46,7 +46,13 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
   }
 
   return (
-    <section className={styles.hero} aria-label="Featured posts">
+    <section
+      className={styles.hero}
+      aria-label="Featured posts"
+      role="region"
+      aria-roledescription="carousel"
+      aria-live="polite"
+    >
       <div className={styles.gradient} aria-hidden />
       <div className={styles.slides}>
         {items.map((item, index) => {
@@ -72,6 +78,9 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
               key={item.id}
               className={`${styles.slide} ${isActive ? styles.active : styles.inactive}`}
               aria-hidden={!isActive}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`Slide ${index + 1} of ${items.length}`}
             >
               <div className={styles.slideInner}>
                 <div className={styles.copy}>
@@ -94,6 +103,7 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
                       fetchPriority={index === 0 ? "high" : "auto"}
                       loading={index === 0 ? "eager" : "lazy"}
                       className={styles.mediaImage}
+                      onLoadingComplete={(img) => img.classList.add("is-loaded")}
                     />
                   </div>
                 ) : null}
@@ -102,7 +112,7 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
           );
         })}
       </div>
-      <div className={styles.dots}>
+      <div className={styles.dots} role="tablist" aria-label="Featured stories selector">
         {items.map((item, index) => (
           <button
             type="button"
@@ -111,6 +121,8 @@ export function HeroCarousel({ posts, intervalMs = 7000 }: HeroCarouselProps) {
             className={`${styles.dot} ${index === activeIndex ? styles.dotActive : ""}`}
             aria-label={`Show slide ${index + 1}`}
             aria-pressed={index === activeIndex}
+            role="tab"
+            aria-selected={index === activeIndex}
           />
         ))}
       </div>

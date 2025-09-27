@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
+import { announce } from "@/lib/a11y/announcer";
 import { cn } from "@/lib/utils/cn";
 import { track } from "@/lib/analytics";
 
@@ -79,17 +80,20 @@ export function NewsletterForm({
         const errorMessage = data?.error ?? "We couldn’t save your email just yet. Please try again.";
         setStatus("error");
         setMessage(errorMessage);
+        announce(errorMessage, "assertive");
         return;
       }
 
       setStatus("success");
       setMessage("Success! You’re on the list.");
+      announce("Success! You're on the newsletter list.", "polite");
       track("newsletter_subscribed", { tag, source });
       setEmail("");
     } catch (error) {
       console.error("Newsletter subscription failed", error);
       setStatus("error");
       setMessage("We couldn’t reach the newsletter service. Please try again.");
+      announce("We couldn’t reach the newsletter service. Please try again.", "assertive");
     }
   };
 

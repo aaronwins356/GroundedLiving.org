@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
+import { Reveal } from "@/components/ui/Reveal";
 import { getAllProducts } from "@/lib/shop/products";
 import { canonicalFor } from "@/lib/seo/meta";
 import { buildMetaTitle } from "@/lib/seo/title";
@@ -28,13 +29,29 @@ export const metadata: Metadata = {
     url: canonicalFor("/shop").toString(),
     title: META_TITLE,
     description: META_DESCRIPTION,
-    images: [{ url: ogImageForTitle(PAGE_TITLE) }],
+    images: [
+      {
+        url: ogImageForTitle(PAGE_TITLE, {
+          variant: "commerce",
+          subtitle: PAGE_DESCRIPTION,
+          eyebrow: "Shop",
+          tag: "Future Commerce",
+        }),
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: META_TITLE,
     description: META_DESCRIPTION,
-    images: [ogImageForTitle(PAGE_TITLE)],
+    images: [
+      ogImageForTitle(PAGE_TITLE, {
+        variant: "commerce",
+        subtitle: PAGE_DESCRIPTION,
+        eyebrow: "Shop",
+        tag: "Future Commerce",
+      }),
+    ],
   },
 };
 
@@ -60,18 +77,21 @@ export default function ShopPage() {
       <JsonLd item={itemList} id="shop-item-list" />
       <Section className="pb-16 pt-12 md:pt-16">
         <Container className="space-y-12">
-          <header className="space-y-5 text-center md:text-left">
+          <Reveal as="header" className="space-y-5 text-center md:text-left">
             <p className="text-sm font-semibold uppercase tracking-[0.35em] text-moss-600">Grounded Living Shop</p>
             <h1 className="text-4xl font-semibold text-ink md:text-5xl">{PAGE_TITLE}</h1>
             <p className="mx-auto max-w-2xl text-lg text-ink/80 md:mx-0">{PAGE_DESCRIPTION}</p>
             <p className="mx-auto max-w-2xl text-sm text-ink/60 md:mx-0">{DISCLAIMER_TEXT}</p>
-          </header>
+          </Reveal>
           <ul className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
               <ProductCard key={product.slug} product={product} />
             ))}
           </ul>
-          <div className="rounded-3xl border border-ink/10 bg-white/70 p-6 text-sm text-ink/70">
+          <Reveal
+            as="div"
+            className="rounded-3xl border border-[color:var(--card-border-default)] bg-[var(--card-bg-default)] p-6 text-sm text-ink/70 shadow-[var(--card-shadow-default)]"
+          >
             <h2 className="text-base font-semibold text-ink">Transparency quick facts</h2>
             <ul className="mt-3 space-y-2">
               <li>
@@ -84,7 +104,7 @@ export default function ShopPage() {
                 <strong className="text-ink">Questions:</strong> Email <a className="underline" href="mailto:hello@groundedliving.org">hello@groundedliving.org</a> for sourcing or contraindication clarifications.
               </li>
             </ul>
-          </div>
+          </Reveal>
         </Container>
       </Section>
       <TrackEvent event="shop_index_viewed" params={{ product_count: products.length }} />

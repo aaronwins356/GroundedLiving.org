@@ -25,6 +25,7 @@ export interface RichTextNode {
     | "unordered-list"
     | "list-item"
     | "embedded-asset-block"
+    | "embedded-entry-block"
     | "hr"
     | "text";
   value?: string;
@@ -102,6 +103,21 @@ export interface BlogPostRecipe {
   totalTime?: string | number | null;
   ingredients?: string[] | null;
   instructions?: string[] | null;
+}
+
+export interface InfographicListItem {
+  title: string;
+  description?: string | null;
+}
+
+export interface InfographicBlock {
+  id: string;
+  eyebrow?: string | null;
+  title: string;
+  summary?: string | null;
+  items: InfographicListItem[];
+  footnote?: string | null;
+  theme?: "moss" | "spruce" | "saffron" | "linen";
 }
 
 /**

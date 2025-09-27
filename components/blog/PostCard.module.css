@@ -25,11 +25,18 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-slow);
+  transform: scale(1.02);
+  opacity: 0;
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
 }
 
 .coverLink:hover .coverImage {
   transform: scale(1.05);
+}
+
+.coverImage.is-loaded {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .coverPlaceholder {

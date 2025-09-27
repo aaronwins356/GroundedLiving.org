@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import type { ReactNode } from "react";
 
@@ -49,7 +51,15 @@ export function RecipeLayout({
     <article className="recipe-layout" aria-labelledby="recipe-title">
       <div className="recipe-layout__hero">
         <div className="recipe-layout__image">
-          <Image src={hero.src} alt={hero.alt} fill className="object-cover" sizes="(min-width: 1024px) 640px, 100vw" />
+          <Image
+            src={hero.src}
+            alt={hero.alt}
+            fill
+            className="fade-media object-cover"
+            sizes="(min-width: 1024px) 640px, 100vw"
+            priority
+            onLoadingComplete={(img) => img.classList.add("is-loaded")}
+          />
         </div>
         <div className="recipe-layout__intro">
           <p className="recipe-layout__eyebrow">Seasonal Recipe</p>
@@ -76,6 +86,31 @@ export function RecipeLayout({
           <a
             href="#recipe-card"
             className={buttonClassNames({ variant: "secondary", size: "md", className: "recipe-layout__jump" })}
+            onClick={(event) => {
+              if (typeof document === "undefined") {
+                return;
+              }
+              const target = document.getElementById("recipe-card");
+              if (!target) {
+                return;
+              }
+              event.preventDefault();
+              const previousTabIndex = target.getAttribute("tabindex");
+              target.setAttribute("tabindex", "-1");
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+              target.focus({ preventScroll: true });
+              target.addEventListener(
+                "blur",
+                () => {
+                  if (previousTabIndex === null) {
+                    target.removeAttribute("tabindex");
+                  } else {
+                    target.setAttribute("tabindex", previousTabIndex);
+                  }
+                },
+                { once: true },
+              );
+            }}
           >
             Jump to recipe
           </a>

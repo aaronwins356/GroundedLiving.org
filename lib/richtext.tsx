@@ -2,7 +2,8 @@ import { Fragment, type ReactNode } from "react";
 
 import Image from "next/image";
 
-import type { RichTextDocument, RichTextMark, RichTextNode } from "@/types/contentful";
+import { InfographicCard } from "@/components/blog/InfographicCard";
+import type { InfographicBlock, RichTextDocument, RichTextMark, RichTextNode } from "@/types/contentful";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -103,6 +104,31 @@ function renderNode(node: RichTextNode, key: string): ReactNode {
           {alt ? <figcaption>{alt}</figcaption> : null}
         </figure>
       );
+    }
+    case "embedded-entry-block": {
+      const target = node.data?.target as { __typename?: string; data?: InfographicBlock } | undefined;
+      if (!target?.__typename || !target.data) {
+        return null;
+      }
+
+      if (target.__typename === "InfographicBlock") {
+        const { data } = target;
+        return (
+          <div key={key} className="not-prose">
+            <InfographicCard
+              id={data.id}
+              eyebrow={data.eyebrow}
+              title={data.title}
+              summary={data.summary}
+              items={data.items}
+              footnote={data.footnote}
+              theme={data.theme ?? "linen"}
+            />
+          </div>
+        );
+      }
+
+      return null;
     }
     case "hyperlink": {
       const uri = typeof node.data?.uri === "string" ? node.data.uri : undefined;
